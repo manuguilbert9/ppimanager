@@ -7,6 +7,7 @@ import { StrengthsForm } from "./strengths-form";
 import { getAllLibraryItems } from "@/lib/library-repository";
 import { DifficultiesForm } from "./difficulties-form";
 import { NeedsForm } from "./needs-form";
+import { ObjectivesForm } from "./objectives-form";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
@@ -72,6 +73,10 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
             compensatoryToolsSuggestions={getSuggestions('compensatoryTools')}
             specialEducationalApproachSuggestions={getSuggestions('specialEducationalApproach')}
             complementaryCareSuggestions={getSuggestions('complementaryCare')}
+        />
+        <ObjectivesForm 
+          student={student}
+          objectivesSuggestions={getSuggestions('objectives')}
         />
       </div>
     </>

@@ -49,6 +49,14 @@ export type Needs = {
   complementaryCare?: string[];
 };
 
+export type Objective = {
+  id?: string;
+  title: string;
+  successCriteria?: string;
+  deadline?: string;
+};
+
+
 export type Student = {
   id: string;
   firstName: string;
@@ -69,6 +77,7 @@ export type Student = {
   strengths?: Strengths;
   difficulties?: Difficulties;
   needs?: Needs;
+  objectives?: Objective[];
 };
 
 export type Ppi = {
