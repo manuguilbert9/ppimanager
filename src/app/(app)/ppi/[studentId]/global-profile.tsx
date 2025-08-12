@@ -107,7 +107,7 @@ export function GlobalProfileForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3', 'item-4', 'item-5']} className="w-full">
+            <Accordion type="multiple" className="w-full">
               
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-lg font-medium">Nature du handicap et troubles associés</AccordionTrigger>

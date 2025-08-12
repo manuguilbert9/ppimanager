@@ -83,7 +83,7 @@ export function StrengthsForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-             <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+             <Accordion type="multiple" className="w-full">
                 <AccordionItem value="item-1">
                     <AccordionTrigger className="text-lg font-medium">Points d'appui</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
