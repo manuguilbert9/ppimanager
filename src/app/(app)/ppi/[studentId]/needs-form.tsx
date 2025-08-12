@@ -79,7 +79,7 @@ export function NeedsForm({
   const badgeClassName = "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200";
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#d0ebe8' }}>
       <CardHeader>
         <CardTitle>Besoins éducatifs particuliers</CardTitle>
         <CardDescription>
@@ -91,7 +91,7 @@ export function NeedsForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
              <Accordion type="multiple" className="w-full">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium text-teal-600 dark:text-teal-500">Identifier les besoins</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-teal-800">Identifier les besoins</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="pedagogicalAccommodations" render={({ field }) => (
                             <FormItem>

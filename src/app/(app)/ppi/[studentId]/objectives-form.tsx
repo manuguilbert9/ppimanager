@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, useFormContext, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext, Controller, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -305,9 +305,9 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
     const objectiveContent = (
-      <AccordionItem value={field.id} className="w-full border-purple-200 dark:border-purple-800 border rounded-md px-4 bg-purple-50 dark:bg-purple-900/20">
+      <AccordionItem value={field.id} className="w-full bg-white/50 border-purple-200 dark:border-purple-800 border rounded-md px-4">
         <div className="flex items-center w-full">
-          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-3 text-purple-600 dark:text-purple-400">
+          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-3 text-purple-800">
             <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
           </AccordionTrigger>
           <Button type="button" variant="ghost" size="icon" onClick={() => remove(originalIndex)} className="ml-2">
@@ -315,70 +315,72 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
           </Button>
         </div>
         <AccordionContent className="space-y-4 pt-2 pb-4">
-          <FormField
-            control={form.control}
-            name={`objectives.${originalIndex}.title`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Intitulé de l'objectif</FormLabel>
-                <FormControl>
-                  <ComboboxField
-                    {...field}
-                    placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
-                    suggestions={objectivesSuggestions}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <AdaptationsManager 
-            objectiveIndex={originalIndex} 
-            adaptationsSuggestions={adaptationsSuggestions}
-          />
-
-          <FormField
-            control={form.control}
-            name={`objectives.${originalIndex}.successCriteria`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Critère de réussite attendue</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
+          <FormProvider {...form}>
+            <FormField
               control={form.control}
-              name={`objectives.${originalIndex}.deadline`}
+              name={`objectives.${originalIndex}.title`}
               render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Échéance</FormLabel>
+                <FormItem>
+                  <FormLabel>Intitulé de l'objectif</FormLabel>
                   <FormControl>
-                      <Input placeholder="Ex: Fin du trimestre" {...field} />
+                    <ComboboxField
+                      {...field}
+                      placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
+                      suggestions={objectivesSuggestions}
+                    />
                   </FormControl>
                   <FormMessage />
-                  </FormItem>
+                </FormItem>
               )}
-              />
-              <FormField
+            />
+
+            <AdaptationsManager 
+              objectiveIndex={originalIndex} 
+              adaptationsSuggestions={adaptationsSuggestions}
+            />
+
+            <FormField
               control={form.control}
-              name={`objectives.${originalIndex}.validationDate`}
+              name={`objectives.${originalIndex}.successCriteria`}
               render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Date de validation</FormLabel>
+                <FormItem>
+                  <FormLabel>Critère de réussite attendue</FormLabel>
                   <FormControl>
-                      <Input placeholder="JJ/MM/AAAA" {...field} />
+                    <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
                   </FormControl>
                   <FormMessage />
-                  </FormItem>
+                </FormItem>
               )}
-              />
-          </div>
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name={`objectives.${originalIndex}.deadline`}
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Échéance</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Ex: Fin du trimestre" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name={`objectives.${originalIndex}.validationDate`}
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Date de validation</FormLabel>
+                    <FormControl>
+                        <Input placeholder="JJ/MM/AAAA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+          </FormProvider>
         </AccordionContent>
       </AccordionItem>
     );
@@ -402,7 +404,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#abb3dd' }}>
       <CardHeader>
         <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>
         <CardDescription>

@@ -97,7 +97,7 @@ export function GlobalProfileForm({
   }
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#E6E5C5' }}>
       <CardHeader>
         <CardTitle>Profil global de l’élève</CardTitle>
         <CardDescription>
@@ -110,7 +110,7 @@ export function GlobalProfileForm({
             <Accordion type="multiple" className="w-full">
               
               <AccordionItem value="item-1">
-                <AccordionTrigger className="text-lg font-medium">Nature du handicap et troubles associés</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Nature du handicap et troubles associés</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                   <FormField control={form.control} name="disabilityNatures" render={({ field }) => (
                     <FormItem>
@@ -137,7 +137,7 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger className="text-lg font-medium">Santé et besoins médicaux</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Santé et besoins médicaux</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
@@ -178,7 +178,7 @@ export function GlobalProfileForm({
               </AccordionItem>
               
               <AccordionItem value="item-3">
-                <AccordionTrigger className="text-lg font-medium">Développement et autonomie</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Développement et autonomie</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="dailyLifeAutonomy" render={({ field }) => (
                         <FormItem>
@@ -212,7 +212,7 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger className="text-lg font-medium">Histoire scolaire et parcours</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Histoire scolaire et parcours</AccordionTrigger>
                 <AccordionContent className="pt-4">
                     <FormField control={form.control} name="schoolHistory" render={({ field }) => (
                         <FormItem>
@@ -225,7 +225,7 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-5">
-                <AccordionTrigger className="text-lg font-medium">Centres d’intérêt et projet personnel</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Centres d’intérêt et projet personnel</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="hobbies" render={({ field }) => (
                         <FormItem>

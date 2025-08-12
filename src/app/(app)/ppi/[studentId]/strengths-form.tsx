@@ -75,7 +75,7 @@ export function StrengthsForm({
   const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#b4e2cc' }}>
       <CardHeader>
         <CardTitle>Points d'appuis</CardTitle>
         <CardDescription>
@@ -87,7 +87,7 @@ export function StrengthsForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
              <Accordion type="multiple" className="w-full">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium text-green-600 dark:text-green-500">Points forts de l'élève</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-green-800">Points forts de l'élève</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
