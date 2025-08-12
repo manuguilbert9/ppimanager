@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +18,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { addLibraryItems } from '@/lib/library-repository';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw } from 'lucide-react';
+import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
+import type { DragEndEvent } from '@dnd-kit/core';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -36,6 +41,38 @@ interface ObjectivesFormProps {
   objectivesSuggestions: string[];
 }
 
+const SortableObjectiveItem = ({
+  id,
+  index,
+  children,
+}: {
+  id: string;
+  index: number;
+  children: React.ReactNode;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center w-full gap-2">
+      <div {...attributes} {...listeners} className="cursor-grab touch-none p-2">
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <div className="flex-grow">{children}</div>
+    </div>
+  );
+};
+
 export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -48,10 +85,26 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = fields.findIndex((field) => field.id === active.id);
+      const newIndex = fields.findIndex((field) => field.id === over.id);
+      move(oldIndex, newIndex);
+    }
+  };
 
   const handleSuggestObjectives = async () => {
     setIsSuggesting(true);
@@ -157,80 +210,86 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Accordion type="multiple" className="w-full" defaultValue={fields.map(f => f.id)}>
-              {fields.map((field, index) => (
-                <AccordionItem value={field.id} key={field.id}>
-                  <div className="flex items-center w-full">
-                    <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1">
-                      <span>Objectif #{index + 1}: {form.watch(`objectives.${index}.title`) || 'Nouvel objectif'}</span>
-                    </AccordionTrigger>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="ml-2">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                  <AccordionContent className="space-y-4 pt-4">
-                    <FormField
-                      control={form.control}
-                      name={`objectives.${index}.title`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Intitulé de l'objectif</FormLabel>
-                          <FormControl>
-                            <ComboboxField
-                              {...field}
-                              placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
-                              suggestions={objectivesSuggestions}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`objectives.${index}.successCriteria`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Critère de réussite attendue</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                        control={form.control}
-                        name={`objectives.${index}.deadline`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Échéance</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Ex: Fin du trimestre" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name={`objectives.${index}.validationDate`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Date de validation</FormLabel>
-                            <FormControl>
-                                <Input placeholder="JJ/MM/AAAA" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={fields.map(field => field.id)} strategy={verticalListSortingStrategy}>
+                <Accordion type="multiple" className="w-full space-y-2" defaultValue={fields.map(f => f.id)}>
+                  {fields.map((field, index) => (
+                    <SortableObjectiveItem key={field.id} id={field.id} index={index}>
+                      <AccordionItem value={field.id} className="w-full border rounded-md px-4">
+                        <div className="flex items-center w-full">
+                          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2">
+                            <span>Objectif #{index + 1}: {form.watch(`objectives.${index}.title`) || 'Nouvel objectif'}</span>
+                          </AccordionTrigger>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="ml-2">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <AccordionContent className="space-y-4 pt-4">
+                          <FormField
+                            control={form.control}
+                            name={`objectives.${index}.title`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Intitulé de l'objectif</FormLabel>
+                                <FormControl>
+                                  <ComboboxField
+                                    {...field}
+                                    placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
+                                    suggestions={objectivesSuggestions}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`objectives.${index}.successCriteria`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Critère de réussite attendue</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                              control={form.control}
+                              name={`objectives.${index}.deadline`}
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Échéance</FormLabel>
+                                  <FormControl>
+                                      <Input placeholder="Ex: Fin du trimestre" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                              />
+                              <FormField
+                              control={form.control}
+                              name={`objectives.${index}.validationDate`}
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Date de validation</FormLabel>
+                                  <FormControl>
+                                      <Input placeholder="JJ/MM/AAAA" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                              />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </SortableObjectiveItem>
+                  ))}
+                </Accordion>
+              </SortableContext>
+            </DndContext>
             
             <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '' })}>
               <PlusCircle className="mr-2 h-4 w-4" />
