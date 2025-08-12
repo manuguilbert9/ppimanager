@@ -33,7 +33,6 @@ export function ComboboxInput({
   placeholder,
   suggestions = [],
 }: ComboboxInputProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   
@@ -49,10 +48,8 @@ export function ComboboxInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' && inputRef.current) {
-        if (inputValue.trim()) {
-            handleSelect(inputValue);
-        }
+    if (e.key === 'Enter' && inputValue.trim()) {
+        handleSelect(inputValue);
     }
   };
 
@@ -83,7 +80,6 @@ export function ComboboxInput({
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
           <Command onKeyDown={handleKeyDown}>
             <CommandInput 
-                ref={inputRef}
                 placeholder="Rechercher ou créer..."
                 value={inputValue}
                 onValueChange={setInputValue}
