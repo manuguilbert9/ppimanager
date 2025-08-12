@@ -78,9 +78,13 @@ const SortableObjectiveItem = ({
 
 export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [suggestions, setSuggestions] = useState<Objective[]>([]);
+  const [isSuggestingObjectives, setIsSuggestingObjectives] = useState(false);
+  const [objectiveSuggestions, setObjectiveSuggestions] = useState<Objective[]>([]);
+  
+  // State for AI-suggested adaptations, indexed by objective ID
+  const [adaptationSuggestions, setAdaptationSuggestions] = useState<Record<string, string[]>>({});
   const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState<string | null>(null);
+
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -134,8 +138,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   const handleSuggestObjectives = async () => {
-    setIsSuggesting(true);
-    setSuggestions([]);
+    setIsSuggestingObjectives(true);
+    setObjectiveSuggestions([]);
     try {
         const studentProfile: SuggestObjectivesInput = {
             strengths: student.strengths || {},
@@ -144,7 +148,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         };
         
       const result = await suggestObjectives(studentProfile);
-      setSuggestions(result.objectives);
+      setObjectiveSuggestions(result.objectives);
     } catch (error) {
       console.error(error);
       toast({
@@ -153,11 +157,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         description: "Une erreur est survenue lors de la génération des suggestions d'objectifs.",
       });
     } finally {
-      setIsSuggesting(false);
+      setIsSuggestingObjectives(false);
     }
   };
 
-  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string, appendAdaptation: (value: string) => void) => {
+  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string) => {
     const objectiveTitle = form.getValues(`objectives.${objectiveIndex}.title`);
     if (!objectiveTitle) {
       toast({
@@ -171,9 +175,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     setIsSuggestingAdaptations(objectiveId);
     try {
       const result = await suggestAdaptations({ objectiveTitle });
-      result.adaptations.forEach(adaptation => appendAdaptation(adaptation));
-      addLibraryItems(result.adaptations, 'adaptations');
-
+      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+      const newSuggestions = result.adaptations.filter(a => !currentAdaptations.includes(a));
+      
+      setAdaptationSuggestions(prev => ({ ...prev, [objectiveId]: newSuggestions }));
+      
     } catch (error) {
       console.error(error);
       toast({
@@ -187,7 +193,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
 
-  const addSuggestionToForm = (suggestion: Objective) => {
+  const addObjectiveSuggestionToForm = (suggestion: Objective) => {
     append({ 
         id: Math.random().toString(36).substring(7),
         title: suggestion.title, 
@@ -196,7 +202,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         validationDate: '',
         adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations : [],
     });
-    setSuggestions(suggestions.filter(s => s.title !== suggestion.title));
+    setObjectiveSuggestions(objectiveSuggestions.filter(s => s.title !== suggestion.title));
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -226,61 +232,107 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     }
   }
 
-  const AdaptationsFieldArray = ({ objectiveIndex, objectiveId }: { objectiveIndex: number, objectiveId: string }) => {
+  const AdaptationsManager = ({ objectiveIndex, objectiveId }: { objectiveIndex: number, objectiveId: string }) => {
     const { fields, append, remove } = useFieldArray({
       control: form.control,
       name: `objectives.${objectiveIndex}.adaptations`,
     });
+  
+    const [newAdaptation, setNewAdaptation] = useState('');
+    const suggestions = adaptationSuggestions[objectiveId] || [];
+  
+    const addAdaptation = (adaptation: string) => {
+      if (adaptation.trim()) {
+        append(adaptation.trim());
+        addLibraryItems([adaptation.trim()], 'adaptations');
+        // Remove from suggestions if it exists
+        setAdaptationSuggestions(prev => ({
+          ...prev,
+          [objectiveId]: prev[objectiveId]?.filter(s => s !== adaptation) || []
+        }));
+      }
+    };
+  
+    const handleAddClick = () => {
+      addAdaptation(newAdaptation);
+      setNewAdaptation('');
+    };
 
+    const handleSuggestionClick = (suggestion: string) => {
+      addAdaptation(suggestion);
+    };
+  
     return (
       <FormItem>
         <div className="flex items-center justify-between">
-            <FormLabel>Moyens et adaptations</FormLabel>
-            <Button 
-            type="button" 
-            size="sm" 
-            variant="ghost" 
-            onClick={() => handleSuggestAdaptations(objectiveIndex, objectiveId, (value) => append(value))}
+          <FormLabel>Moyens et adaptations</FormLabel>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => handleSuggestAdaptations(objectiveIndex, objectiveId)}
             disabled={isSuggestingAdaptations === objectiveId}
-            >
+          >
             {isSuggestingAdaptations === objectiveId ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
             )}
-            Suggérer
-            </Button>
+            Suggérer par IA
+          </Button>
         </div>
+        
+        {suggestions.length > 0 && (
+          <div className="p-3 bg-accent/50 rounded-md">
+            <p className="text-sm font-medium mb-2">Suggestions :</p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion, index) => (
+                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-            {fields.map((field, index) => (
-            <FormField
-                key={field.id}
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex items-start gap-2">
+              <FormField
                 control={form.control}
                 name={`objectives.${objectiveIndex}.adaptations.${index}`}
                 render={({ field }) => (
-                    <FormItem>
-                        <div className="flex items-start gap-2">
-                        <FormControl>
-                          <Textarea
-                            placeholder="Décrire une adaptation..."
-                            {...field}
-                            className="min-h-[40px] flex-1"
-                          />
-                        </FormControl>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0">
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Textarea
+                        placeholder="Décrire une adaptation..."
+                        {...field}
+                        className="min-h-[40px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-            />
-            ))}
+              />
+              <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 mt-1">
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
+          ))}
         </div>
-        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append('')}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Ajouter une adaptation
-        </Button>
+        
+        <div className="flex items-start gap-2 mt-2">
+           <Textarea
+              placeholder="Écrire une nouvelle adaptation..."
+              value={newAdaptation}
+              onChange={(e) => setNewAdaptation(e.target.value)}
+              className="min-h-[40px] flex-1"
+            />
+            <Button type="button" variant="outline" size="icon" onClick={handleAddClick} className="shrink-0 mt-1" disabled={!newAdaptation.trim()}>
+                <PlusCircle className="h-4 w-4" />
+            </Button>
+        </div>
       </FormItem>
     );
   };
@@ -316,7 +368,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             )}
           />
 
-          <AdaptationsFieldArray objectiveIndex={originalIndex} objectiveId={item.field.id} />
+          <AdaptationsManager objectiveIndex={originalIndex} objectiveId={item.field.id} />
 
           <FormField
             control={form.control}
@@ -391,8 +443,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       </CardHeader>
       <CardContent>
         <div className="mb-6 flex gap-2">
-          <Button type="button" onClick={handleSuggestObjectives} disabled={isSuggesting}>
-            {isSuggesting ? (
+          <Button type="button" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
+            {isSuggestingObjectives ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Génération en cours...
@@ -404,15 +456,15 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               </>
             )}
           </Button>
-           {suggestions.length > 0 && !isSuggesting && (
-            <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggesting}>
+           {objectiveSuggestions.length > 0 && !isSuggestingObjectives && (
+            <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
               <RefreshCw className="mr-2 h-4" />
               Relancer
             </Button>
           )}
         </div>
         
-        {suggestions.length > 0 && (
+        {objectiveSuggestions.length > 0 && (
             <Alert className="mb-6">
                  <WandSparkles className="h-4 w-4" />
                 <AlertTitle>Suggestions d'objectifs</AlertTitle>
@@ -420,8 +472,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                    Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter.
                 </AlertDescription>
                 <div className="mt-4 flex flex-wrap gap-2">
-                    {suggestions.map((suggestion, index) => (
-                        <Button key={index} variant="outline" size="sm" onClick={() => addSuggestionToForm(suggestion)}>
+                    {objectiveSuggestions.map((suggestion, index) => (
+                        <Button key={index} variant="outline" size="sm" onClick={() => addObjectiveSuggestionToForm(suggestion)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             {suggestion.title}
                         </Button>
