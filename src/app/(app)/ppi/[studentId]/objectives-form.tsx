@@ -233,7 +233,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   }
 
   const AdaptationsManager = ({ objectiveIndex, objectiveId }: { objectiveIndex: number, objectiveId: string }) => {
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, update } = useFieldArray({
       control: form.control,
       name: `objectives.${objectiveIndex}.adaptations`,
     });
@@ -291,7 +291,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             <p className="text-sm font-medium mb-2">Suggestions :</p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((suggestion, index) => (
-                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)} className="h-auto whitespace-normal">
+                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)} className="h-auto whitespace-normal text-left">
                   <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
                   {suggestion}
                 </Button>
@@ -303,22 +303,24 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         <div className="space-y-2">
           {fields.map((field, index) => (
             <div key={field.id} className="flex items-start gap-2">
-              <FormField
-                control={form.control}
-                name={`objectives.${objectiveIndex}.adaptations.${index}`}
-                render={({ field }) => (
-                  <div className="flex-1">
-                    <FormControl>
-                      <Textarea
-                        placeholder="Décrire une adaptation..."
-                        {...field}
-                        className="min-h-[40px] w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </div>
-                )}
-              />
+              <div className="flex-1">
+                 <FormField
+                  control={form.control}
+                  name={`objectives.${objectiveIndex}.adaptations.${index}`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Décrire une adaptation..."
+                          {...field}
+                          className="min-h-[40px]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 mt-1">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </Button>
@@ -327,13 +329,15 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         </div>
         
         <div className="flex items-start gap-2 mt-2">
-           <Textarea
-              placeholder="Écrire une nouvelle adaptation..."
+           <div className="flex-1">
+            <ComboboxField
               value={newAdaptation}
-              onChange={(e) => setNewAdaptation(e.target.value)}
-              className="min-h-[40px] flex-1"
+              onChange={setNewAdaptation}
+              placeholder="Rechercher ou créer une adaptation..."
+              suggestions={adaptationsSuggestions}
             />
-            <Button type="button" variant="outline" size="icon" onClick={handleAddClick} className="shrink-0 mt-1" disabled={!newAdaptation.trim()}>
+           </div>
+            <Button type="button" variant="outline" size="icon" onClick={handleAddClick} className="shrink-0" disabled={!newAdaptation.trim()}>
                 <PlusCircle className="h-4 w-4" />
             </Button>
         </div>
