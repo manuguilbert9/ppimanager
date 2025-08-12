@@ -28,7 +28,7 @@ const AppLogo = () => (
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader className="group-data-[collapsible=icon]:-ml-1">
            <AppLogo/>
         </SidebarHeader>
