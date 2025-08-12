@@ -24,6 +24,7 @@ const objectiveSchema = z.object({
   title: z.string().min(1, 'L\'intitulé est requis.'),
   successCriteria: z.string().optional(),
   deadline: z.string().optional(),
+  validationDate: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -80,7 +81,8 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
     append({ 
         title: suggestion.title, 
         successCriteria: suggestion.successCriteria, 
-        deadline: suggestion.deadline 
+        deadline: suggestion.deadline,
+        validationDate: '',
     });
     setSuggestions(suggestions.filter(s => s.title !== suggestion.title));
   }
@@ -197,25 +199,40 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name={`objectives.${index}.deadline`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Échéance</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Fin du trimestre" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name={`objectives.${index}.deadline`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Échéance</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ex: Fin du trimestre" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name={`objectives.${index}.validationDate`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Date de validation</FormLabel>
+                            <FormControl>
+                                <Input placeholder="JJ/MM/AAAA" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
             
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '' })}>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '' })}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>

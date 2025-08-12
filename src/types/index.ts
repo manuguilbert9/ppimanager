@@ -54,6 +54,7 @@ export type Objective = {
   title: string;
   successCriteria?: string;
   deadline?: string;
+  validationDate?: string;
 };
 
 
