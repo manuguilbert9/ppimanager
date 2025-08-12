@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { updateStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
 import type { Student, GlobalProfile } from '@/types';
-import { ComboboxInput } from './combobox-input';
+import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
 
