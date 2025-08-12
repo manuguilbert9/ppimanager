@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { addLibraryItems } from '@/lib/library-repository';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles } from 'lucide-react';
+import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -112,7 +112,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
+        <div className="mb-6 flex gap-2">
           <Button type="button" onClick={handleSuggestObjectives} disabled={isSuggesting}>
             {isSuggesting ? (
               <>
@@ -126,6 +126,12 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
               </>
             )}
           </Button>
+           {suggestions.length > 0 && !isSuggesting && (
+            <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggesting}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Relancer
+            </Button>
+          )}
         </div>
         
         {suggestions.length > 0 && (
