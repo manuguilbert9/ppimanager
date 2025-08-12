@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
+import { suggestAdaptations } from '@/ai/flows/suggest-adaptations-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -79,6 +80,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<Objective[]>([]);
+  const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState<string | null>(null);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,7 +90,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     },
   });
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove, move, update } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
@@ -144,6 +147,40 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       setIsSuggesting(false);
     }
   };
+
+  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string) => {
+    const objectiveTitle = form.getValues(`objectives.${objectiveIndex}.title`);
+    if (!objectiveTitle) {
+      toast({
+        variant: 'destructive',
+        title: 'Intitulé manquant',
+        description: "Veuillez d'abord saisir l'intitulé de l'objectif.",
+      });
+      return;
+    }
+
+    setIsSuggestingAdaptations(objectiveId);
+    try {
+      const result = await suggestAdaptations({ objectiveTitle });
+      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+      const newAdaptations = result.adaptations.filter(a => !currentAdaptations.includes(a));
+      const updatedAdaptations = [...currentAdaptations, ...newAdaptations];
+      
+      const currentObjective = form.getValues(`objectives.${objectiveIndex}`);
+      update(objectiveIndex, { ...currentObjective, adaptations: updatedAdaptations });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de suggestion',
+        description: 'Une erreur est survenue lors de la suggestion d\'adaptations.',
+      });
+    } finally {
+      setIsSuggestingAdaptations(null);
+    }
+  };
+
 
   const addSuggestionToForm = (suggestion: Objective) => {
     append({ 
@@ -207,12 +244,29 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name={`objectives.${originalIndex}.adaptations`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Moyens et adaptations</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Moyens et adaptations</FormLabel>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => handleSuggestAdaptations(originalIndex, item.field.id)}
+                    disabled={isSuggestingAdaptations === item.field.id}
+                  >
+                    {isSuggestingAdaptations === item.field.id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Suggérer
+                  </Button>
+                </div>
                 <FormControl>
                   <ComboboxInput
                     {...field}
