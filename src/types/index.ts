@@ -56,7 +56,7 @@ export type Ppi = {
 export type LibraryItem = {
   id: string;
   text: string;
-  category: 'needs' | 'objectives' | 'adaptations' | 'indicators' | 'disabilityNatures' | 'associatedDisorders' | 'equipments' | 'hobbies';
+  category: 'needs' | 'objectives' | 'adaptations' | 'indicators' | 'disabilityNatures' | 'associatedDisorders' | 'equipments' | 'hobbies' | 'medicalNeeds';
 };
 
 export type Classe = {

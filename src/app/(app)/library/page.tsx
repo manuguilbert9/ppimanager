@@ -33,6 +33,7 @@ export default async function LibraryPage() {
   const associatedDisorders = await getLibraryItems('associatedDisorders');
   const equipments = await getLibraryItems('equipments');
   const hobbies = await getLibraryItems('hobbies');
+  const medicalNeeds = await getLibraryItems('medicalNeeds');
 
   return (
     <>
@@ -55,6 +56,7 @@ export default async function LibraryPage() {
           <TabsTrigger value="associatedDisorders">Troubles associés</TabsTrigger>
           <TabsTrigger value="equipments">Équipements</TabsTrigger>
           <TabsTrigger value="hobbies">Centres d'intérêt</TabsTrigger>
+          <TabsTrigger value="medicalNeeds">Besoins médicaux</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="needs">
@@ -156,6 +158,19 @@ export default async function LibraryPage() {
               </CardHeader>
               <CardContent>
                 <LibraryContent items={hobbies} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="medicalNeeds">
+            <Card>
+              <CardHeader>
+                <CardTitle>Besoins médicaux</CardTitle>
+                <CardDescription>
+                  Liste des besoins médicaux saisis pour les élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={medicalNeeds} />
               </CardContent>
             </Card>
           </TabsContent>

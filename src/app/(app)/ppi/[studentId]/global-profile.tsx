@@ -74,6 +74,9 @@ export function GlobalProfileForm({ student }: { student: Student }) {
       if (values.hobbies && values.hobbies.length > 0) {
         await addLibraryItems(values.hobbies, 'hobbies');
       }
+      if (values.medicalNeeds && values.medicalNeeds.length > 0) {
+        await addLibraryItems(values.medicalNeeds, 'medicalNeeds');
+      }
 
       toast({
         title: 'Profil mis à jour',
