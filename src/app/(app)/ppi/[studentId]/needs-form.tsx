@@ -89,7 +89,7 @@ export function NeedsForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
              <Accordion type="multiple" className="w-full">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium">Identifier les besoins</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-teal-600 dark:text-teal-500">Identifier les besoins</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="pedagogicalAccommodations" render={({ field }) => (
                             <FormItem>

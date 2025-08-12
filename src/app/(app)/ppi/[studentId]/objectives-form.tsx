@@ -176,7 +176,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
     const objectiveContent = (
       <AccordionItem value={field.id} className="w-full border rounded-md px-4 bg-card">
         <div className="flex items-center w-full">
-          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2">
+          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2 text-purple-600 dark:text-purple-500">
             <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
           </AccordionTrigger>
           <Button type="button" variant="ghost" size="icon" onClick={() => remove(originalIndex)} className="ml-2">

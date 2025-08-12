@@ -90,7 +90,7 @@ export function DifficultiesForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
              <Accordion type="multiple" className="w-full">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium">Points de vigilance</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-red-600 dark:text-red-500">Points de vigilance</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="cognitiveDifficulties" render={({ field }) => (
                             <FormItem>
