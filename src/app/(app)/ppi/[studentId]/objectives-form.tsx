@@ -253,7 +253,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                     <FormItem>
                         <div className="flex items-center gap-2">
                         <FormControl>
-                            <Input {...field} placeholder="Décrire une adaptation..." />
+                          <ComboboxField
+                            {...field}
+                            placeholder="Décrire une adaptation..."
+                            suggestions={adaptationsSuggestions}
+                          />
                         </FormControl>
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                             <Trash2 className="h-4 w-4 text-muted-foreground" />

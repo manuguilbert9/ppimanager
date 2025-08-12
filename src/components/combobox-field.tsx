@@ -44,6 +44,11 @@ export function ComboboxField({
     setInputValue(trimmedItem);
     setOpen(false);
   };
+  
+  const handleInputChange = (text: string) => {
+    setInputValue(text);
+    onChange(text);
+  }
 
   const filteredSuggestions = suggestions.filter((item) =>
     item.toLowerCase().includes(inputValue.toLowerCase())
@@ -71,7 +76,7 @@ export function ComboboxField({
           <CommandInput
             placeholder="Rechercher ou créer..."
             value={inputValue}
-            onValueChange={setInputValue}
+            onValueChange={handleInputChange}
           />
           <CommandList>
             <CommandEmpty>Aucun résultat.</CommandEmpty>
