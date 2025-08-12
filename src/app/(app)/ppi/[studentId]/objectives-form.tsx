@@ -151,14 +151,14 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
             <Accordion type="multiple" className="w-full">
               {fields.map((field, index) => (
                 <AccordionItem value={field.id} key={field.id}>
-                  <AccordionTrigger className="text-lg font-medium hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
+                  <div className="flex items-center w-full">
+                    <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1">
                       <span>Objectif #{index + 1}: {form.watch(`objectives.${index}.title`) || 'Nouvel objectif'}</span>
-                       <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); remove(index); }} >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                       </Button>
-                    </div>
-                  </AccordionTrigger>
+                    </AccordionTrigger>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="ml-2">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                   <AccordionContent className="space-y-4 pt-4">
                     <FormField
                       control={form.control}
