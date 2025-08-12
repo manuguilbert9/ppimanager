@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { getPpis } from '@/lib/ppi-repository';
 import type { Ppi } from '@/types';
 import { PpiStatusChanger } from './ppi-status-changer';
+import { ExportPpiButton } from './export-ppi-button';
 
 const PpiSection = ({
   title,
@@ -58,9 +59,12 @@ const PpiSection = ({
                 </TableCell>
                 <TableCell>{ppi.lastUpdate}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/ppi/${ppi.studentId}`}>Voir le PPI</Link>
-                  </Button>
+                    <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href={`/ppi/${ppi.studentId}`}>Voir le PPI</Link>
+                        </Button>
+                        {ppi.status === 'validated' && <ExportPpiButton studentId={ppi.studentId} />}
+                    </div>
                 </TableCell>
               </TableRow>
             ))}
