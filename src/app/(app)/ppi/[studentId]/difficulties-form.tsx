@@ -77,6 +77,8 @@ export function DifficultiesForm({
     }
   }
 
+  const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+
   return (
     <Card>
       <CardHeader>
@@ -95,35 +97,35 @@ export function DifficultiesForm({
                         <FormField control={form.control} name="cognitiveDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés cognitives</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Troubles de l'attention..." {...field} suggestions={cognitiveDifficultiesSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Troubles de l'attention..." {...field} suggestions={cognitiveDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="schoolDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés scolaires</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Niveau en retard..." {...field} suggestions={schoolDifficultiesSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Niveau en retard..." {...field} suggestions={schoolDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="motorDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés motrices et fonctionnelles</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Maladresse graphique..." {...field} suggestions={motorDifficultiesSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Maladresse graphique..." {...field} suggestions={motorDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="socioEmotionalDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés socio-émotionnelles ou comportementales</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Crises, anxiété..." {...field} suggestions={socioEmotionalDifficultiesSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Crises, anxiété..." {...field} suggestions={socioEmotionalDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="disabilityConstraints" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Contraintes liées au handicap</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Pauses fréquentes..." {...field} suggestions={disabilityConstraintsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Pauses fréquentes..." {...field} suggestions={disabilityConstraintsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

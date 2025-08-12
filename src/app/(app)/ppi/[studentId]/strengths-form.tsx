@@ -72,6 +72,8 @@ export function StrengthsForm({
     }
   }
 
+  const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+
   return (
     <Card>
       <CardHeader>
@@ -90,28 +92,28 @@ export function StrengthsForm({
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Compétences académiques acquises</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Sait reconnaître les lettres..." {...field} suggestions={academicSkillsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Sait reconnaître les lettres..." {...field} suggestions={academicSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="cognitiveStrengths" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Forces cognitives et comportementales</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Bonne mémoire visuelle..." {...field} suggestions={cognitiveStrengthsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Bonne mémoire visuelle..." {...field} suggestions={cognitiveStrengthsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="socialSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Habiletés sociales ou communicationnelles préservées</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Cherche à entrer en interaction..." {...field} suggestions={socialSkillsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Cherche à entrer en interaction..." {...field} suggestions={socialSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="exploitableInterests" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Intérêts spécifiques exploitables</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Passion pour la musique..." {...field} suggestions={exploitableInterestsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Passion pour la musique..." {...field} suggestions={exploitableInterestsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

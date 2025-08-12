@@ -26,6 +26,7 @@ interface ComboboxInputProps {
   onChange: (value: string[]) => void;
   placeholder?: string;
   suggestions?: string[];
+  badgeClassName?: string;
 }
 
 export function ComboboxInput({
@@ -33,6 +34,7 @@ export function ComboboxInput({
   onChange,
   placeholder,
   suggestions = [],
+  badgeClassName,
 }: ComboboxInputProps) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
@@ -132,7 +134,7 @@ export function ComboboxInput({
           <Badge
             key={item}
             variant="secondary"
-            className="flex items-center gap-1"
+            className={cn("flex items-center gap-1", badgeClassName)}
           >
             {item}
             <button

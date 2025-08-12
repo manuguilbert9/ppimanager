@@ -76,6 +76,8 @@ export function NeedsForm({
     }
   }
 
+  const badgeClassName = "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200";
+
   return (
     <Card>
       <CardHeader>
@@ -94,35 +96,35 @@ export function NeedsForm({
                         <FormField control={form.control} name="pedagogicalAccommodations" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Besoin d’aménagements pédagogiques</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Documents en gros caractères..." {...field} suggestions={pedagogicalAccommodationsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Documents en gros caractères..." {...field} suggestions={pedagogicalAccommodationsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="humanAssistance" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Besoin d’aide humaine</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Présence d’un AESH..." {...field} suggestions={humanAssistanceSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Présence d’un AESH..." {...field} suggestions={humanAssistanceSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="compensatoryTools" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Besoin d’outils de compensation</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Ordinateur avec synthèse vocale..." {...field} suggestions={compensatoryToolsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Ordinateur avec synthèse vocale..." {...field} suggestions={compensatoryToolsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="specialEducationalApproach" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Besoin en approche éducative particulière</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Structuration visuelle type TEACCH..." {...field} suggestions={specialEducationalApproachSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Structuration visuelle type TEACCH..." {...field} suggestions={specialEducationalApproachSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="complementaryCare" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Besoin de soins ou rééducations complémentaires</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Séances d’orthophonie..." {...field} suggestions={complementaryCareSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Séances d’orthophonie..." {...field} suggestions={complementaryCareSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
