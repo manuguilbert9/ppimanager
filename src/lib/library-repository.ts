@@ -1,7 +1,7 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, query, where, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, query, where, addDoc, writeBatch, doc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { LibraryItem } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -22,8 +22,14 @@ export async function getLibraryItems(category: LibraryItem['category']): Promis
 }
 
 export async function addLibraryItems(items: string[], category: LibraryItem['category']) {
+    if (!items || items.length === 0) {
+        return;
+    }
+    
     try {
         const libraryRef = collection(db, 'library');
+        // Firestore 'in' query can handle up to 30 items.
+        // If you expect more, this would need to be chunked.
         const q = query(libraryRef, where('category', '==', category), where('text', 'in', items));
         const existingDocs = await getDocs(q);
         const existingItems = existingDocs.docs.map(doc => doc.data().text);
@@ -33,7 +39,8 @@ export async function addLibraryItems(items: string[], category: LibraryItem['ca
         if (newItems.length > 0) {
             const batch = writeBatch(db);
             newItems.forEach(itemText => {
-                const docRef = doc(collection(db, 'library'));
+                // Correctly create a new document reference with an auto-generated ID
+                const docRef = doc(collection(db, 'library')); 
                 batch.set(docRef, { text: itemText, category: category });
             });
             await batch.commit();
