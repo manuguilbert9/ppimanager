@@ -47,6 +47,7 @@ export type Student = {
 
 export type Ppi = {
   id: string;
+  studentId: string;
   studentName: string;
   lastUpdate: string;
   status: 'validated' | 'draft' | 'archived';
@@ -55,7 +56,7 @@ export type Ppi = {
 export type LibraryItem = {
   id: string;
   text: string;
-  category: 'needs' | 'objectives' | 'adaptations' | 'indicators';
+  category: 'needs' | 'objectives' | 'adaptations' | 'indicators' | 'disabilityNatures' | 'associatedDisorders' | 'equipments' | 'hobbies';
 };
 
 export type Classe = {

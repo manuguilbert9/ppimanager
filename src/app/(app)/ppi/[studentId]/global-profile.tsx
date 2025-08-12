@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Student, GlobalProfile } from '@/types';
 import { TagInput } from './tag-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { addLibraryItems } from '@/lib/library-repository';
 
 const formSchema = z.object({
   disabilityNature: z.string().optional(),
@@ -59,6 +60,21 @@ export function GlobalProfileForm({ student }: { student: Student }) {
     try {
       const globalProfile: GlobalProfile = values;
       await updateStudent(student.id, { globalProfile });
+      
+      // Add new tags to library
+      if (values.disabilityNature) {
+        await addLibraryItems([values.disabilityNature], 'disabilityNatures');
+      }
+      if (values.associatedDisorders && values.associatedDisorders.length > 0) {
+        await addLibraryItems(values.associatedDisorders, 'associatedDisorders');
+      }
+      if (values.equipment && values.equipment.length > 0) {
+        await addLibraryItems(values.equipment, 'equipments');
+      }
+      if (values.hobbies && values.hobbies.length > 0) {
+        await addLibraryItems(values.hobbies, 'hobbies');
+      }
+
       toast({
         title: 'Profil mis à jour',
         description: `Le profil de ${student.firstName} ${student.lastName} a été enregistré.`,

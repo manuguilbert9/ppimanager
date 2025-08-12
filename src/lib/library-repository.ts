@@ -1,9 +1,10 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, query, where } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, query, where, addDoc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import type { LibraryItem } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 function libraryItemFromDoc(doc: QueryDocumentSnapshot<DocumentData>): LibraryItem {
     const data = doc.data();
@@ -19,6 +20,31 @@ export async function getLibraryItems(category: LibraryItem['category']): Promis
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(libraryItemFromDoc);
 }
+
+export async function addLibraryItems(items: string[], category: LibraryItem['category']) {
+    try {
+        const libraryRef = collection(db, 'library');
+        const q = query(libraryRef, where('category', '==', category), where('text', 'in', items));
+        const existingDocs = await getDocs(q);
+        const existingItems = existingDocs.docs.map(doc => doc.data().text);
+
+        const newItems = items.filter(item => !existingItems.includes(item));
+
+        if (newItems.length > 0) {
+            const batch = writeBatch(db);
+            newItems.forEach(itemText => {
+                const docRef = doc(collection(db, 'library'));
+                batch.set(docRef, { text: itemText, category: category });
+            });
+            await batch.commit();
+            revalidatePath('/library');
+        }
+    } catch (error) {
+        console.error("Error adding library items: ", error);
+        // Do not throw error to not interrupt user flow
+    }
+}
+
 
 export async function getLibraryItemsCount(): Promise<number> {
     const querySnapshot = await getDocs(collection(db, 'library'));

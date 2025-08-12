@@ -19,6 +19,7 @@ const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
         {item.text}
       </li>
     ))}
+    {items.length === 0 && <p className="text-muted-foreground p-2">Aucun élément dans cette catégorie pour le moment.</p>}
   </ul>
 );
 
@@ -28,7 +29,10 @@ export default async function LibraryPage() {
   const objectives = await getLibraryItems('objectives');
   const adaptations = await getLibraryItems('adaptations');
   const indicators = await getLibraryItems('indicators');
-
+  const disabilityNatures = await getLibraryItems('disabilityNatures');
+  const associatedDisorders = await getLibraryItems('associatedDisorders');
+  const equipments = await getLibraryItems('equipments');
+  const hobbies = await getLibraryItems('hobbies');
 
   return (
     <>
@@ -42,11 +46,15 @@ export default async function LibraryPage() {
         </Button>
       </PageHeader>
       <Tabs defaultValue="needs">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto justify-start">
           <TabsTrigger value="needs">Besoins</TabsTrigger>
           <TabsTrigger value="objectives">Objectifs</TabsTrigger>
           <TabsTrigger value="adaptations">Moyens et Adaptations</TabsTrigger>
           <TabsTrigger value="indicators">Indicateurs</TabsTrigger>
+          <TabsTrigger value="disabilityNatures">Diagnostics</TabsTrigger>
+          <TabsTrigger value="associatedDisorders">Troubles associés</TabsTrigger>
+          <TabsTrigger value="equipments">Équipements</TabsTrigger>
+          <TabsTrigger value="hobbies">Centres d'intérêt</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="needs">
@@ -96,6 +104,58 @@ export default async function LibraryPage() {
               </CardHeader>
               <CardContent>
                 <LibraryContent items={indicators} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+           <TabsContent value="disabilityNatures">
+            <Card>
+              <CardHeader>
+                <CardTitle>Diagnostics</CardTitle>
+                <CardDescription>
+                  Liste des diagnostics principaux saisis pour les élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={disabilityNatures} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+           <TabsContent value="associatedDisorders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Troubles associés</CardTitle>
+                <CardDescription>
+                  Liste des troubles associés saisis pour les élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={associatedDisorders} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+           <TabsContent value="equipments">
+            <Card>
+              <CardHeader>
+                <CardTitle>Équipements et appareillages</CardTitle>
+                <CardDescription>
+                  Liste des équipements saisis pour les élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={equipments} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+           <TabsContent value="hobbies">
+            <Card>
+              <CardHeader>
+                <CardTitle>Centres d'intérêt</CardTitle>
+                <CardDescription>
+                  Liste des centres d'intérêt saisis pour les élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={hobbies} />
               </CardContent>
             </Card>
           </TabsContent>
