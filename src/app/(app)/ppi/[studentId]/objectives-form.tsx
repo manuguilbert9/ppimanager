@@ -23,6 +23,7 @@ import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-ob
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { Separator } from '@/components/ui/separator';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -43,11 +44,9 @@ interface ObjectivesFormProps {
 
 const SortableObjectiveItem = ({
   id,
-  index,
   children,
 }: {
   id: string;
-  index: number;
   children: React.ReactNode;
 }) => {
   const {
@@ -96,13 +95,26 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+  
+  const activeObjectives = fields
+    .map((field, index) => ({ field, originalIndex: index }))
+    .filter(({ field, originalIndex }) => !form.watch(`objectives.${originalIndex}.validationDate`));
+
+  const validatedObjectives = fields
+    .map((field, index) => ({ field, originalIndex: index }))
+    .filter(({ field, originalIndex }) => form.watch(`objectives.${originalIndex}.validationDate`));
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = fields.findIndex((field) => field.id === active.id);
-      const newIndex = fields.findIndex((field) => field.id === over.id);
-      move(oldIndex, newIndex);
+      const oldIndexInActive = activeObjectives.findIndex((item) => item.field.id === active.id);
+      const newIndexInActive = activeObjectives.findIndex((item) => item.field.id === over.id);
+      
+      const originalOldIndex = activeObjectives[oldIndexInActive].originalIndex;
+      const originalNewIndex = activeObjectives[newIndexInActive].originalIndex;
+
+      move(originalOldIndex, originalNewIndex);
     }
   };
 
@@ -158,6 +170,99 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
       });
     }
   }
+  
+  const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
+    const { field, originalIndex } = item;
+    const objectiveContent = (
+      <AccordionItem value={field.id} className="w-full border rounded-md px-4 bg-card">
+        <div className="flex items-center w-full">
+          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2">
+            <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
+          </AccordionTrigger>
+          <Button type="button" variant="ghost" size="icon" onClick={() => remove(originalIndex)} className="ml-2">
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+        <AccordionContent className="space-y-4 pt-4">
+          <FormField
+            control={form.control}
+            name={`objectives.${originalIndex}.title`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Intitulé de l'objectif</FormLabel>
+                <FormControl>
+                  <ComboboxField
+                    {...field}
+                    placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
+                    suggestions={objectivesSuggestions}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name={`objectives.${originalIndex}.successCriteria`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Critère de réussite attendue</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+              control={form.control}
+              name={`objectives.${originalIndex}.deadline`}
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Échéance</FormLabel>
+                  <FormControl>
+                      <Input placeholder="Ex: Fin du trimestre" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+              />
+              <FormField
+              control={form.control}
+              name={`objectives.${originalIndex}.validationDate`}
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Date de validation</FormLabel>
+                  <FormControl>
+                      <Input placeholder="JJ/MM/AAAA" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+              />
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    );
+
+    if (isSortable) {
+      return (
+        <SortableObjectiveItem key={field.id} id={field.id}>
+          {objectiveContent}
+        </SortableObjectiveItem>
+      );
+    }
+    
+    return (
+      <div key={field.id} className="flex items-center w-full gap-2">
+        <div className="p-2">
+          <div className="h-5 w-5" /> 
+        </div>
+        <div className="flex-grow">{objectiveContent}</div>
+      </div>
+    );
+  };
 
   return (
     <Card>
@@ -210,83 +315,11 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <h3 className="text-xl font-semibold tracking-tight">Objectifs en cours</h3>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={fields.map(field => field.id)} strategy={verticalListSortingStrategy}>
+              <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
                 <Accordion type="multiple" className="w-full space-y-2" defaultValue={fields.map(f => f.id)}>
-                  {fields.map((field, index) => (
-                    <SortableObjectiveItem key={field.id} id={field.id} index={index}>
-                      <AccordionItem value={field.id} className="w-full border rounded-md px-4">
-                        <div className="flex items-center w-full">
-                          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2">
-                            <span>Objectif #{index + 1}: {form.watch(`objectives.${index}.title`) || 'Nouvel objectif'}</span>
-                          </AccordionTrigger>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="ml-2">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                        <AccordionContent className="space-y-4 pt-4">
-                          <FormField
-                            control={form.control}
-                            name={`objectives.${index}.title`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Intitulé de l'objectif</FormLabel>
-                                <FormControl>
-                                  <ComboboxField
-                                    {...field}
-                                    placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
-                                    suggestions={objectivesSuggestions}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`objectives.${index}.successCriteria`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Critère de réussite attendue</FormLabel>
-                                <FormControl>
-                                  <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <FormField
-                              control={form.control}
-                              name={`objectives.${index}.deadline`}
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Échéance</FormLabel>
-                                  <FormControl>
-                                      <Input placeholder="Ex: Fin du trimestre" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name={`objectives.${index}.validationDate`}
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Date de validation</FormLabel>
-                                  <FormControl>
-                                      <Input placeholder="JJ/MM/AAAA" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </SortableObjectiveItem>
-                  ))}
+                  {activeObjectives.map((item) => renderObjective(item, true))}
                 </Accordion>
               </SortableContext>
             </DndContext>
@@ -295,6 +328,16 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>
+            
+            {validatedObjectives.length > 0 && (
+                <>
+                    <Separator className="my-8" />
+                    <h3 className="text-xl font-semibold tracking-tight">Objectifs atteints</h3>
+                    <Accordion type="multiple" className="w-full space-y-2" defaultValue={fields.map(f => f.id)}>
+                        {validatedObjectives.map((item) => renderObjective(item, false))}
+                    </Accordion>
+                </>
+            )}
 
             <div className="flex justify-end">
               <Button type="submit" disabled={form.formState.isSubmitting}>
