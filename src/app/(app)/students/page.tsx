@@ -28,13 +28,13 @@ export default async function StudentsPage() {
   const classes = await getClasses();
 
   const statusVariant = {
-    active: 'default',
+    validated: 'default',
     draft: 'secondary',
     archived: 'outline',
   } as const;
 
   const statusText = {
-    active: 'Actif',
+    validated: 'Validé',
     draft: 'Brouillon',
     archived: 'Archivé',
   };
@@ -86,7 +86,7 @@ export default async function StudentsPage() {
                 <TableHead>Nom</TableHead>
                 <TableHead>Classe</TableHead>
                 <TableHead>Âge</TableHead>
-                <TableHead>Statut</TableHead>
+                <TableHead>Statut PPI</TableHead>
                 <TableHead>Dernière mise à jour du PPI</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -115,8 +115,8 @@ export default async function StudentsPage() {
                   <TableCell>{student.className}</TableCell>
                   <TableCell>{getAge(student.birthDate)}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[student.status]}>
-                      {statusText[student.status]}
+                    <Badge variant={statusVariant[student.ppiStatus]}>
+                      {statusText[student.ppiStatus]}
                     </Badge>
                   </TableCell>
                   <TableCell>{student.lastUpdate}</TableCell>

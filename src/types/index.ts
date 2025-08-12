@@ -57,6 +57,7 @@ export type Objective = {
   validationDate?: string;
 };
 
+export type PpiStatus = 'draft' | 'validated' | 'archived';
 
 export type Student = {
   id: string;
@@ -72,7 +73,7 @@ export type Student = {
   classId: string;
   className: string; // To avoid joins on list pages
   lastUpdate: string;
-  status: 'active' | 'archived' | 'draft';
+  ppiStatus: PpiStatus;
   avatarUrl: string;
   globalProfile?: GlobalProfile;
   strengths?: Strengths;
@@ -86,7 +87,7 @@ export type Ppi = {
   studentId: string;
   studentName: string;
   lastUpdate: string;
-  status: 'validated' | 'draft' | 'archived';
+  status: PpiStatus;
 };
 
 export type LibraryItem = {

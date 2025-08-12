@@ -23,7 +23,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         classId: data.classId,
         className: classe?.name ?? 'N/A',
         lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
-        status: data.status,
+        ppiStatus: data.ppiStatus || 'draft',
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
         globalProfile: data.globalProfile || {},
         strengths: data.strengths || {},
@@ -48,11 +48,11 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
-            status: 'active',
+            ppiStatus: 'draft',
             lastUpdate: serverTimestamp(),
             avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
             globalProfile: {},
@@ -68,7 +68,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'la
     }
 }
 
-export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl'>>) {
+export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'lastUpdate' | 'avatarUrl'>>) {
     try {
         const studentRef = doc(db, 'students', id);
         await updateDoc(studentRef, {

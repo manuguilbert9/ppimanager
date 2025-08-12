@@ -1,10 +1,11 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Ppi, Student } from '@/types';
+import type { Ppi, Student, PpiStatus } from '@/types';
 import { getStudents } from './students-repository';
+import { revalidatePath } from 'next/cache';
 
 function ppiFromStudent(student: Student): Ppi {
     return {
@@ -12,7 +13,7 @@ function ppiFromStudent(student: Student): Ppi {
         studentId: student.id,
         studentName: `${student.firstName} ${student.lastName}`,
         lastUpdate: student.lastUpdate,
-        status: student.status === 'active' ? 'draft' : 'archived',
+        status: student.ppiStatus || 'draft',
     };
 }
 
@@ -41,4 +42,18 @@ export async function getPpi(id: string): Promise<Ppi | null> {
         };
     }
     return ppiFromStudent(student);
+}
+
+
+export async function updatePpiStatus(studentId: string, status: PpiStatus) {
+    try {
+        const studentRef = doc(db, 'students', studentId);
+        await updateDoc(studentRef, {
+            ppiStatus: status,
+        });
+        revalidatePath('/ppi');
+    } catch (error) {
+        console.error("Error updating PPI status: ", error);
+        throw new Error('Failed to update PPI status');
+    }
 }
