@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,7 +10,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
@@ -19,12 +19,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface ComboboxInputProps {
-  value: string[];
+  value?: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
-  suggestions: string[];
+  suggestions?: string[];
 }
 
 export function ComboboxInput({
@@ -46,9 +47,10 @@ export function ComboboxInput({
         onChange([...value, trimmedItem]);
     }
     setInputValue('');
+    setOpen(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputValue.trim()) {
         e.preventDefault();
         handleSelect(inputValue);
@@ -80,11 +82,13 @@ export function ComboboxInput({
             </PopoverTrigger>
         </div>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-          <Command onKeyDown={handleKeyDown}>
-            <CommandInput 
+          <Command>
+             <Input 
                 placeholder="Rechercher ou créer..."
                 value={inputValue}
-                onValueChange={setInputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="m-1 w-[calc(100%-0.5rem)]"
             />
             <CommandList>
                 <CommandEmpty>
