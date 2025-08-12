@@ -52,7 +52,7 @@ export type Needs = {
 export type Objective = {
   id?: string;
   title: string;
-  adaptations?: string | string[]; // Can be string for textarea or string[] for combobox
+  adaptations?: string[];
   successCriteria?: string;
   deadline?: string;
   validationDate?: string;

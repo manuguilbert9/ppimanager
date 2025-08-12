@@ -29,7 +29,7 @@ import { Separator } from '@/components/ui/separator';
 const objectiveSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, 'L\'intitulé est requis.'),
-  adaptations: z.string().optional(),
+  adaptations: z.array(z.string()).optional(),
   successCriteria: z.string().optional(),
   deadline: z.string().optional(),
   validationDate: z.string().optional(),
@@ -87,7 +87,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     defaultValues: {
       objectives: (student.objectives || []).map(o => ({
         ...o,
-        adaptations: Array.isArray(o.adaptations) ? o.adaptations.join('\n') : o.adaptations || '',
+        adaptations: Array.isArray(o.adaptations) ? o.adaptations : (typeof o.adaptations === 'string' && o.adaptations ? [o.adaptations] : []),
       })),
     },
   });
@@ -150,7 +150,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     }
   };
 
-  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string) => {
+  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string, appendAdaptation: (value: string) => void) => {
     const objectiveTitle = form.getValues(`objectives.${objectiveIndex}.title`);
     if (!objectiveTitle) {
       toast({
@@ -164,12 +164,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     setIsSuggestingAdaptations(objectiveId);
     try {
       const result = await suggestAdaptations({ objectiveTitle });
-      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || '';
-      const newAdaptationsText = result.adaptations.join('\n');
-      const updatedAdaptations = currentAdaptations ? `${currentAdaptations}\n${newAdaptationsText}` : newAdaptationsText;
-      
-      const currentObjective = form.getValues(`objectives.${objectiveIndex}`);
-      update(objectiveIndex, { ...currentObjective, adaptations: updatedAdaptations });
+      result.adaptations.forEach(adaptation => appendAdaptation(adaptation));
       addLibraryItems(result.adaptations, 'adaptations');
 
     } catch (error) {
@@ -191,7 +186,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         successCriteria: suggestion.successCriteria, 
         deadline: suggestion.deadline,
         validationDate: '',
-        adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations.join('\n') : (suggestion.adaptations || ''),
+        adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations : [],
     });
     setSuggestions(suggestions.filter(s => s.title !== suggestion.title));
   }
@@ -200,7 +195,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     try {
       const objectivesToSave = values.objectives.map(o => ({
         ...o,
-        adaptations: o.adaptations?.split('\n').filter(line => line.trim() !== '') || [],
+        adaptations: o.adaptations || [],
       }));
 
       await updateStudent(student.id, { objectives: objectivesToSave });
@@ -222,6 +217,61 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       });
     }
   }
+
+  const AdaptationsFieldArray = ({ objectiveIndex, objectiveId }: { objectiveIndex: number, objectiveId: string }) => {
+    const { fields, append, remove } = useFieldArray({
+      control: form.control,
+      name: `objectives.${objectiveIndex}.adaptations`,
+    });
+
+    return (
+      <FormItem>
+        <div className="flex items-center justify-between">
+            <FormLabel>Moyens et adaptations</FormLabel>
+            <Button 
+            type="button" 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => handleSuggestAdaptations(objectiveIndex, objectiveId, (value) => append(value))}
+            disabled={isSuggestingAdaptations === objectiveId}
+            >
+            {isSuggestingAdaptations === objectiveId ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Suggérer
+            </Button>
+        </div>
+        <div className="space-y-2">
+            {fields.map((field, index) => (
+            <FormField
+                key={field.id}
+                control={form.control}
+                name={`objectives.${objectiveIndex}.adaptations.${index}`}
+                render={({ field }) => (
+                    <FormItem>
+                        <div className="flex items-center gap-2">
+                        <FormControl>
+                            <Input {...field} placeholder="Décrire une adaptation..." />
+                        </FormControl>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            ))}
+        </div>
+        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append('')}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Ajouter une adaptation
+        </Button>
+      </FormItem>
+    );
+  };
   
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
@@ -254,39 +304,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             )}
           />
 
-          <FormField
-            control={form.control}
-            name={`objectives.${originalIndex}.adaptations`}
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Moyens et adaptations</FormLabel>
-                  <Button 
-                    type="button" 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => handleSuggestAdaptations(originalIndex, item.field.id)}
-                    disabled={isSuggestingAdaptations === item.field.id}
-                  >
-                    {isSuggestingAdaptations === item.field.id ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Suggérer
-                  </Button>
-                </div>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    placeholder="Utiliser un plan incliné... (une adaptation par ligne)"
-                    rows={4}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <AdaptationsFieldArray objectiveIndex={originalIndex} objectiveId={item.field.id} />
+
           <FormField
             control={form.control}
             name={`objectives.${originalIndex}.successCriteria`}
@@ -410,7 +429,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               </SortableContext>
             </DndContext>
             
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: '' })}>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>
