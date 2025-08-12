@@ -242,9 +242,13 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     const suggestions = adaptationSuggestions[objectiveId] || [];
   
     const addAdaptation = (adaptation: string) => {
-      if (adaptation.trim()) {
-        append(adaptation.trim());
-        addLibraryItems([adaptation.trim()], 'adaptations');
+      const trimmedAdaptation = adaptation.trim();
+      if (trimmedAdaptation) {
+        const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+        if (!currentAdaptations.includes(trimmedAdaptation)) {
+            append(trimmedAdaptation);
+            addLibraryItems([trimmedAdaptation], 'adaptations');
+        }
         // Remove from suggestions if it exists
         setAdaptationSuggestions(prev => ({
           ...prev,
@@ -303,16 +307,16 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 control={form.control}
                 name={`objectives.${objectiveIndex}.adaptations.${index}`}
                 render={({ field }) => (
-                  <FormItem className="flex-1">
+                  <>
                     <FormControl>
                       <Textarea
                         placeholder="Décrire une adaptation..."
                         {...field}
-                        className="min-h-[40px]"
+                        className="min-h-[40px] flex-1"
                       />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </>
                 )}
               />
               <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 mt-1">
