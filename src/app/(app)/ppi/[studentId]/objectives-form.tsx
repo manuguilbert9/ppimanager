@@ -259,15 +259,15 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 name={`objectives.${objectiveIndex}.adaptations.${index}`}
                 render={({ field }) => (
                     <FormItem>
-                        <div className="flex items-center gap-2">
-                        <FormControl className="flex-1">
-                          <ComboboxField
-                            {...field}
+                        <div className="flex items-start gap-2">
+                        <FormControl>
+                          <Textarea
                             placeholder="Décrire une adaptation..."
-                            suggestions={adaptationsSuggestions}
+                            {...field}
+                            className="min-h-[40px] flex-1"
                           />
                         </FormControl>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0">
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         </div>
@@ -406,7 +406,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
           </Button>
            {suggestions.length > 0 && !isSuggesting && (
             <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggesting}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4" />
               Relancer
             </Button>
           )}
