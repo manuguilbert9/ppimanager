@@ -124,7 +124,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
           Modifier l'élève
         </DropdownMenuItem>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifier l'élève</DialogTitle>
           <DialogDescription>

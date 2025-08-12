@@ -114,7 +114,7 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
           Ajouter un élève
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajouter un nouvel élève</DialogTitle>
           <DialogDescription>
