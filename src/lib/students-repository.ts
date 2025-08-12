@@ -24,7 +24,8 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         className: classe?.name ?? 'N/A',
         lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
         status: data.status,
-        avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`
+        avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
+        globalProfile: data.globalProfile || {},
     };
 }
 
@@ -43,13 +44,14 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
             status: 'active',
             lastUpdate: serverTimestamp(),
-            avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`
+            avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
+            globalProfile: {},
         });
         revalidatePath('/students');
     } catch (error) {
@@ -66,6 +68,7 @@ export async function updateStudent(id: string, student: Partial<Omit<Student, '
             lastUpdate: serverTimestamp()
         });
         revalidatePath('/students');
+        revalidatePath(`/ppi/${id}`);
     } catch (error) {
         console.error("Error updating document: ", error);
         throw new Error('Failed to update student');

@@ -112,7 +112,7 @@ export default async function DashboardPage() {
                     <TableCell>{ppi.lastUpdate}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/ppi/${ppi.id}`}>Voir le PPI</Link>
+                        <Link href={`/ppi/${ppi.studentId}`}>Voir le PPI</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

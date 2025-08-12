@@ -9,6 +9,23 @@ export type FamilyContact = {
   email?: string;
 };
 
+export type GlobalProfile = {
+  disabilityNature?: string;
+  associatedDisorders?: string[];
+  specifics?: string;
+  hasPAI?: boolean;
+  medicalNeeds?: string[];
+  treatments?: string;
+  equipment?: string[];
+  dailyLifeAutonomy?: string;
+  motorSkills?: string;
+  communicationSkills?: string;
+  sensorySkills?: string;
+  schoolHistory?: string;
+  hobbies?: string[];
+  personalProject?: string;
+}
+
 export type Student = {
   id: string;
   firstName: string;
@@ -25,6 +42,7 @@ export type Student = {
   lastUpdate: string;
   status: 'active' | 'archived' | 'draft';
   avatarUrl: string;
+  globalProfile?: GlobalProfile;
 };
 
 export type Ppi = {
