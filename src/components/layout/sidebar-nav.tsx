@@ -4,9 +4,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { FileText, LayoutDashboard, Library, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -22,44 +19,44 @@ export function SidebarNav() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <Link href="/dashboard" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Tableau de bord">
+        <SidebarMenuButton asChild isActive={isActive('/dashboard')} tooltip="Tableau de bord">
+          <Link href="/dashboard">
             <LayoutDashboard />
             Tableau de bord
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <Link href="/students" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/students')} tooltip="Élèves">
+        <SidebarMenuButton asChild isActive={isActive('/students')} tooltip="Élèves">
+          <Link href="/students">
             <Users />
             Élèves
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <Link href="/ppi" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/ppi')} tooltip="PPI">
+        <SidebarMenuButton asChild isActive={isActive('/ppi')} tooltip="PPI">
+          <Link href="/ppi">
             <FileText />
             PPI
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <Link href="/library" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/library')} tooltip="Bibliothèque">
+        <SidebarMenuButton asChild isActive={isActive('/library')} tooltip="Bibliothèque">
+          <Link href="/library">
             <Library />
             Bibliothèque
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <Link href="/settings" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/settings')} tooltip="Paramètres">
+        <SidebarMenuButton asChild isActive={isActive('/settings')} tooltip="Paramètres">
+          <Link href="/settings">
             <Settings />
             Paramètres
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
   );
