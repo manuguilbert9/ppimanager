@@ -40,9 +40,7 @@ export function ComboboxField({
 
   const handleSelect = (item: string) => {
     const trimmedItem = item.trim();
-    if (trimmedItem) {
-      onChange(trimmedItem);
-    }
+    onChange(trimmedItem);
     setInputValue(trimmedItem);
     setOpen(false);
   };
