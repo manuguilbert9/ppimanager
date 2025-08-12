@@ -8,6 +8,7 @@ import { getAllLibraryItems } from "@/lib/library-repository";
 import { DifficultiesForm } from "./difficulties-form";
 import { NeedsForm } from "./needs-form";
 import { ObjectivesForm } from "./objectives-form";
+import { GevascoImporter } from "./gevasco-importer";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
@@ -43,6 +44,7 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
       </PageHeader>
       
       <div className="space-y-8">
+        <GevascoImporter student={student} />
         <GlobalProfileForm 
           student={student} 
           disabilityNaturesSuggestions={getSuggestions('disabilityNatures')}
