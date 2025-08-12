@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -46,7 +47,6 @@ export function ComboboxInput({
         onChange([...value, trimmedItem]);
     }
     setInputValue('');
-    // setOpen(false); // Optionally close on select
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
