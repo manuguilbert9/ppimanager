@@ -8,9 +8,28 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getLibraryItems } from '@/lib/library-repository';
+import { LibraryItem } from '@/types';
 import { PlusCircle } from 'lucide-react';
 
-export default function LibraryPage() {
+const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
+  <ul>
+    {items.map((item) => (
+      <li key={item.id} className="p-2 border-b">
+        {item.text}
+      </li>
+    ))}
+  </ul>
+);
+
+
+export default async function LibraryPage() {
+  const needs = await getLibraryItems('needs');
+  const objectives = await getLibraryItems('objectives');
+  const adaptations = await getLibraryItems('adaptations');
+  const indicators = await getLibraryItems('indicators');
+
+
   return (
     <>
       <PageHeader
@@ -37,7 +56,7 @@ export default function LibraryPage() {
                 <CardDescription>Besoins réutilisables pour les élèves.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p>La liste des besoins sera affichée ici.</p>
+                <LibraryContent items={needs} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -50,7 +69,33 @@ export default function LibraryPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p>La liste des objectifs sera affichée ici.</p>
+                <LibraryContent items={objectives} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="adaptations">
+            <Card>
+              <CardHeader>
+                <CardTitle>Moyens et Adaptations</CardTitle>
+                <CardDescription>
+                  Moyens et adaptations communs pouvant être assignés aux élèves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={adaptations} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="indicators">
+            <Card>
+              <CardHeader>
+                <CardTitle>Indicateurs</CardTitle>
+                <CardDescription>
+                  Indicateurs communs pour le suivi des objectifs.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={indicators} />
               </CardContent>
             </Card>
           </TabsContent>

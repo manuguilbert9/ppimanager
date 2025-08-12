@@ -13,3 +13,9 @@ export type Ppi = {
   lastUpdate: string;
   status: 'validated' | 'draft' | 'archived';
 };
+
+export type LibraryItem = {
+  id: string;
+  text: string;
+  category: 'needs' | 'objectives' | 'adaptations' | 'indicators';
+};

@@ -7,12 +7,12 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "TODO:_REPLACE_ME",
-  authDomain: "TODO:__REPLACE_ME",
-  projectId: "TODO:__REPLACE_ME",
-  storageBucket: "TODO:__REPLACE_ME",
-  messagingSenderId: "TODO:__REPLACE_ME",
-  appId: "TODO:__REPLACE_ME"
+  "projectId": "flashppi",
+  "appId": "1:555605811875:web:f6c3c7f43bd9f7bc1c9516",
+  "storageBucket": "flashppi.firebasestorage.app",
+  "apiKey": "AIzaSyB7fCSlGlVe8qNroFwCmkUqnYwXMf71UPg",
+  "authDomain": "flashppi.firebaseapp.com",
+  "messagingSenderId": "555605811875"
 };
 
 // Initialize Firebase

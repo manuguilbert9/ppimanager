@@ -15,18 +15,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, FileText, Users } from 'lucide-react';
+import { ArrowRight, FileText, Library, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
 import type { Ppi } from '@/types';
+import { getLibraryItemsCount } from '@/lib/library-repository';
 
 export default async function DashboardPage() {
-  const libraryItemsCount = 128; // Mock data
-
   const students = await getStudents();
   const ppis = await getPpis();
+  const libraryItemsCount = await getLibraryItemsCount();
 
   const statusVariant = {
     validated: 'default',
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Éléments de la bibliothèque</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Library className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{libraryItemsCount}</div>
