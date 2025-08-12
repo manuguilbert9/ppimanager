@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -80,6 +81,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<Objective[]>([]);
   const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -355,7 +361,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       </AccordionItem>
     );
 
-    if (isSortable) {
+    if (isSortable && isMounted) {
       return (
         <SortableObjectiveItem key={field.id} id={field.id}>
           {objectiveContent}
@@ -425,13 +431,19 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <h3 className="text-xl font-semibold tracking-tight">Objectifs en cours</h3>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
+            {isMounted ? (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
+                        <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
+                        {activeObjectives.map((item) => renderObjective(item, true))}
+                        </Accordion>
+                    </SortableContext>
+                </DndContext>
+            ) : (
                 <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
-                  {activeObjectives.map((item) => renderObjective(item, true))}
+                    {activeObjectives.map((item) => renderObjective(item, false))}
                 </Accordion>
-              </SortableContext>
-            </DndContext>
+            )}
             
             <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -459,3 +471,4 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     </Card>
   );
 }
+
