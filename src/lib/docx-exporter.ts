@@ -1,3 +1,4 @@
+
 'use server';
 
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType } from 'docx';
@@ -60,7 +61,7 @@ function createParagraph(label: string, value?: string) {
 }
 
 function createTextareaContent(label: string, value?: string) {
-    if (!value) return null;
+    if (!value) return [];
     return [
         new Paragraph({
             children: [new TextRun({ text: label, bold: true, underline: {} })],
