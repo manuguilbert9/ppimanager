@@ -63,6 +63,8 @@ export function ComboboxInput({
       item.toLowerCase().includes(inputValue.toLowerCase())
   );
 
+  const showCreateOption = inputValue.trim() && !filteredSuggestions.some(s => s.toLowerCase() === inputValue.trim().toLowerCase());
+
   return (
     <div className="flex flex-col gap-2">
        <Popover open={open} onOpenChange={setOpen}>
@@ -92,19 +94,18 @@ export function ComboboxInput({
             />
             <CommandList>
                 <CommandEmpty>
-                    {inputValue.trim() && !filteredSuggestions.some(s => s.toLowerCase() === inputValue.trim().toLowerCase()) ? (
-                         <CommandItem
-                            onSelect={() => handleSelect(inputValue)}
-                            className="flex items-center gap-2"
-                            >
-                            <PlusCircle className="h-4 w-4" />
-                            <span>Créer "{inputValue}"</span>
-                        </CommandItem>
-                    ) : (
-                        <span>Aucun résultat.</span>
-                    )}
+                    <span>Aucun résultat.</span>
                 </CommandEmpty>
                 <CommandGroup>
+                {showCreateOption && (
+                    <CommandItem
+                        onSelect={() => handleSelect(inputValue)}
+                        className="flex items-center gap-2"
+                        >
+                        <PlusCircle className="h-4 w-4" />
+                        <span>Créer "{inputValue}"</span>
+                    </CommandItem>
+                )}
                 {filteredSuggestions.map((item) => (
                   <CommandItem
                     key={item}
