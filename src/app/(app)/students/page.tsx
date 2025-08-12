@@ -25,10 +25,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { students } from '@/data/mock';
 import Link from 'next/link';
+import { getStudents } from '@/lib/students-repository';
+import type { Student } from '@/types';
 
-export default function StudentsPage() {
+export default async function StudentsPage() {
+  const students = await getStudents();
+
   const statusVariant = {
     active: 'default',
     draft: 'secondary',
@@ -72,7 +75,7 @@ export default function StudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student) => (
+              {students.map((student: Student) => (
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">

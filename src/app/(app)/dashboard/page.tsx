@@ -15,13 +15,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { students, ppis } from '@/data/mock';
 import { ArrowRight, FileText, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { getStudents } from '@/lib/students-repository';
+import { getPpis } from '@/lib/ppi-repository';
+import type { Ppi } from '@/types';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const libraryItemsCount = 128; // Mock data
+
+  const students = await getStudents();
+  const ppis = await getPpis();
 
   const statusVariant = {
     validated: 'default',
@@ -55,7 +60,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ppis.filter(p => p.status !== 'archived').length}</div>
+            <div className="text-2xl font-bold">{ppis.filter((p: Ppi) => p.status !== 'archived').length}</div>
             <p className="text-xs text-muted-foreground">Pour tous les élèves</p>
           </CardContent>
         </Card>
@@ -98,7 +103,7 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ppis.slice(0, 5).map(ppi => (
+                {ppis.slice(0, 5).map((ppi: Ppi) => (
                   <TableRow key={ppi.id}>
                     <TableCell className="font-medium">{ppi.studentName}</TableCell>
                     <TableCell>
