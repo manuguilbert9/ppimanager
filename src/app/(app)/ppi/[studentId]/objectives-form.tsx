@@ -291,8 +291,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             <p className="text-sm font-medium mb-2">Suggestions :</p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((suggestion, index) => (
-                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
+                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)} className="h-auto whitespace-normal">
+                  <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
                   {suggestion}
                 </Button>
               ))}
@@ -307,16 +307,16 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 control={form.control}
                 name={`objectives.${objectiveIndex}.adaptations.${index}`}
                 render={({ field }) => (
-                  <>
+                  <div className="flex-1">
                     <FormControl>
                       <Textarea
                         placeholder="Décrire une adaptation..."
                         {...field}
-                        className="min-h-[40px] flex-1"
+                        className="min-h-[40px] w-full"
                       />
                     </FormControl>
                     <FormMessage />
-                  </>
+                  </div>
                 )}
               />
               <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 mt-1">
