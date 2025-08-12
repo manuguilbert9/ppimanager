@@ -41,14 +41,17 @@ export function ComboboxInput({
   };
 
   const handleSelect = (item: string) => {
-    if (!value.includes(item)) {
-        onChange([...value, item]);
+    const trimmedItem = item.trim();
+    if (trimmedItem && !value.includes(trimmedItem)) {
+        onChange([...value, trimmedItem]);
     }
     setInputValue('');
+    // setOpen(false); // Optionally close on select
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && inputValue.trim()) {
+        e.preventDefault();
         handleSelect(inputValue);
     }
   };
@@ -71,7 +74,7 @@ export function ComboboxInput({
                 className="w-full justify-between"
                 >
                 <span className="truncate">
-                    {placeholder}
+                    {placeholder || "Sélectionner..."}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
