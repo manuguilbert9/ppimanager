@@ -43,6 +43,7 @@ export default async function ClassesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Enseignant</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -53,6 +54,9 @@ export default async function ClassesPage() {
                 <TableRow key={classe.id}>
                   <TableCell className="font-medium">
                       {classe.name}
+                  </TableCell>
+                  <TableCell>
+                      {classe.teacherName}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">

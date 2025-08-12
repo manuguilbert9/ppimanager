@@ -10,6 +10,7 @@ function classeFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData):
     return {
         id: doc.id,
         name: data.name,
+        teacherName: data.teacherName,
     };
 }
 
@@ -28,7 +29,7 @@ export async function getClasse(id: string): Promise<Classe | null> {
     return classeFromDoc(docSnap);
 }
 
-export async function addClasse(classe: { name: string; }) {
+export async function addClasse(classe: { name: string; teacherName: string; }) {
     try {
         await addDoc(collection(db, 'classes'), classe);
         revalidatePath('/classes');
@@ -38,7 +39,7 @@ export async function addClasse(classe: { name: string; }) {
     }
 }
 
-export async function updateClasse(id: string, classe: { name: string; }) {
+export async function updateClasse(id: string, classe: { name: string; teacherName: string; }) {
     try {
         const classeRef = doc(db, 'classes', id);
         await updateDoc(classeRef, classe);

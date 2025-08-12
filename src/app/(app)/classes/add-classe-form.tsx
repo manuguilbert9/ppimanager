@@ -32,6 +32,9 @@ const formSchema = z.object({
   name: z.string().min(1, {
     message: 'Le nom de la classe est requis.',
   }),
+  teacherName: z.string().min(1, {
+    message: "Le nom de l'enseignant est requis.",
+  }),
 });
 
 export function AddClasseForm() {
@@ -43,6 +46,7 @@ export function AddClasseForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      teacherName: '',
     },
   });
 
@@ -92,6 +96,19 @@ export function AddClasseForm() {
                     <FormLabel>Nom de la classe</FormLabel>
                     <FormControl>
                       <Input placeholder="ex: CM2" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="teacherName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom de l'enseignant</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ex: Mr. Dupont" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

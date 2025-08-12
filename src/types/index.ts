@@ -1,3 +1,14 @@
+export type FamilyContact = {
+  id?: string;
+  title: string;
+  name: string;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+};
+
 export type Student = {
   id: string;
   firstName: string;
@@ -6,12 +17,9 @@ export type Student = {
   sex?: 'male' | 'female' | 'other';
   school?: string;
   level?: string;
-  mdphNotification?: string;
-  admissionDate?: string;
-  reviewDate?: string;
-  referents?: string; // enseignants, éducateurs, etc.
-  familyContacts?: string;
-  parentalAuthority?: string;
+  mdphNotificationTitle?: string;
+  mdphNotificationExpiration?: string;
+  familyContacts: FamilyContact[];
   classId: string;
   className: string; // To avoid joins on list pages
   lastUpdate: string;
@@ -35,4 +43,5 @@ export type LibraryItem = {
 export type Classe = {
     id: string;
     name: string;
+    teacherName: string;
 };
