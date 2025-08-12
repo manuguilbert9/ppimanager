@@ -4,12 +4,18 @@ import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlobalProfileForm } from "./global-profile";
 import { StrengthsForm } from "./strengths-form";
+import { getAllLibraryItems } from "@/lib/library-repository";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
+  const libraryItems = await getAllLibraryItems();
 
   if (!student) {
     notFound();
+  }
+  
+  const getSuggestions = (category: string) => {
+    return libraryItems.filter(item => item.category === category).map(item => item.text);
   }
 
   return (
@@ -34,8 +40,21 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
       </PageHeader>
       
       <div className="space-y-8">
-        <GlobalProfileForm student={student} />
-        <StrengthsForm student={student} />
+        <GlobalProfileForm 
+          student={student} 
+          disabilityNaturesSuggestions={getSuggestions('disabilityNatures')}
+          associatedDisordersSuggestions={getSuggestions('associatedDisorders')}
+          medicalNeedsSuggestions={getSuggestions('medicalNeeds')}
+          equipmentSuggestions={getSuggestions('equipment')}
+          hobbiesSuggestions={getSuggestions('hobbies')}
+        />
+        <StrengthsForm
+          student={student}
+          academicSkillsSuggestions={getSuggestions('academicSkills')}
+          cognitiveStrengthsSuggestions={getSuggestions('cognitiveStrengths')}
+          socialSkillsSuggestions={getSuggestions('socialSkills')}
+          exploitableInterestsSuggestions={getSuggestions('exploitableInterests')}
+        />
       </div>
     </>
   );

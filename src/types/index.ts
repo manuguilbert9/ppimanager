@@ -64,7 +64,20 @@ export type Ppi = {
 export type LibraryItem = {
   id: string;
   text: string;
-  category: 'needs' | 'objectives' | 'adaptations' | 'indicators' | 'academicSkills' | 'cognitiveStrengths' | 'socialSkills' | 'exploitableInterests';
+  category: 
+    | 'needs' 
+    | 'objectives' 
+    | 'adaptations' 
+    | 'indicators' 
+    | 'academicSkills' 
+    | 'cognitiveStrengths' 
+    | 'socialSkills' 
+    | 'exploitableInterests'
+    | 'disabilityNatures'
+    | 'associatedDisorders'
+    | 'medicalNeeds'
+    | 'equipment'
+    | 'hobbies';
 };
 
 export type Classe = {

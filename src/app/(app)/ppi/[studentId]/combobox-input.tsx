@@ -1,0 +1,156 @@
+'use client';
+
+import * as React from 'react';
+import { Check, ChevronsUpDown, PlusCircle, X } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+
+interface ComboboxInputProps {
+  value: string[];
+  onChange: (value: string[]) => void;
+  placeholder?: string;
+  suggestions: string[];
+}
+
+export function ComboboxInput({
+  value = [],
+  onChange,
+  placeholder,
+  suggestions = [],
+}: ComboboxInputProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState('');
+  
+  const handleUnselect = (item: string) => {
+    onChange(value.filter((i) => i !== item));
+  };
+
+  const handleSelect = (item: string) => {
+    if (!value.includes(item)) {
+        onChange([...value, item]);
+    }
+    setInputValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && inputRef.current) {
+        if (inputValue.trim()) {
+            handleSelect(inputValue);
+        }
+    }
+  };
+
+  const filteredSuggestions = suggestions.filter(
+    (item) =>
+      !value.includes(item) &&
+      item.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+       <Popover open={open} onOpenChange={setOpen}>
+        <div className="flex gap-2">
+            <PopoverTrigger asChild>
+                <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between"
+                >
+                <span className="truncate">
+                    {placeholder}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+        </div>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command onKeyDown={handleKeyDown}>
+            <CommandInput 
+                ref={inputRef}
+                placeholder="Rechercher ou créer..."
+                value={inputValue}
+                onValueChange={setInputValue}
+            />
+            <CommandList>
+                <CommandEmpty>
+                    {inputValue.trim() && !filteredSuggestions.some(s => s.toLowerCase() === inputValue.trim().toLowerCase()) ? (
+                         <CommandItem
+                            onSelect={() => handleSelect(inputValue)}
+                            className="flex items-center gap-2"
+                            >
+                            <PlusCircle className="h-4 w-4" />
+                            <span>Créer "{inputValue}"</span>
+                        </CommandItem>
+                    ) : (
+                        <span>Aucun résultat.</span>
+                    )}
+                </CommandEmpty>
+                <CommandGroup>
+                {filteredSuggestions.map((item) => (
+                  <CommandItem
+                    key={item}
+                    value={item}
+                    onSelect={() => handleSelect(item)}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        value.includes(item) ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {item}
+                  </CommandItem>
+                ))}
+                </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <div className="flex flex-wrap gap-1">
+        {value.map((item) => (
+          <Badge
+            key={item}
+            variant="secondary"
+            className="flex items-center gap-1"
+          >
+            {item}
+            <button
+              type="button"
+              className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleUnselect(item);
+                }
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={() => handleUnselect(item)}
+            >
+              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { updateStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
 import type { Student, Strengths } from '@/types';
-import { TagInput } from './tag-input';
+import { ComboboxInput } from './combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
 
@@ -20,7 +20,22 @@ const formSchema = z.object({
   exploitableInterests: z.array(z.string()).optional(),
 });
 
-export function StrengthsForm({ student }: { student: Student }) {
+interface StrengthsFormProps {
+  student: Student;
+  academicSkillsSuggestions: string[];
+  cognitiveStrengthsSuggestions: string[];
+  socialSkillsSuggestions: string[];
+  exploitableInterestsSuggestions: string[];
+}
+
+
+export function StrengthsForm({ 
+  student, 
+  academicSkillsSuggestions, 
+  cognitiveStrengthsSuggestions,
+  socialSkillsSuggestions,
+  exploitableInterestsSuggestions
+}: StrengthsFormProps) {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -75,28 +90,28 @@ export function StrengthsForm({ student }: { student: Student }) {
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Compétences académiques acquises</FormLabel>
-                                <FormControl><TagInput placeholder="Sait reconnaître les lettres..." {...field} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Sait reconnaître les lettres..." {...field} suggestions={academicSkillsSuggestions} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="cognitiveStrengths" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Forces cognitives et comportementales</FormLabel>
-                                <FormControl><TagInput placeholder="Bonne mémoire visuelle..." {...field} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Bonne mémoire visuelle..." {...field} suggestions={cognitiveStrengthsSuggestions} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="socialSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Habiletés sociales ou communicationnelles préservées</FormLabel>
-                                <FormControl><TagInput placeholder="Cherche à entrer en interaction..." {...field} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Cherche à entrer en interaction..." {...field} suggestions={socialSkillsSuggestions} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="exploitableInterests" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Intérêts spécifiques exploitables</FormLabel>
-                                <FormControl><TagInput placeholder="Passion pour la musique..." {...field} /></FormControl>
+                                <FormControl><ComboboxInput placeholder="Passion pour la musique..." {...field} suggestions={exploitableInterestsSuggestions} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

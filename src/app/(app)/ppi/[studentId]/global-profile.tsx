@@ -12,8 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { updateStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
 import type { Student, GlobalProfile } from '@/types';
-import { TagInput } from './tag-input';
+import { ComboboxInput } from './combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { addLibraryItems } from '@/lib/library-repository';
 
 const formSchema = z.object({
   disabilityNatures: z.array(z.string()).optional(),
@@ -32,7 +33,23 @@ const formSchema = z.object({
   personalProject: z.string().optional(),
 });
 
-export function GlobalProfileForm({ student }: { student: Student }) {
+interface GlobalProfileFormProps {
+  student: Student;
+  disabilityNaturesSuggestions: string[];
+  associatedDisordersSuggestions: string[];
+  medicalNeedsSuggestions: string[];
+  equipmentSuggestions: string[];
+  hobbiesSuggestions: string[];
+}
+
+export function GlobalProfileForm({ 
+  student, 
+  disabilityNaturesSuggestions,
+  associatedDisordersSuggestions,
+  medicalNeedsSuggestions,
+  equipmentSuggestions,
+  hobbiesSuggestions
+}: GlobalProfileFormProps) {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -59,6 +76,12 @@ export function GlobalProfileForm({ student }: { student: Student }) {
     try {
       const globalProfile: GlobalProfile = values;
       await updateStudent(student.id, { globalProfile });
+
+      if (values.disabilityNatures) addLibraryItems(values.disabilityNatures, 'disabilityNatures');
+      if (values.associatedDisorders) addLibraryItems(values.associatedDisorders, 'associatedDisorders');
+      if (values.medicalNeeds) addLibraryItems(values.medicalNeeds, 'medicalNeeds');
+      if (values.equipment) addLibraryItems(values.equipment, 'equipment');
+      if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
       
       toast({
         title: 'Profil mis à jour',
@@ -92,14 +115,14 @@ export function GlobalProfileForm({ student }: { student: Student }) {
                   <FormField control={form.control} name="disabilityNatures" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Diagnostics principaux</FormLabel>
-                      <FormControl><TagInput placeholder="Ajouter un diagnostic..." {...field} /></FormControl>
+                      <FormControl><ComboboxInput placeholder="Ajouter un diagnostic..." {...field} suggestions={disabilityNaturesSuggestions} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="associatedDisorders" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Autres troubles ou déficiences associées</FormLabel>
-                      <FormControl><TagInput {...field} placeholder="Ajouter un trouble..." /></FormControl>
+                      <FormControl><ComboboxInput {...field} placeholder="Ajouter un trouble..." suggestions={associatedDisordersSuggestions} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -121,14 +144,14 @@ export function GlobalProfileForm({ student }: { student: Student }) {
                             <FormField control={form.control} name="medicalNeeds" render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Besoins médicaux spécifiques</FormLabel>
-                                <FormControl><TagInput {...field} placeholder="Ajouter un besoin..." /></FormControl>
+                                <FormControl><ComboboxInput {...field} placeholder="Ajouter un besoin..." suggestions={medicalNeedsSuggestions} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="equipment" render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Appareillages</FormLabel>
-                                <FormControl><TagInput {...field} placeholder="Ajouter un appareillage..." /></FormControl>
+                                <FormControl><ComboboxInput {...field} placeholder="Ajouter un appareillage..." suggestions={equipmentSuggestions} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )} />
@@ -207,7 +230,7 @@ export function GlobalProfileForm({ student }: { student: Student }) {
                     <FormField control={form.control} name="hobbies" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Centres d'intérêt et points de motivation</FormLabel>
-                            <FormControl><TagInput {...field} placeholder="Ajouter un centre d'intérêt..." /></FormControl>
+                            <FormControl><ComboboxInput {...field} placeholder="Ajouter un centre d'intérêt..." suggestions={hobbiesSuggestions} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />

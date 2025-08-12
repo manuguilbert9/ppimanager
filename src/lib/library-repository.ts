@@ -6,13 +6,18 @@ import { db } from './firebase';
 import type { LibraryItem } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-function libraryItemFromDoc(doc: QueryDocumentSnapshot<DocumentData>): LibraryItem {
+function libraryItemFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): LibraryItem {
     const data = doc.data();
     return {
         id: doc.id,
         text: data.text,
         category: data.category,
     };
+}
+
+export async function getAllLibraryItems(): Promise<LibraryItem[]> {
+    const querySnapshot = await getDocs(collection(db, 'library'));
+    return querySnapshot.docs.map(libraryItemFromDoc);
 }
 
 export async function getLibraryItems(category: LibraryItem['category']): Promise<LibraryItem[]> {
@@ -28,23 +33,22 @@ export async function addLibraryItems(items: string[], category: LibraryItem['ca
     
     try {
         const libraryRef = collection(db, 'library');
-        // Firestore 'in' query can handle up to 30 items.
-        // If you expect more, this would need to be chunked.
-        const q = query(libraryRef, where('category', '==', category), where('text', 'in', items));
-        const existingDocs = await getDocs(q);
-        const existingItems = existingDocs.docs.map(doc => doc.data().text);
+        const itemsInDBQuery = query(libraryRef, where('category', '==', category), where('text', 'in', items.slice(0, 30)));
+        
+        const existingDocs = await getDocs(itemsInDBQuery);
+        const existingItems = existingDocs.docs.map(doc => doc.data().text as string);
 
         const newItems = items.filter(item => !existingItems.includes(item));
 
         if (newItems.length > 0) {
             const batch = writeBatch(db);
             newItems.forEach(itemText => {
-                // Correctly create a new document reference with an auto-generated ID
                 const docRef = doc(collection(db, 'library')); 
                 batch.set(docRef, { text: itemText, category: category });
             });
             await batch.commit();
             revalidatePath('/library');
+            revalidatePath('/ppi/*');
         }
     } catch (error) {
         console.error("Error adding library items: ", error);
