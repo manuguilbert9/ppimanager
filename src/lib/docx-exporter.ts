@@ -1,74 +1,193 @@
 
 'use server';
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType } from 'docx';
-import type { Student, Objective, FamilyContact } from '@/types';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation } from 'docx';
+import type { Student } from '@/types';
 
-function createSection(title: string, children: any[], pageBreak = true) {
-    const section = [
-        new Paragraph({
-            children: [
-                new TextRun({
-                    text: title,
-                    bold: true,
-                    size: 32, // 16pt
-                }),
-            ],
-            heading: HeadingLevel.HEADING_1,
-            spacing: { after: 200 },
-        }),
-        ...children,
-    ];
-    if (pageBreak) {
-        section.push(new Paragraph({ children: [new PageBreak()] }));
-    }
-    return section;
-}
+const HEADING_COLOR = "4F46E5"; // A nice shade of purple, similar to primary color
+const TABLE_WIDTH = 9000;
+const FULL_WIDTH = {
+    size: TABLE_WIDTH,
+    type: WidthType.DXA,
+};
+const TWO_COL_WIDTHS = [TABLE_WIDTH * 0.3, TABLE_WIDTH * 0.7];
 
-function createSubHeading(text: string) {
-    return new Paragraph({
+const NO_BORDER = {
+    top: { style: "none", size: 0, color: "FFFFFF" },
+    bottom: { style: "none", size: 0, color: "FFFFFF" },
+    left: { style: "none", size: 0, color: "FFFFFF" },
+    right: { style: "none", size: 0, color: "FFFFFF" },
+};
+
+function createSectionTitle(title: string): TableRow {
+    return new TableRow({
         children: [
-            new TextRun({
-                text,
-                bold: true,
-                size: 28, // 14pt
+            new TableCell({
+                children: [new Paragraph({
+                    children: [new TextRun({
+                        text: title,
+                        bold: true,
+                        size: 32, // 16pt
+                        color: "FFFFFF"
+                    })],
+                    alignment: AlignmentType.CENTER,
+                })],
+                shading: {
+                    type: ShadingType.SOLID,
+                    color: HEADING_COLOR,
+                    fill: HEADING_COLOR,
+                },
+                verticalAlign: VerticalAlign.CENTER,
+                columnSpan: 2,
+                margins: { top: 200, bottom: 200 },
             }),
         ],
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 400, after: 200 },
+        tableHeader: true,
     });
 }
 
-function createListItem(text: string) {
-    return new Paragraph({
-        text,
-        bullet: {
-            level: 0,
-        },
-        style: "default",
-    });
-}
-
-function createParagraph(label: string, value?: string) {
-    if (!value) return null;
-    return new Paragraph({
+function createSubHeadingRow(text: string): TableRow {
+    return new TableRow({
         children: [
-            new TextRun({ text: `${label}: `, bold: true }),
-            new TextRun(value),
+            new TableCell({
+                children: [new Paragraph({
+                    children: [new TextRun({
+                        text,
+                        bold: true,
+                        size: 28, // 14pt
+                        color: HEADING_COLOR,
+                    })],
+                })],
+                columnSpan: 2,
+                margins: { top: 300, bottom: 100 },
+                borders: NO_BORDER,
+            }),
         ],
-        spacing: { after: 100 },
     });
 }
 
-function createTextareaContent(label: string, value?: string) {
-    if (!value) return [];
+function createDataRow(label: string, value?: string): TableRow | null {
+    if (!value) return null;
+    return new TableRow({
+        children: [
+            new TableCell({
+                children: [new Paragraph({
+                    children: [new TextRun({ text: label, bold: true })],
+                    style: "default",
+                })],
+                verticalAlign: VerticalAlign.TOP,
+                borders: NO_BORDER,
+                width: { size: TWO_COL_WIDTHS[0], type: WidthType.DXA },
+            }),
+            new TableCell({
+                children: [new Paragraph({ text: value, style: "default" })],
+                verticalAlign: VerticalAlign.TOP,
+                borders: NO_BORDER,
+                width: { size: TWO_COL_WIDTHS[1], type: WidthType.DXA },
+            }),
+        ],
+    });
+}
+
+function createListRow(label: string, items?: string[]): TableRow[] {
+    if (!items || items.length === 0) {
+        return [];
+    }
+        
+    const content = items.map(item => new Paragraph({ text: item, bullet: { level: 0 }, style: "default" }));
+        
     return [
-        new Paragraph({
-            children: [new TextRun({ text: label, bold: true, underline: {} })],
-            spacing: { before: 200, after: 100 },
+        new TableRow({
+            children: [
+                new TableCell({
+                    children: [new Paragraph({
+                        children: [new TextRun({ text: label, bold: true, underline: {} })],
+                        style: "default",
+                    })],
+                    columnSpan: 2,
+                    borders: NO_BORDER,
+                    margins: { top: 200, bottom: 50 },
+                }),
+            ],
         }),
-        ...value.split('\n').map(line => new Paragraph({ text: line, style: "default" })),
-    ].filter(p => p !== null);
+        new TableRow({
+            children: [
+                 new TableCell({
+                    children: content,
+                    columnSpan: 2,
+                    borders: NO_BORDER,
+                    margins: { left: 400 },
+                }),
+            ]
+        })
+    ];
+}
+
+function createTextareaRow(label: string, value?: string): TableRow[] {
+    if (!value || !value.trim()) {
+        return [];
+    }
+
+    const content = value.split('\n').map(line => new Paragraph({ text: line, style: "default" }));
+        
+     return [
+        new TableRow({
+            children: [
+                new TableCell({
+                    children: [new Paragraph({
+                        children: [new TextRun({ text: label, bold: true, underline: {} })],
+                        style: "default",
+                    })],
+                    columnSpan: 2,
+                    borders: NO_BORDER,
+                    margins: { top: 200, bottom: 50 },
+                }),
+            ],
+        }),
+        new TableRow({
+            children: [
+                 new TableCell({
+                    children: content,
+                    columnSpan: 2,
+                    borders: NO_BORDER,
+                    margins: { left: 200 },
+                }),
+            ]
+        })
+    ];
+}
+
+function createSpacerRow(): TableRow {
+    return new TableRow({
+        children: [
+            new TableCell({
+                children: [new Paragraph("")],
+                columnSpan: 2,
+                borders: NO_BORDER
+            }),
+        ],
+    });
+}
+
+
+function createSection(title: string, rows: (TableRow | null | (TableRow | null)[])[], pageBreakBefore = true) {
+    const tableRows = [
+        createSectionTitle(title),
+        ...rows.flat().filter((row): row is TableRow => row !== null),
+    ];
+
+    const sectionChildren: (Table | Paragraph)[] = [
+        new Table({
+            rows: tableRows,
+            width: FULL_WIDTH,
+        })
+    ];
+    
+    if (pageBreakBefore) {
+        sectionChildren.unshift(new Paragraph({ children: [new PageBreak()] }));
+    }
+    
+    return sectionChildren;
 }
 
 
@@ -83,13 +202,21 @@ export async function generateDocx(student: Student): Promise<Blob> {
                     next: "Normal",
                     quickFormat: true,
                     run: {
-                        size: 24, // 12pt
+                        size: 22, // 11pt
+                        font: "Calibri",
                     },
+                    paragraph: {
+                        spacing: { after: 100 },
+                    }
                 },
             ],
         },
         sections: [{
-            properties: {},
+            properties: {
+                 page: {
+                    margin: { top: 720, right: 720, bottom: 720, left: 720 }, // 0.5 inch margins
+                 },
+            },
             children: [
                 // Part 1: Page de Garde
                 new Paragraph({
@@ -124,115 +251,93 @@ export async function generateDocx(student: Student): Promise<Blob> {
                     alignment: AlignmentType.CENTER,
                     style: "default",
                 }),
-                new Paragraph({
-                    children: [new PageBreak()]
-                }),
 
                 // Part 2: Informations Administratives
                 ...createSection('Informations Administratives', [
-                    createSubHeading('Identité de l’élève'),
-                    createParagraph('Nom', student.lastName),
-                    createParagraph('Prénom', student.firstName),
-                    createParagraph('Date de naissance', student.birthDate),
-                    createParagraph('Sexe', student.sex),
-                    createSubHeading('Scolarisation'),
-                    createParagraph('Établissement', student.school),
-                    createParagraph('Classe', student.className),
-                    createParagraph('Niveau scolaire de référence', student.level),
-                    createSubHeading('Notification MDPH'),
-                    createParagraph('Intitulé', student.mdphNotificationTitle),
-                    createParagraph('Date d\'expiration', student.mdphNotificationExpiration),
-                    createSubHeading('Famille / Représentants légaux'),
-                    ...(student.familyContacts || []).flatMap(contact => ([
-                        createParagraph(contact.title, contact.name),
-                        new Paragraph({ text: `    Adresse: ${contact.street || ''}, ${contact.postalCode || ''} ${contact.city || ''}`, style: "default"}),
-                        new Paragraph({ text: `    Téléphone: ${contact.phone || ''}`, style: "default"}),
-                        new Paragraph({ text: `    Email: ${contact.email || ''}`, style: "default", spacing: { after: 200 } }),
-                    ])),
-                ].filter(p => p !== null)),
+                    createSubHeadingRow('Identité de l’élève'),
+                    createDataRow('Nom', student.lastName),
+                    createDataRow('Prénom', student.firstName),
+                    createDataRow('Date de naissance', student.birthDate),
+                    createDataRow('Sexe', student.sex),
+                    createSpacerRow(),
+                    createSubHeadingRow('Scolarisation'),
+                    createDataRow('Établissement', student.school),
+                    createDataRow('Classe', student.className),
+                    createDataRow('Niveau scolaire de référence', student.level),
+                    createSpacerRow(),
+                    createSubHeadingRow('Notification MDPH'),
+                    createDataRow('Intitulé', student.mdphNotificationTitle),
+                    createDataRow('Date d\'expiration', student.mdphNotificationExpiration),
+                    createSpacerRow(),
+                    createSubHeadingRow('Famille / Représentants légaux'),
+                    ...(student.familyContacts || []).flatMap(contact => [
+                        createDataRow(contact.title, contact.name),
+                        createDataRow("    Adresse", `${contact.street || ''}, ${contact.postalCode || ''} ${contact.city || ''}`),
+                        createDataRow("    Téléphone", contact.phone),
+                        createDataRow("    Email", contact.email),
+                        createSpacerRow(),
+                    ]),
+                ]),
 
                 // Part 3: Profil Global
                 ...createSection('Profil Global de l’élève', [
-                    createSubHeading('Nature du handicap et troubles associés'),
-                    new Paragraph({ children: [new TextRun({ text: "Diagnostics principaux", bold: true, underline: {} })] }),
-                    ...(student.globalProfile?.disabilityNatures?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    new Paragraph({ children: [new TextRun({ text: "Autres troubles ou déficiences associées", bold: true, underline: {} })], spacing: {before: 200}}),
-                    ...(student.globalProfile?.associatedDisorders?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    ...createTextareaContent('Spécificités (degré, latéralité, etc.)', student.globalProfile?.specifics),
-
-                    createSubHeading('Santé et besoins médicaux'),
-                    new Paragraph({ text: `PAI en place: ${student.globalProfile?.hasPAI ? 'Oui' : 'Non'}`, style: "default" }),
-                    new Paragraph({ children: [new TextRun({ text: "Besoins médicaux spécifiques", bold: true, underline: {} })], spacing: {before: 200}}),
-                    ...(student.globalProfile?.medicalNeeds?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    ...createTextareaContent('Traitements médicaux réguliers', student.globalProfile?.treatments),
-                    new Paragraph({ children: [new TextRun({ text: "Appareillages", bold: true, underline: {} })], spacing: {before: 200}}),
-                    ...(student.globalProfile?.equipment?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    
-                    createSubHeading('Développement et autonomie'),
-                    ...createTextareaContent('Autonomie dans les actes de la vie quotidienne', student.globalProfile?.dailyLifeAutonomy),
-                    ...createTextareaContent('Compétences motrices', student.globalProfile?.motorSkills),
-                    ...createTextareaContent('Capacités de communication', student.globalProfile?.communicationSkills),
-                    ...createTextareaContent('Capacités sensorielles', student.globalProfile?.sensorySkills),
-
-                    createSubHeading('Histoire scolaire et projet'),
-                    ...createTextareaContent('Résumé du parcours scolaire antérieur', student.globalProfile?.schoolHistory),
-                    new Paragraph({ children: [new TextRun({ text: "Centres d'intérêt et points de motivation", bold: true, underline: {} })], spacing: {before: 200}}),
-                    ...(student.globalProfile?.hobbies?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    ...createTextareaContent('Esquisse du projet d’avenir ou professionnel', student.globalProfile?.personalProject),
-                ].flat()),
+                    createSubHeadingRow('Nature du handicap et troubles associés'),
+                    ...createListRow("Diagnostics principaux", student.globalProfile?.disabilityNatures),
+                    ...createListRow("Autres troubles ou déficiences associées", student.globalProfile?.associatedDisorders),
+                    ...createTextareaRow('Spécificités (degré, latéralité, etc.)', student.globalProfile?.specifics),
+                    createSpacerRow(),
+                    createSubHeadingRow('Santé et besoins médicaux'),
+                    createDataRow("PAI en place", student.globalProfile?.hasPAI ? 'Oui' : 'Non'),
+                    ...createListRow("Besoins médicaux spécifiques", student.globalProfile?.medicalNeeds),
+                    ...createTextareaRow('Traitements médicaux réguliers', student.globalProfile?.treatments),
+                    ...createListRow("Appareillages", student.globalProfile?.equipment),
+                    createSpacerRow(),
+                    createSubHeadingRow('Développement et autonomie'),
+                    ...createTextareaRow('Autonomie dans les actes de la vie quotidienne', student.globalProfile?.dailyLifeAutonomy),
+                    ...createTextareaRow('Compétences motrices', student.globalProfile?.motorSkills),
+                    ...createTextareaRow('Capacités de communication', student.globalProfile?.communicationSkills),
+                    ...createTextareaRow('Capacités sensorielles', student.globalProfile?.sensorySkills),
+                    createSpacerRow(),
+                    createSubHeadingRow('Histoire scolaire et projet'),
+                    ...createTextareaRow('Résumé du parcours scolaire antérieur', student.globalProfile?.schoolHistory),
+                    ...createListRow("Centres d'intérêt et points de motivation", student.globalProfile?.hobbies),
+                    ...createTextareaRow('Esquisse du projet d’avenir ou professionnel', student.globalProfile?.personalProject),
+                ]),
                 
                 // Part 4 : Points d'appui
-                ...createSection('Points d\'appui', [
-                    createSubHeading('Compétences acquises'),
-                    ...(student.strengths?.academicSkills?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Forces cognitives et comportementales'),
-                    ...(student.strengths?.cognitiveStrengths?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Habiletés sociales ou communicationnelles préservées'),
-                    ...(student.strengths?.socialSkills?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Intérêts spécifiques exploitables'),
-                    ...(student.strengths?.exploitableInterests?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
+                ...createSection("Points d'appui", [
+                    ...createListRow('Compétences acquises', student.strengths?.academicSkills),
+                    ...createListRow('Forces cognitives et comportementales', student.strengths?.cognitiveStrengths),
+                    ...createListRow('Habiletés sociales ou communicationnelles préservées', student.strengths?.socialSkills),
+                    ...createListRow('Intérêts spécifiques exploitables', student.strengths?.exploitableInterests),
                 ]),
 
                 // Part 5: Difficultés
                 ...createSection('Difficultés', [
-                    createSubHeading('Difficultés cognitives'),
-                    ...(student.difficulties?.cognitiveDifficulties?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Difficultés scolaires'),
-                    ...(student.difficulties?.schoolDifficulties?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Difficultés motrices et fonctionnelles'),
-                    ...(student.difficulties?.motorDifficulties?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Difficultés socio-émotionnelles ou comportementales'),
-                    ...(student.difficulties?.socioEmotionalDifficulties?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Contraintes liées au handicap'),
-                    ...(student.difficulties?.disabilityConstraints?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
+                     ...createListRow('Difficultés cognitives', student.difficulties?.cognitiveDifficulties),
+                     ...createListRow('Difficultés scolaires', student.difficulties?.schoolDifficulties),
+                     ...createListRow('Difficultés motrices et fonctionnelles', student.difficulties?.motorDifficulties),
+                     ...createListRow('Difficultés socio-émotionnelles ou comportementales', student.difficulties?.socioEmotionalDifficulties),
+                     ...createListRow('Contraintes liées au handicap', student.difficulties?.disabilityConstraints),
                 ]),
                 
                 // Part 6: Besoins Éducatifs Particuliers
                 ...createSection('Besoins Éducatifs Particuliers', [
-                    createSubHeading('Besoin d’aménagements pédagogiques'),
-                    ...(student.needs?.pedagogicalAccommodations?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Besoin d’aide humaine'),
-                    ...(student.needs?.humanAssistance?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Besoin d’outils de compensation'),
-                    ...(student.needs?.compensatoryTools?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Besoin en approche éducative particulière'),
-                    ...(student.needs?.specialEducationalApproach?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                    createSubHeading('Besoin de soins ou rééducations complémentaires'),
-                    ...(student.needs?.complementaryCare?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
+                     ...createListRow('Besoin d’aménagements pédagogiques', student.needs?.pedagogicalAccommodations),
+                     ...createListRow('Besoin d’aide humaine', student.needs?.humanAssistance),
+                     ...createListRow('Besoin d’outils de compensation', student.needs?.compensatoryTools),
+                     ...createListRow('Besoin en approche éducative particulière', student.needs?.specialEducationalApproach),
+                     ...createListRow('Besoin de soins ou rééducations complémentaires', student.needs?.complementaryCare),
                 ]),
 
                 // Part 7: Objectifs
                 ...createSection('Objectifs prioritaires d’apprentissage', (student.objectives || []).flatMap((objective, index) => [
-                    new Paragraph({
-                        children: [new TextRun({ text: `Objectif ${index + 1}: ${objective.title}`, bold: true, size: 28 })],
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { before: 400, after: 200 },
-                    }),
-                    createParagraph('Critère de réussite attendue', objective.successCriteria),
-                    createParagraph('Échéance', objective.deadline),
-                    new Paragraph({ children: [new TextRun({ text: "Moyens et adaptations", bold: true, underline: {} })], spacing: {before: 200}}),
-                     ...(objective.adaptations?.map(item => createListItem(item)) || [createListItem("Non spécifié")]),
-                ]), false), // No page break after the last section
+                    createSubHeadingRow(`Objectif ${index + 1}: ${objective.title}`),
+                    createDataRow('Critère de réussite attendue', objective.successCriteria),
+                    createDataRow('Échéance', objective.deadline),
+                    ...createListRow("Moyens et adaptations", objective.adaptations),
+                    createSpacerRow(),
+                ])),
             ],
         }],
     });
