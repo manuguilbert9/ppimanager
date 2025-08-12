@@ -25,12 +25,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { Separator } from '@/components/ui/separator';
-import { ComboboxInput } from '@/components/combobox-input';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, 'L\'intitulé est requis.'),
-  adaptations: z.array(z.string()).optional(),
+  adaptations: z.string().optional(),
   successCriteria: z.string().optional(),
   deadline: z.string().optional(),
   validationDate: z.string().optional(),
@@ -86,7 +85,10 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      objectives: student.objectives || [],
+      objectives: (student.objectives || []).map(o => ({
+        ...o,
+        adaptations: Array.isArray(o.adaptations) ? o.adaptations.join('\n') : o.adaptations || '',
+      })),
     },
   });
 
@@ -162,12 +164,13 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     setIsSuggestingAdaptations(objectiveId);
     try {
       const result = await suggestAdaptations({ objectiveTitle });
-      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
-      const newAdaptations = result.adaptations.filter(a => !currentAdaptations.includes(a));
-      const updatedAdaptations = [...currentAdaptations, ...newAdaptations];
+      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || '';
+      const newAdaptationsText = result.adaptations.join('\n');
+      const updatedAdaptations = currentAdaptations ? `${currentAdaptations}\n${newAdaptationsText}` : newAdaptationsText;
       
       const currentObjective = form.getValues(`objectives.${objectiveIndex}`);
       update(objectiveIndex, { ...currentObjective, adaptations: updatedAdaptations });
+      addLibraryItems(result.adaptations, 'adaptations');
 
     } catch (error) {
       console.error(error);
@@ -188,17 +191,23 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         successCriteria: suggestion.successCriteria, 
         deadline: suggestion.deadline,
         validationDate: '',
-        adaptations: [],
+        adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations.join('\n') : (suggestion.adaptations || ''),
     });
     setSuggestions(suggestions.filter(s => s.title !== suggestion.title));
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await updateStudent(student.id, { objectives: values.objectives });
+      const objectivesToSave = values.objectives.map(o => ({
+        ...o,
+        adaptations: o.adaptations?.split('\n').filter(line => line.trim() !== '') || [],
+      }));
+
+      await updateStudent(student.id, { objectives: objectivesToSave });
+      
       if (values.objectives) {
         addLibraryItems(values.objectives.map(o => o.title), 'objectives');
-        const allAdaptations = values.objectives.flatMap(o => o.adaptations || []);
+        const allAdaptations = objectivesToSave.flatMap(o => o.adaptations || []);
         addLibraryItems(allAdaptations, 'adaptations');
       }
       toast({
@@ -268,10 +277,10 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                   </Button>
                 </div>
                 <FormControl>
-                  <ComboboxInput
+                  <Textarea
                     {...field}
-                    placeholder="Utiliser un plan incliné..."
-                    suggestions={adaptationsSuggestions}
+                    placeholder="Utiliser un plan incliné... (une adaptation par ligne)"
+                    rows={4}
                   />
                 </FormControl>
                 <FormMessage />
@@ -401,7 +410,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               </SortableContext>
             </DndContext>
             
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: '' })}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>
