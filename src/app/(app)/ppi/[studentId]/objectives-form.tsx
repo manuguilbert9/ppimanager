@@ -93,6 +93,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     defaultValues: {
       objectives: (student.objectives || []).map(o => ({
         ...o,
+        id: o.id || Math.random().toString(36).substring(7),
         adaptations: Array.isArray(o.adaptations) ? o.adaptations : (typeof o.adaptations === 'string' && o.adaptations ? [o.adaptations] : []),
       })),
     },
@@ -188,6 +189,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
 
   const addSuggestionToForm = (suggestion: Objective) => {
     append({ 
+        id: Math.random().toString(36).substring(7),
         title: suggestion.title, 
         successCriteria: suggestion.successCriteria, 
         deadline: suggestion.deadline,
@@ -258,7 +260,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 render={({ field }) => (
                     <FormItem>
                         <div className="flex items-center gap-2">
-                        <FormControl>
+                        <FormControl className="flex-1">
                           <ComboboxField
                             {...field}
                             placeholder="Décrire une adaptation..."
@@ -445,7 +447,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 </Accordion>
             )}
             
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: Math.random().toString(36).substring(7), title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>
@@ -471,4 +473,3 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     </Card>
   );
 }
-
