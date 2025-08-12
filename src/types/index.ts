@@ -10,7 +10,7 @@ export type FamilyContact = {
 };
 
 export type GlobalProfile = {
-  disabilityNature?: string;
+  disabilityNatures?: string[];
   associatedDisorders?: string[];
   specifics?: string;
   hasPAI?: boolean;

@@ -17,7 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { addLibraryItems } from '@/lib/library-repository';
 
 const formSchema = z.object({
-  disabilityNature: z.string().optional(),
+  disabilityNatures: z.array(z.string()).optional(),
   associatedDisorders: z.array(z.string()).optional(),
   specifics: z.string().optional(),
   hasPAI: z.boolean().optional(),
@@ -39,7 +39,7 @@ export function GlobalProfileForm({ student }: { student: Student }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      disabilityNature: student.globalProfile?.disabilityNature || '',
+      disabilityNatures: student.globalProfile?.disabilityNatures || [],
       associatedDisorders: student.globalProfile?.associatedDisorders || [],
       specifics: student.globalProfile?.specifics || '',
       hasPAI: student.globalProfile?.hasPAI || false,
@@ -62,8 +62,8 @@ export function GlobalProfileForm({ student }: { student: Student }) {
       await updateStudent(student.id, { globalProfile });
       
       // Add new tags to library
-      if (values.disabilityNature) {
-        await addLibraryItems([values.disabilityNature], 'disabilityNatures');
+      if (values.disabilityNatures && values.disabilityNatures.length > 0) {
+        await addLibraryItems(values.disabilityNatures, 'disabilityNatures');
       }
       if (values.associatedDisorders && values.associatedDisorders.length > 0) {
         await addLibraryItems(values.associatedDisorders, 'associatedDisorders');
@@ -107,10 +107,10 @@ export function GlobalProfileForm({ student }: { student: Student }) {
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-lg font-medium">Nature du handicap et troubles associés</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
-                  <FormField control={form.control} name="disabilityNature" render={({ field }) => (
+                  <FormField control={form.control} name="disabilityNatures" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Diagnostic principal</FormLabel>
-                      <FormControl><Input placeholder="Ex: Paralysie cérébrale, TSA..." {...field} /></FormControl>
+                      <FormLabel>Diagnostics principaux</FormLabel>
+                      <FormControl><TagInput placeholder="Ajouter un diagnostic..." {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
