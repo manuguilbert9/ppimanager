@@ -1,6 +1,5 @@
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -28,6 +27,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { getStudents } from '@/lib/students-repository';
 import type { Student } from '@/types';
+import { AddStudentForm } from './add-student-form';
+import { Button } from '@/components/ui/button';
 
 export default async function StudentsPage() {
   const students = await getStudents();
@@ -50,10 +51,7 @@ export default async function StudentsPage() {
         title="Gestion des élèves"
         description="Gérez les profils des élèves et leurs PPI associés."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un élève
-        </Button>
+        <AddStudentForm />
       </PageHeader>
 
       <Card>
