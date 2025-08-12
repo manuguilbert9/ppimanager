@@ -95,17 +95,28 @@ export function GevascoImporter({ student }: { student: Student }) {
                 compensatoryTools: [...(student.needs?.compensatoryTools || []), ...(extractedData.needs?.compensatoryTools || [])],
                 specialEducationalApproach: [...(student.needs?.specialEducationalApproach || []), ...(extractedData.needs?.specialEducationalApproach || [])],
                 complementaryCare: [...(student.needs?.complementaryCare || []), ...(extractedData.needs?.complementaryCare || [])],
+            },
+            globalProfile: {
+                disabilityNatures: [...(student.globalProfile?.disabilityNatures || []), ...(extractedData.globalProfile?.disabilityNatures || [])],
+                associatedDisorders: [...(student.globalProfile?.associatedDisorders || []), ...(extractedData.globalProfile?.associatedDisorders || [])],
+                medicalNeeds: [...(student.globalProfile?.medicalNeeds || []), ...(extractedData.globalProfile?.medicalNeeds || [])],
+                equipment: [...(student.globalProfile?.equipment || []), ...(extractedData.globalProfile?.equipment || [])],
             }
         };
 
         // Remove duplicates
         Object.keys(updatedProfile).forEach(key => {
             const category = key as keyof typeof updatedProfile;
-            Object.keys(updatedProfile[category]).forEach(subKey => {
-                const subCategory = subKey as keyof typeof updatedProfile[typeof category];
-                // @ts-ignore
-                updatedProfile[category][subCategory] = Array.from(new Set(updatedProfile[category][subCategory]));
-            });
+            if (updatedProfile[category]) {
+                Object.keys(updatedProfile[category]).forEach(subKey => {
+                    const subCategory = subKey as keyof typeof updatedProfile[typeof category];
+                    // @ts-ignore
+                    if (updatedProfile[category][subCategory] && Array.isArray(updatedProfile[category][subCategory])) {
+                        // @ts-ignore
+                        updatedProfile[category][subCategory] = Array.from(new Set(updatedProfile[category][subCategory]));
+                    }
+                });
+            }
         });
         
         await updateStudent(student.id, updatedProfile);
@@ -187,7 +198,7 @@ export function GevascoImporter({ student }: { student: Student }) {
               {Object.entries(extractedData).map(([category, values]) => (
                 values && Object.keys(values).length > 0 && (
                   <div key={category}>
-                    <h3 className="font-semibold text-lg capitalize mb-2">{category}</h3>
+                    <h3 className="font-semibold text-lg capitalize mb-2">{category.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
                     <ul className="list-disc pl-5 space-y-1 text-sm">
                       {Object.entries(values).map(([subCategory, items]) => (
                         (items as string[]).map((item, index) => (

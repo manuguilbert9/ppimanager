@@ -39,10 +39,19 @@ const NeedsSchema = z.object({
   complementaryCare: z.array(z.string()).optional().describe("Les soins ou rééducations complémentaires (ex: orthophonie, psychomotricité)."),
 });
 
+const GlobalProfileSchema = z.object({
+    disabilityNatures: z.array(z.string()).optional().describe("Le ou les diagnostics principaux (ex: Trouble du Spectre de l'Autisme)."),
+    associatedDisorders: z.array(z.string()).optional().describe("Les autres troubles associés (ex: TDAH, troubles DYS)."),
+    medicalNeeds: z.array(z.string()).optional().describe("Les besoins médicaux spécifiques qui impactent la scolarité (ex: Suivi PAI, Prise de médicaments)."),
+    equipment: z.array(z.string()).optional().describe("Les appareillages utilisés par l'élève (ex: Fauteuil roulant, appareil auditif).")
+});
+
+
 const ExtractGevascoOutputSchema = z.object({
   strengths: StrengthsSchema.optional().describe("Synthèse des points forts et des acquis de l'élève."),
   difficulties: DifficultiesSchema.optional().describe("Synthèse des difficultés et limitations rencontrées par l'élève."),
   needs: NeedsSchema.optional().describe("Synthèse des besoins éducatifs particuliers pour compenser le handicap."),
+  globalProfile: GlobalProfileSchema.optional().describe("Informations générales sur la situation de l'élève.")
 });
 export type ExtractGevascoOutput = z.infer<typeof ExtractGevascoOutputSchema>;
 
@@ -62,11 +71,15 @@ const prompt = ai.definePrompt({
 
     INSTRUCTIONS :
     1.  Lis attentivement l'ensemble du document.
-    2.  Identifie et synthétise les informations relatives aux points forts (acquis, compétences, centres d'intérêt), aux difficultés (scolaires, cognitives, comportementales) et aux besoins (aménagements, aides, matériel).
+    2.  Identifie et synthétise les informations relatives :
+        - Au profil global : diagnostics, troubles associés, besoins médicaux impactant la scolarité, appareillages.
+        - Aux points forts : acquis, compétences, centres d'intérêt, etc.
+        - Aux difficultés : scolaires, cognitives, comportementales, etc.
+        - Aux besoins : aménagements, aides, matériel, etc.
     3.  Ne te contente pas de copier/coller. Reformule les éléments sous forme de listes claires et concises. Chaque élément de liste doit être une phrase ou un groupe de mots court et précis.
     4.  Si une section est vide ou non pertinente dans le document, laisse le champ correspondant vide dans ta réponse.
     5.  Fais particulièrement attention à la section "Synthèse" et aux "préconisations" ou "recommandations" du document, car elles contiennent souvent les informations les plus importantes.
-    6.  Classe chaque information extraite dans la catégorie la plus appropriée (strengths, difficulties, needs) et la sous-catégorie correspondante.
+    6.  Classe chaque information extraite dans la catégorie la plus appropriée (globalProfile, strengths, difficulties, needs) et la sous-catégorie correspondante.
   `,
 });
 
