@@ -41,6 +41,14 @@ export type Difficulties = {
   disabilityConstraints?: string[];
 };
 
+export type Needs = {
+  pedagogicalAccommodations?: string[];
+  humanAssistance?: string[];
+  compensatoryTools?: string[];
+  specialEducationalApproach?: string[];
+  complementaryCare?: string[];
+};
+
 export type Student = {
   id: string;
   firstName: string;
@@ -60,6 +68,7 @@ export type Student = {
   globalProfile?: GlobalProfile;
   strengths?: Strengths;
   difficulties?: Difficulties;
+  needs?: Needs;
 };
 
 export type Ppi = {
@@ -74,7 +83,6 @@ export type LibraryItem = {
   id: string;
   text: string;
   category: 
-    | 'needs' 
     | 'objectives' 
     | 'adaptations' 
     | 'indicators'
@@ -94,7 +102,13 @@ export type LibraryItem = {
     | 'associatedDisorders'
     | 'medicalNeeds'
     | 'equipment'
-    | 'hobbies';
+    | 'hobbies'
+    // Needs
+    | 'pedagogicalAccommodations'
+    | 'humanAssistance'
+    | 'compensatoryTools'
+    | 'specialEducationalApproach'
+    | 'complementaryCare';
 };
 
 export type Classe = {

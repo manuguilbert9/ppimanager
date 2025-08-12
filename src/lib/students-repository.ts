@@ -28,6 +28,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         globalProfile: data.globalProfile || {},
         strengths: data.strengths || {},
         difficulties: data.difficulties || {},
+        needs: data.needs || {},
     };
 }
 
@@ -46,7 +47,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
@@ -56,6 +57,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'la
             globalProfile: {},
             strengths: {},
             difficulties: {},
+            needs: {},
         });
         revalidatePath('/students');
     } catch (error) {

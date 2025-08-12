@@ -6,6 +6,7 @@ import { GlobalProfileForm } from "./global-profile";
 import { StrengthsForm } from "./strengths-form";
 import { getAllLibraryItems } from "@/lib/library-repository";
 import { DifficultiesForm } from "./difficulties-form";
+import { NeedsForm } from "./needs-form";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
@@ -63,6 +64,14 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
           motorDifficultiesSuggestions={getSuggestions('motorDifficulties')}
           socioEmotionalDifficultiesSuggestions={getSuggestions('socioEmotionalDifficulties')}
           disabilityConstraintsSuggestions={getSuggestions('disabilityConstraints')}
+        />
+        <NeedsForm
+            student={student}
+            pedagogicalAccommodationsSuggestions={getSuggestions('pedagogicalAccommodations')}
+            humanAssistanceSuggestions={getSuggestions('humanAssistance')}
+            compensatoryToolsSuggestions={getSuggestions('compensatoryTools')}
+            specialEducationalApproachSuggestions={getSuggestions('specialEducationalApproach')}
+            complementaryCareSuggestions={getSuggestions('complementaryCare')}
         />
       </div>
     </>

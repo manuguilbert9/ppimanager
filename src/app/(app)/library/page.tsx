@@ -26,10 +26,16 @@ const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
 
 export default async function LibraryPage() {
   // PPI Structure
-  const needs = await getLibraryItems('needs');
   const objectives = await getLibraryItems('objectives');
   const adaptations = await getLibraryItems('adaptations');
   const indicators = await getLibraryItems('indicators');
+
+  // Needs
+  const pedagogicalAccommodations = await getLibraryItems('pedagogicalAccommodations');
+  const humanAssistance = await getLibraryItems('humanAssistance');
+  const compensatoryTools = await getLibraryItems('compensatoryTools');
+  const specialEducationalApproach = await getLibraryItems('specialEducationalApproach');
+  const complementaryCare = await getLibraryItems('complementaryCare');
 
   // Strengths
   const academicSkills = await getLibraryItems('academicSkills');
@@ -63,9 +69,13 @@ export default async function LibraryPage() {
           Ajouter à la bibliothèque
         </Button>
       </PageHeader>
-      <Tabs defaultValue="needs">
+      <Tabs defaultValue="pedagogicalAccommodations">
         <TabsList className="flex-wrap h-auto justify-start">
-          <TabsTrigger value="needs">Besoins</TabsTrigger>
+          <TabsTrigger value="pedagogicalAccommodations">Aménagements pédagogiques</TabsTrigger>
+          <TabsTrigger value="humanAssistance">Aide humaine</TabsTrigger>
+          <TabsTrigger value="compensatoryTools">Outils de compensation</TabsTrigger>
+          <TabsTrigger value="specialEducationalApproach">Approche éducative</TabsTrigger>
+          <TabsTrigger value="complementaryCare">Soins et rééducations</TabsTrigger>
           <TabsTrigger value="objectives">Objectifs</TabsTrigger>
           <TabsTrigger value="adaptations">Moyens et Adaptations</TabsTrigger>
           <TabsTrigger value="indicators">Indicateurs</TabsTrigger>
@@ -85,14 +95,58 @@ export default async function LibraryPage() {
           <TabsTrigger value="hobbies">Centres d'intérêt</TabsTrigger>
         </TabsList>
         <div className="mt-4">
-          <TabsContent value="needs">
+          <TabsContent value="pedagogicalAccommodations">
             <Card>
               <CardHeader>
-                <CardTitle>Besoins</CardTitle>
-                <CardDescription>Besoins réutilisables pour les élèves.</CardDescription>
+                <CardTitle>Aménagements pédagogiques</CardTitle>
+                <CardDescription>Liste des aménagements pédagogiques réutilisables.</CardDescription>
               </CardHeader>
               <CardContent>
-                <LibraryContent items={needs} />
+                <LibraryContent items={pedagogicalAccommodations} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="humanAssistance">
+            <Card>
+              <CardHeader>
+                <CardTitle>Aide humaine</CardTitle>
+                <CardDescription>Liste des types d'aide humaine réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={humanAssistance} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="compensatoryTools">
+            <Card>
+              <CardHeader>
+                <CardTitle>Outils de compensation</CardTitle>
+                <CardDescription>Liste des outils de compensation réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={compensatoryTools} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="specialEducationalApproach">
+            <Card>
+              <CardHeader>
+                <CardTitle>Approche éducative particulière</CardTitle>
+                <CardDescription>Liste des approches éducatives réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={specialEducationalApproach} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="complementaryCare">
+            <Card>
+              <CardHeader>
+                <CardTitle>Soins ou rééducations complémentaires</CardTitle>
+                <CardDescription>Liste des soins ou rééducations réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={complementaryCare} />
               </CardContent>
             </Card>
           </TabsContent>
