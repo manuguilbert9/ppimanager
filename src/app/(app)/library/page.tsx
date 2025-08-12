@@ -87,7 +87,7 @@ export default async function LibraryPage() {
                 <Separator className="my-2" />
 
                 <SectionTitle title="Points forts" />
-                <TabsTrigger value="academicSkills">Compétences académiques</TabsTrigger>
+                <TabsTrigger value="academicSkills">Compétences acquises</TabsTrigger>
                 <TabsTrigger value="cognitiveStrengths">Forces cognitives</TabsTrigger>
                 <TabsTrigger value="socialSkills">Habiletés sociales</TabsTrigger>
                 <TabsTrigger value="exploitableInterests">Intérêts exploitables</TabsTrigger>
@@ -215,8 +215,8 @@ export default async function LibraryPage() {
             <TabsContent value="academicSkills">
                 <Card>
                 <CardHeader>
-                    <CardTitle>Compétences académiques</CardTitle>
-                    <CardDescription>Compétences académiques réutilisables.</CardDescription>
+                    <CardTitle>Compétences acquises</CardTitle>
+                    <CardDescription>Compétences acquises réutilisables.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <LibraryContent items={academicSkills} />

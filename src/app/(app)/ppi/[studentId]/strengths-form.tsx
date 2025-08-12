@@ -91,7 +91,7 @@ export function StrengthsForm({
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Compétences académiques acquises</FormLabel>
+                                <FormLabel>Compétences acquises</FormLabel>
                                 <FormControl><ComboboxInput placeholder="Sait reconnaître les lettres..." {...field} suggestions={academicSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
