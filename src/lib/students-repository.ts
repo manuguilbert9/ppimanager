@@ -2,21 +2,32 @@
 
 import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Student, Classe } from '@/types';
+import type { Student } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { getClasse } from './classes-repository';
 
 async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
     const data = doc.data();
-    const classe = await getClasse(data.classId);
+    const classe = data.classId ? await getClasse(data.classId) : null;
     return {
         id: doc.id,
-        name: data.name,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate,
+        sex: data.sex,
+        school: data.school,
+        level: data.level,
+        mdphNotification: data.mdphNotification,
+        admissionDate: data.admissionDate,
+        reviewDate: data.reviewDate,
+        referents: data.referents,
+        familyContacts: data.familyContacts,
+        parentalAuthority: data.parentalAuthority,
         classId: data.classId,
         className: classe?.name ?? 'N/A',
         lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
         status: data.status,
-        avatarUrl: data.avatarUrl || 'https://placehold.co/40x40.png'
+        avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`
     };
 }
 
@@ -35,13 +46,13 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: { name: string; classId: string; }) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
             status: 'active',
             lastUpdate: serverTimestamp(),
-            avatarUrl: `https://placehold.co/40x40.png?text=${student.name.substring(0,2)}`
+            avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`
         });
         revalidatePath('/students');
     } catch (error) {
@@ -50,7 +61,7 @@ export async function addStudent(student: { name: string; classId: string; }) {
     }
 }
 
-export async function updateStudent(id: string, student: { name: string; classId: string; }) {
+export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl'>>) {
     try {
         const studentRef = doc(db, 'students', id);
         await updateDoc(studentRef, {

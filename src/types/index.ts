@@ -1,6 +1,17 @@
 export type Student = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  birthDate?: string;
+  sex?: 'male' | 'female' | 'other';
+  school?: string;
+  level?: string;
+  mdphNotification?: string;
+  admissionDate?: string;
+  reviewDate?: string;
+  referents?: string; // enseignants, éducateurs, etc.
+  familyContacts?: string;
+  parentalAuthority?: string;
   classId: string;
   className: string; // To avoid joins on list pages
   lastUpdate: string;

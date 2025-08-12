@@ -38,6 +38,18 @@ export default async function StudentsPage() {
     archived: 'Archivé',
   };
 
+  const getAge = (birthDate?: string) => {
+    if (!birthDate) return 'N/A';
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
   return (
     <>
       <PageHeader
@@ -60,6 +72,7 @@ export default async function StudentsPage() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Classe</TableHead>
+                <TableHead>Âge</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Dernière mise à jour du PPI</TableHead>
                 <TableHead>
@@ -75,17 +88,19 @@ export default async function StudentsPage() {
                       <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={student.avatarUrl}
-                          alt={student.name}
+                          alt={`${student.firstName} ${student.lastName}`}
                           data-ai-hint="person portrait"
                         />
                         <AvatarFallback>
-                          {student.name.substring(0, 2)}
+                          {student.firstName?.substring(0, 1)}
+                          {student.lastName?.substring(0, 1)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{student.name}</span>
+                      <span className="font-medium">{student.firstName} {student.lastName}</span>
                     </div>
                   </TableCell>
                   <TableCell>{student.className}</TableCell>
+                  <TableCell>{getAge(student.birthDate)}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[student.status]}>
                       {statusText[student.status]}
