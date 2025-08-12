@@ -1,11 +1,11 @@
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Student } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData>): Student {
+function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Student {
     const data = doc.data();
     return {
         id: doc.id,
@@ -23,12 +23,13 @@ export async function getStudents(): Promise<Student[]> {
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
-    const querySnapshot = await getDocs(collection(db, 'students'));
-    const doc = querySnapshot.docs.find(d => d.id === id);
-    if (!doc) {
+    const docRef = doc(db, 'students', id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
         return null;
     }
-    return studentFromDoc(doc);
+    return studentFromDoc(docSnap);
 }
 
 export async function addStudent(student: { name: string; class: string; }) {
@@ -43,5 +44,29 @@ export async function addStudent(student: { name: string; class: string; }) {
     } catch (error) {
         console.error("Error adding document: ", error);
         throw new Error('Failed to add student');
+    }
+}
+
+export async function updateStudent(id: string, student: { name: string; class: string; }) {
+    try {
+        const studentRef = doc(db, 'students', id);
+        await updateDoc(studentRef, {
+            ...student,
+            lastUpdate: serverTimestamp()
+        });
+        revalidatePath('/students');
+    } catch (error) {
+        console.error("Error updating document: ", error);
+        throw new Error('Failed to update student');
+    }
+}
+
+export async function deleteStudent(id: string) {
+    try {
+        await deleteDoc(doc(db, "students", id));
+        revalidatePath('/students');
+    } catch (error) {
+        console.error("Error deleting document: ", error);
+        throw new Error('Failed to delete student');
     }
 }

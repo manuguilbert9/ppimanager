@@ -1,5 +1,4 @@
 import { PageHeader } from '@/components/page-header';
-import { MoreHorizontal } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -15,20 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { getStudents } from '@/lib/students-repository';
 import type { Student } from '@/types';
 import { AddStudentForm } from './add-student-form';
-import { Button } from '@/components/ui/button';
+import { StudentActions } from './student-actions';
 
 export default async function StudentsPage() {
   const students = await getStudents();
@@ -43,7 +35,7 @@ export default async function StudentsPage() {
     active: 'Actif',
     draft: 'Brouillon',
     archived: 'Archivé',
-  }
+  };
 
   return (
     <>
@@ -57,7 +49,9 @@ export default async function StudentsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Liste des élèves</CardTitle>
-          <CardDescription>Une liste de tous les élèves du système.</CardDescription>
+          <CardDescription>
+            Une liste de tous les élèves du système.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -78,35 +72,28 @@ export default async function StudentsPage() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={student.avatarUrl} alt={student.name} data-ai-hint="person portrait" />
-                        <AvatarFallback>{student.name.substring(0, 2)}</AvatarFallback>
+                        <AvatarImage
+                          src={student.avatarUrl}
+                          alt={student.name}
+                          data-ai-hint="person portrait"
+                        />
+                        <AvatarFallback>
+                          {student.name.substring(0, 2)}
+                        </AvatarFallback>
                       </Avatar>
                       <span className="font-medium">{student.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>{student.class}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[student.status]}>{statusText[student.status]}</Badge>
+                    <Badge variant={statusVariant[student.status]}>
+                      {statusText[student.status]}
+                    </Badge>
                   </TableCell>
                   <TableCell>{student.lastUpdate}</TableCell>
                   <TableCell>
                     <div className="flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Ouvrir le menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Modifier l'élève</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <StudentActions student={student} />
                     </div>
                   </TableCell>
                 </TableRow>
