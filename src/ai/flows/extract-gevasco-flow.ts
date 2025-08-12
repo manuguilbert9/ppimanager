@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
   name: 'extractGevascoPrompt',
   input: { schema: ExtractGevascoInputSchema },
   output: { schema: ExtractGevascoOutputSchema },
-  model: 'googleai/gemini-1.5-pro-latest',
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
     Tu es un expert en ingénierie pédagogique spécialisé dans l'analyse de documents GevaSco pour les élèves en situation de handicap.
     Analyse le document PDF GevaSco fourni et extrais les informations clés de manière structurée.
