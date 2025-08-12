@@ -77,6 +77,7 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
         <ObjectivesForm 
           student={student}
           objectivesSuggestions={getSuggestions('objectives')}
+          adaptationsSuggestions={getSuggestions('adaptations')}
         />
       </div>
     </>

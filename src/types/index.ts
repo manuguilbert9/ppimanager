@@ -52,6 +52,7 @@ export type Needs = {
 export type Objective = {
   id?: string;
   title: string;
+  adaptations?: string[];
   successCriteria?: string;
   deadline?: string;
   validationDate?: string;

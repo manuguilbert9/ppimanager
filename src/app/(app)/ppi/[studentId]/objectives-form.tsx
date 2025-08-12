@@ -24,10 +24,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { Separator } from '@/components/ui/separator';
+import { ComboboxInput } from '@/components/combobox-input';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, 'L\'intitulé est requis.'),
+  adaptations: z.array(z.string()).optional(),
   successCriteria: z.string().optional(),
   deadline: z.string().optional(),
   validationDate: z.string().optional(),
@@ -40,6 +42,7 @@ const formSchema = z.object({
 interface ObjectivesFormProps {
   student: Student;
   objectivesSuggestions: string[];
+  adaptationsSuggestions: string[];
 }
 
 const SortableObjectiveItem = ({
@@ -72,7 +75,7 @@ const SortableObjectiveItem = ({
   );
 };
 
-export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFormProps) {
+export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<Objective[]>([]);
@@ -148,6 +151,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
         successCriteria: suggestion.successCriteria, 
         deadline: suggestion.deadline,
         validationDate: '',
+        adaptations: [],
     });
     setSuggestions(suggestions.filter(s => s.title !== suggestion.title));
   }
@@ -157,6 +161,8 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
       await updateStudent(student.id, { objectives: values.objectives });
       if (values.objectives) {
         addLibraryItems(values.objectives.map(o => o.title), 'objectives');
+        const allAdaptations = values.objectives.flatMap(o => o.adaptations || []);
+        addLibraryItems(allAdaptations, 'adaptations');
       }
       toast({
         title: 'Objectifs mis à jour',
@@ -195,6 +201,23 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
                     {...field}
                     placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
                     suggestions={objectivesSuggestions}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name={`objectives.${originalIndex}.adaptations`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Moyens et adaptations</FormLabel>
+                <FormControl>
+                  <ComboboxInput
+                    {...field}
+                    placeholder="Utiliser un plan incliné..."
+                    suggestions={adaptationsSuggestions}
                   />
                 </FormControl>
                 <FormMessage />
@@ -324,7 +347,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
               </SortableContext>
             </DndContext>
             
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '' })}>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter un objectif
             </Button>
