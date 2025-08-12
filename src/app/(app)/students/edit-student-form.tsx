@@ -135,7 +135,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-6 p-1">
               <h3 className="text-lg font-medium border-b pb-2">Identité de l’élève</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <FormField control={form.control} name="lastName" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nom</FormLabel>
@@ -173,7 +173,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                 )} />
               </div>
               <h3 className="text-lg font-medium border-b pb-2 pt-4">Scolarisation</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <FormField control={form.control} name="school" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Établissement</FormLabel>
@@ -239,7 +239,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                       </div>
                       <div className="mt-4">
                           <FormLabel>Adresse</FormLabel>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2">
                             <FormField control={form.control} name={`familyContacts.${index}.street`} render={({ field }) => (
                               <FormItem><FormControl><Input placeholder="Rue" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
