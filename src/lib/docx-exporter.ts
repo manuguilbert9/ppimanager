@@ -190,6 +190,7 @@ function createSection(title: string, color: string, rows: (TableRow | null | (T
         new Table({
             rows: tableRows,
             width: FULL_WIDTH,
+            alignment: AlignmentType.CENTER,
         })
     ];
     
