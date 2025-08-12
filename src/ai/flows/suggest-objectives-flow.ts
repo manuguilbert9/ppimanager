@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
 
     Voici le profil de l'élève :
 
-    POINTS FORTS :
+    POINTS FORTS (ce que l'élève sait déjà faire) :
     - Compétences académiques : {{{strengths.academicSkills}}}
     - Forces cognitives : {{{strengths.cognitiveStrengths}}}
     - Habiletés sociales : {{{strengths.socialSkills}}}
@@ -79,7 +79,12 @@ const prompt = ai.definePrompt({
     - Approche éducative : {{{needs.specialEducationalApproach}}}
     - Soins complémentaires : {{{needs.complementaryCare}}}
 
-    À partir de ces informations, définis 3 à 5 objectifs d'apprentissage prioritaires.
+    INSTRUCTION IMPORTANTE :
+    Analyse le profil complet pour identifier la "zone proximale de développement" de l'élève.
+    Ne propose PAS d'objectifs qui répètent les compétences déjà listées dans les "POINTS FORTS".
+    Tes suggestions doivent représenter la prochaine étape logique d'apprentissage, en s'appuyant sur les forces pour surmonter les difficultés.
+
+    À partir de cette analyse, définis 3 à 5 objectifs d'apprentissage prioritaires.
     Pour chaque objectif, formule :
     1.  Un intitulé clair, spécifique et centré sur l'élève (commençant par un verbe d'action).
     2.  Un critère de réussite simple et observable.
