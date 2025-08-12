@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -112,7 +112,7 @@ export function GevascoImporter({ student }: { student: Student }) {
       
         toast({
             title: 'PPI mis à jour',
-            description: 'Les informations du GevaSco ont été ajoutées au profil de l\'élève.',
+            description: "Les informations du GevaSco ont été ajoutées au profil de l'élève.",
         });
         setExtractedData(null);
         router.refresh();
@@ -167,7 +167,7 @@ export function GevascoImporter({ student }: { student: Student }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-                {error ? 'Erreur d\'importation' : 'Données extraites du GevaSco'}
+                {error ? "Erreur d'importation" : 'Données extraites du GevaSco'}
             </DialogTitle>
             <DialogDescription>
               {error ? "Une erreur est survenue." : "Vérifiez les informations extraites par l'IA avant de les appliquer au PPI."}
