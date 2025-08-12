@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlobalProfileForm } from "./global-profile";
 import { StrengthsForm } from "./strengths-form";
 import { getAllLibraryItems } from "@/lib/library-repository";
+import { DifficultiesForm } from "./difficulties-form";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
@@ -54,6 +55,14 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
           cognitiveStrengthsSuggestions={getSuggestions('cognitiveStrengths')}
           socialSkillsSuggestions={getSuggestions('socialSkills')}
           exploitableInterestsSuggestions={getSuggestions('exploitableInterests')}
+        />
+        <DifficultiesForm
+          student={student}
+          cognitiveDifficultiesSuggestions={getSuggestions('cognitiveDifficulties')}
+          schoolDifficultiesSuggestions={getSuggestions('schoolDifficulties')}
+          motorDifficultiesSuggestions={getSuggestions('motorDifficulties')}
+          socioEmotionalDifficultiesSuggestions={getSuggestions('socioEmotionalDifficulties')}
+          disabilityConstraintsSuggestions={getSuggestions('disabilityConstraints')}
         />
       </div>
     </>

@@ -33,6 +33,14 @@ export type Strengths = {
   exploitableInterests?: string[];
 }
 
+export type Difficulties = {
+  cognitiveDifficulties?: string[];
+  schoolDifficulties?: string[];
+  motorDifficulties?: string[];
+  socioEmotionalDifficulties?: string[];
+  disabilityConstraints?: string[];
+};
+
 export type Student = {
   id: string;
   firstName: string;
@@ -51,6 +59,7 @@ export type Student = {
   avatarUrl: string;
   globalProfile?: GlobalProfile;
   strengths?: Strengths;
+  difficulties?: Difficulties;
 };
 
 export type Ppi = {
@@ -68,11 +77,19 @@ export type LibraryItem = {
     | 'needs' 
     | 'objectives' 
     | 'adaptations' 
-    | 'indicators' 
+    | 'indicators'
+    // Strengths
     | 'academicSkills' 
     | 'cognitiveStrengths' 
     | 'socialSkills' 
     | 'exploitableInterests'
+    // Difficulties
+    | 'cognitiveDifficulties'
+    | 'schoolDifficulties'
+    | 'motorDifficulties'
+    | 'socioEmotionalDifficulties'
+    | 'disabilityConstraints'
+    // Global Profile
     | 'disabilityNatures'
     | 'associatedDisorders'
     | 'medicalNeeds'

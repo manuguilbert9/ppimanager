@@ -25,14 +25,32 @@ const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
 
 
 export default async function LibraryPage() {
+  // PPI Structure
   const needs = await getLibraryItems('needs');
   const objectives = await getLibraryItems('objectives');
   const adaptations = await getLibraryItems('adaptations');
   const indicators = await getLibraryItems('indicators');
+
+  // Strengths
   const academicSkills = await getLibraryItems('academicSkills');
   const cognitiveStrengths = await getLibraryItems('cognitiveStrengths');
   const socialSkills = await getLibraryItems('socialSkills');
   const exploitableInterests = await getLibraryItems('exploitableInterests');
+
+  // Difficulties
+  const cognitiveDifficulties = await getLibraryItems('cognitiveDifficulties');
+  const schoolDifficulties = await getLibraryItems('schoolDifficulties');
+  const motorDifficulties = await getLibraryItems('motorDifficulties');
+  const socioEmotionalDifficulties = await getLibraryItems('socioEmotionalDifficulties');
+  const disabilityConstraints = await getLibraryItems('disabilityConstraints');
+
+  // Global Profile
+  const disabilityNatures = await getLibraryItems('disabilityNatures');
+  const associatedDisorders = await getLibraryItems('associatedDisorders');
+  const medicalNeeds = await getLibraryItems('medicalNeeds');
+  const equipment = await getLibraryItems('equipment');
+  const hobbies = await getLibraryItems('hobbies');
+
 
   return (
     <>
@@ -55,6 +73,16 @@ export default async function LibraryPage() {
           <TabsTrigger value="cognitiveStrengths">Forces cognitives</TabsTrigger>
           <TabsTrigger value="socialSkills">Habiletés sociales</TabsTrigger>
           <TabsTrigger value="exploitableInterests">Intérêts exploitables</TabsTrigger>
+          <TabsTrigger value="cognitiveDifficulties">Difficultés cognitives</TabsTrigger>
+          <TabsTrigger value="schoolDifficulties">Difficultés scolaires</TabsTrigger>
+          <TabsTrigger value="motorDifficulties">Difficultés motrices</TabsTrigger>
+          <TabsTrigger value="socioEmotionalDifficulties">Difficultés socio-émotionnelles</TabsTrigger>
+          <TabsTrigger value="disabilityConstraints">Contraintes du handicap</TabsTrigger>
+          <TabsTrigger value="disabilityNatures">Diagnostics</TabsTrigger>
+          <TabsTrigger value="associatedDisorders">Troubles associés</TabsTrigger>
+          <TabsTrigger value="medicalNeeds">Besoins médicaux</TabsTrigger>
+          <TabsTrigger value="equipment">Équipements</TabsTrigger>
+          <TabsTrigger value="hobbies">Centres d'intérêt</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="needs">
@@ -148,6 +176,116 @@ export default async function LibraryPage() {
               </CardHeader>
               <CardContent>
                 <LibraryContent items={exploitableInterests} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="cognitiveDifficulties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Difficultés cognitives</CardTitle>
+                <CardDescription>Difficultés cognitives réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={cognitiveDifficulties} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="schoolDifficulties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Difficultés scolaires</CardTitle>
+                <CardDescription>Difficultés scolaires réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={schoolDifficulties} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="motorDifficulties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Difficultés motrices et fonctionnelles</CardTitle>
+                <CardDescription>Difficultés motrices et fonctionnelles réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={motorDifficulties} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="socioEmotionalDifficulties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Difficultés socio-émotionnelles ou comportementales</CardTitle>
+                <CardDescription>Difficultés socio-émotionnelles ou comportementales réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={socioEmotionalDifficulties} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="disabilityConstraints">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contraintes liées au handicap</CardTitle>
+                <CardDescription>Contraintes liées au handicap réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={disabilityConstraints} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="disabilityNatures">
+            <Card>
+              <CardHeader>
+                <CardTitle>Diagnostics</CardTitle>
+                <CardDescription>Diagnostics réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={disabilityNatures} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="associatedDisorders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Troubles associés</CardTitle>
+                <CardDescription>Troubles associés réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={associatedDisorders} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="medicalNeeds">
+            <Card>
+              <CardHeader>
+                <CardTitle>Besoins médicaux</CardTitle>
+                <CardDescription>Besoins médicaux réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={medicalNeeds} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="equipment">
+            <Card>
+              <CardHeader>
+                <CardTitle>Équipements</CardTitle>
+                <CardDescription>Équipements réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={equipment} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="hobbies">
+            <Card>
+              <CardHeader>
+                <CardTitle>Centres d'intérêt</CardTitle>
+                <CardDescription>Centres d'intérêt réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={hobbies} />
               </CardContent>
             </Card>
           </TabsContent>
