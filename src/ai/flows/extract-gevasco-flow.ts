@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -46,12 +47,25 @@ const GlobalProfileSchema = z.object({
     equipment: z.array(z.string()).optional().describe("Les appareillages utilisés par l'élève (ex: Fauteuil roulant, appareil auditif).")
 });
 
+const FamilyContactSchema = z.object({
+    title: z.string().describe("Le lien de parenté (ex: Mère, Père, Responsable légal 1)."),
+    name: z.string().describe("Le nom et prénom du contact."),
+});
+
+const AdministrativeDataSchema = z.object({
+    birthDate: z.string().optional().describe("La date de naissance de l'élève (JJ/MM/AAAA)."),
+    level: z.string().optional().describe("Le niveau scolaire de référence de l'élève (ex: 6ème, CE2)."),
+    mdphNotificationTitle: z.string().optional().describe("L'intitulé de la notification de décision de la MDPH."),
+    mdphNotificationExpiration: z.string().optional().describe("La date d'échéance de la notification MDPH (JJ/MM/AAAA)."),
+    familyContacts: z.array(FamilyContactSchema).optional().describe("La liste des contacts familiaux."),
+});
 
 const ExtractGevascoOutputSchema = z.object({
   strengths: StrengthsSchema.optional().describe("Synthèse des points forts et des acquis de l'élève."),
   difficulties: DifficultiesSchema.optional().describe("Synthèse des difficultés et limitations rencontrées par l'élève."),
   needs: NeedsSchema.optional().describe("Synthèse des besoins éducatifs particuliers pour compenser le handicap."),
-  globalProfile: GlobalProfileSchema.optional().describe("Informations générales sur la situation de l'élève.")
+  globalProfile: GlobalProfileSchema.optional().describe("Informations générales sur la situation de l'élève."),
+  administrativeData: AdministrativeDataSchema.optional().describe("Données administratives extraites du document.")
 });
 export type ExtractGevascoOutput = z.infer<typeof ExtractGevascoOutputSchema>;
 
@@ -65,21 +79,49 @@ const prompt = ai.definePrompt({
   output: { schema: ExtractGevascoOutputSchema },
   prompt: `
     Tu es un expert en ingénierie pédagogique spécialisé dans l'analyse de documents GevaSco pour les élèves en situation de handicap.
-    Analyse le document PDF GevaSco fourni et extrais les informations clés de manière structurée.
+    Analyse le document PDF GevaSco fourni et extrais les informations clés de manière structurée en remplissant TOUS les champs demandés dans le format de sortie.
 
     Document à analyser : {{media url=document}}
 
-    INSTRUCTIONS :
-    1.  Lis attentivement l'ensemble du document.
-    2.  Identifie et synthétise les informations relatives :
-        - Au profil global : diagnostics, troubles associés, besoins médicaux impactant la scolarité, appareillages.
-        - Aux points forts : acquis, compétences, centres d'intérêt, etc.
-        - Aux difficultés : scolaires, cognitives, comportementales, etc.
-        - Aux besoins : aménagements, aides, matériel, etc.
-    3.  Ne te contente pas de copier/coller. Reformule les éléments sous forme de listes claires et concises. Chaque élément de liste doit être une phrase ou un groupe de mots court et précis.
-    4.  Si une section est vide ou non pertinente dans le document, laisse le champ correspondant vide dans ta réponse.
-    5.  Fais particulièrement attention à la section "Synthèse" et aux "préconisations" ou "recommandations" du document, car elles contiennent souvent les informations les plus importantes.
-    6.  Classe chaque information extraite dans la catégorie la plus appropriée (globalProfile, strengths, difficulties, needs) et la sous-catégorie correspondante.
+    INSTRUCTIONS DÉTAILLÉES :
+    1.  **Analyse Approfondie** : Lis attentivement l'intégralité du document. Fais particulièrement attention aux sections "Synthèse", "Attentes", "Préconisations", "Recommandations", et aux cadres administratifs.
+    2.  **Reformulation** : Ne te contente JAMAIS de copier/coller. Reformule chaque information sous forme de phrases ou d'éléments de liste clairs, concis et exploitables.
+    3.  **Extraction Structurée** : Extrais les informations suivantes et classe-les précisément :
+
+        a.  **Données Administratives (administrativeData)**:
+            -   \`birthDate\`: La date de naissance de l'élève.
+            -   \`level\`: Le niveau ou la classe de référence.
+            -   \`mdphNotificationTitle\`: L'intitulé exact de la décision MDPH (ex: "Orientation en ULIS", "Accompagnement par AESH mutualisée 8h/semaine").
+            -   \`mdphNotificationExpiration\`: La date de FIN de validité de la notification MDPH.
+            -   \`familyContacts\`: Identifie les responsables légaux, extrais leur lien (\`title\`, ex: Mère, Père) et leur nom complet (\`name\`).
+
+        b.  **Profil Global (globalProfile)**:
+            -   \`disabilityNatures\`: Le ou les diagnostics principaux (ex: "Trouble du Spectre de l'Autisme", "Troubles Spécifiques du Langage et des Apprentissages").
+            -   \`associatedDisorders\`: Les autres troubles mentionnés (ex: "TDAH", "Trouble oppositionnel avec provocation").
+            -   \`medicalNeeds\`: Les besoins médicaux qui impactent la scolarité (ex: "Suivi PAI pour asthme", "Prise de médicaments sur le temps scolaire").
+            -   \`equipment\`: Les appareillages et matériel spécifiques utilisés par l'élève (ex: "Fauteuil roulant électrique", "Appareils auditifs", "Verticalisateur").
+
+        c.  **Points Forts (strengths)**:
+            -   \`academicSkills\`: Les compétences scolaires acquises (ex: "Reconnaît les lettres de l'alphabet", "Peut compter jusqu'à 20").
+            -   \`cognitiveStrengths\`: Les forces cognitives (ex: "Excellente mémoire visuelle", "Bonne capacité de concentration sur des tâches courtes").
+            -   \`socialSkills\`: Les habiletés sociales (ex: "Recherche l'interaction avec l'adulte", "Participe aux jeux de groupe").
+            -   \`exploitableInterests\`: Les centres d'intérêt pouvant servir de levier (ex: "Passion pour les dinosaures", "Intérêt pour la musique").
+
+        d.  **Difficultés (difficulties)**:
+            -   \`cognitiveDifficulties\`: Les difficultés cognitives (ex: "Difficultés de planification", "Lenteur dans le traitement de l'information").
+            -   \`schoolDifficulties\`: Les difficultés scolaires (ex: "Retard en lecture", "Difficultés en résolution de problèmes mathématiques").
+            -   \`motorDifficulties\`: Les difficultés motrices (ex: "Difficultés en graphomotricité fine", "Déplacements lents et fatigants").
+            -   \`socioEmotionalDifficulties\`: Les difficultés sociales et émotionnelles (ex: "Anxiété lors des transitions", "Gestion difficile de la frustration").
+            -   \`disabilityConstraints\`: Les contraintes liées au handicap (ex: "Grande fatigabilité", "Nécessite des pauses fréquentes").
+
+        e.  **Besoins (needs)**:
+            -   \`pedagogicalAccommodations\`: Les aménagements pédagogiques recommandés (ex: "Fournir des supports visuels", "Adapter la quantité de travail écrit", "Utiliser une police d'écriture agrandie").
+            -   \`humanAssistance\`: Le besoin d'aide humaine (ex: "Accompagnement par un(e) AESH", "Tutorat par un pair").
+            -   \`compensatoryTools\`: Les outils de compensation à mettre en place (ex: "Ordinateur avec logiciel de synthèse vocale", "Calculatrice").
+            -   \`specialEducationalApproach\`: Les approches éducatives spécifiques (ex: "Utiliser une communication par pictogrammes (PECS)", "Approche structurée de type TEACCH").
+            -   \`complementaryCare\`: Les soins et rééducations (ex: "Séances d'orthophonie", "Suivi en psychomotricité", "SESSAD").
+
+    4.  **Champs Vides** : Si une information n'est pas présente dans le document, laisse le champ correspondant vide dans ta réponse. Ne déduis pas d'informations non écrites.
   `,
 });
 
