@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, useFormContext, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -24,6 +24,7 @@ import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-ob
 import { suggestAdaptations } from '@/ai/flows/suggest-adaptations-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
+import { ComboboxInput } from '@/components/combobox-input';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { Separator } from '@/components/ui/separator';
 
@@ -76,15 +77,123 @@ const SortableObjectiveItem = ({
   );
 };
 
+
+const AdaptationsManager = ({ objectiveIndex, objectiveId, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; objectiveId: string; adaptationsSuggestions: string[]; }) => {
+    const { control, getValues } = useFormContext<z.infer<typeof formSchema>>();
+    const { toast } = useToast();
+
+    const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray({
+        control: control,
+        name: `objectives.${objectiveIndex}.adaptations`,
+    });
+
+    const [adaptationSuggestions, setAdaptationSuggestions] = useState<string[]>([]);
+    const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState(false);
+    const [newAdaptation, setNewAdaptation] = useState('');
+
+    const handleSuggestAdaptations = async () => {
+        const objectiveTitle = getValues(`objectives.${objectiveIndex}.title`);
+        if (!objectiveTitle) {
+            toast({ variant: 'destructive', title: 'Intitulé manquant', description: "Veuillez d'abord saisir l'intitulé de l'objectif." });
+            return;
+        }
+
+        setIsSuggestingAdaptations(true);
+        try {
+            const result = await suggestAdaptations({ objectiveTitle });
+            const currentAdaptations = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+            const newSuggestions = result.adaptations.filter(a => !currentAdaptations.includes(a));
+            setAdaptationSuggestions(newSuggestions);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur de suggestion', description: 'Une erreur est survenue lors de la suggestion d\'adaptations.' });
+        } finally {
+            setIsSuggestingAdaptations(false);
+        }
+    };
+
+    const addAdaptation = (adaptation: string) => {
+        const trimmedAdaptation = adaptation.trim();
+        if (trimmedAdaptation) {
+            const currentAdaptations = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+            if (!currentAdaptations.includes(trimmedAdaptation)) {
+                appendAdaptation(trimmedAdaptation);
+                addLibraryItems([trimmedAdaptation], 'adaptations');
+            }
+            setAdaptationSuggestions(prev => prev.filter(s => s !== adaptation));
+        }
+    };
+
+    const handleAddClick = () => {
+        addAdaptation(newAdaptation);
+        setNewAdaptation('');
+    };
+
+    return (
+        <FormItem>
+            <div className="flex items-center justify-between">
+                <FormLabel>Moyens et adaptations</FormLabel>
+                <Button type="button" size="sm" variant="ghost" onClick={handleSuggestAdaptations} disabled={isSuggestingAdaptations}>
+                    {isSuggestingAdaptations ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Suggérer par IA
+                </Button>
+            </div>
+
+            {adaptationSuggestions.length > 0 && (
+                <div className="p-3 bg-accent/50 rounded-md">
+                    <p className="text-sm font-medium mb-2">Suggestions :</p>
+                    <div className="flex flex-wrap gap-2">
+                        {adaptationSuggestions.map((suggestion, index) => (
+                            <Button key={index} type="button" variant="outline" size="sm" onClick={() => addAdaptation(suggestion)} className="h-auto whitespace-normal text-left">
+                                <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
+                                {suggestion}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-2">
+                {adaptationFields.map((field, index) => (
+                    <div key={field.id} className="flex items-start gap-2">
+                        <Controller
+                            control={control}
+                            name={`objectives.${objectiveIndex}.adaptations.${index}`}
+                            render={({ field }) => (
+                                <Textarea
+                                    placeholder="Décrire une adaptation..."
+                                    {...field}
+                                    className="min-h-[40px] flex-1"
+                                />
+                            )}
+                        />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeAdaptation(index)} className="shrink-0 mt-1">
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex items-start gap-2 mt-2">
+                <div className="flex-1">
+                    <ComboboxInput
+                        value={[]}
+                        onChange={(values) => { if (values.length > 0) { addAdaptation(values[0]); } }}
+                        placeholder="Rechercher ou créer une adaptation..."
+                        suggestions={librarySuggestions}
+                        singleSelection
+                    />
+                </div>
+            </div>
+        </FormItem>
+    );
+};
+
+
 export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
   const [isSuggestingObjectives, setIsSuggestingObjectives] = useState(false);
   const [objectiveSuggestions, setObjectiveSuggestions] = useState<Objective[]>([]);
-  
-  // State for AI-suggested adaptations, indexed by objective ID
-  const [adaptationSuggestions, setAdaptationSuggestions] = useState<Record<string, string[]>>({});
-  const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState<string | null>(null);
-
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -103,7 +212,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     },
   });
 
-  const { fields, append, remove, move, update } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
@@ -161,38 +270,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     }
   };
 
-  const handleSuggestAdaptations = async (objectiveIndex: number, objectiveId: string) => {
-    const objectiveTitle = form.getValues(`objectives.${objectiveIndex}.title`);
-    if (!objectiveTitle) {
-      toast({
-        variant: 'destructive',
-        title: 'Intitulé manquant',
-        description: "Veuillez d'abord saisir l'intitulé de l'objectif.",
-      });
-      return;
-    }
-
-    setIsSuggestingAdaptations(objectiveId);
-    try {
-      const result = await suggestAdaptations({ objectiveTitle });
-      const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
-      const newSuggestions = result.adaptations.filter(a => !currentAdaptations.includes(a));
-      
-      setAdaptationSuggestions(prev => ({ ...prev, [objectiveId]: newSuggestions }));
-      
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de suggestion',
-        description: 'Une erreur est survenue lors de la suggestion d\'adaptations.',
-      });
-    } finally {
-      setIsSuggestingAdaptations(null);
-    }
-  };
-
-
   const addObjectiveSuggestionToForm = (suggestion: Objective) => {
     append({ 
         id: Math.random().toString(36).substring(7),
@@ -231,119 +308,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       });
     }
   }
-
-  const AdaptationsManager = ({ objectiveIndex, objectiveId }: { objectiveIndex: number, objectiveId: string }) => {
-    const { fields, append, remove, update } = useFieldArray({
-      control: form.control,
-      name: `objectives.${objectiveIndex}.adaptations`,
-    });
-  
-    const [newAdaptation, setNewAdaptation] = useState('');
-    const suggestions = adaptationSuggestions[objectiveId] || [];
-  
-    const addAdaptation = (adaptation: string) => {
-      const trimmedAdaptation = adaptation.trim();
-      if (trimmedAdaptation) {
-        const currentAdaptations = form.getValues(`objectives.${objectiveIndex}.adaptations`) || [];
-        if (!currentAdaptations.includes(trimmedAdaptation)) {
-            append(trimmedAdaptation);
-            addLibraryItems([trimmedAdaptation], 'adaptations');
-        }
-        // Remove from suggestions if it exists
-        setAdaptationSuggestions(prev => ({
-          ...prev,
-          [objectiveId]: prev[objectiveId]?.filter(s => s !== adaptation) || []
-        }));
-      }
-    };
-  
-    const handleAddClick = () => {
-      addAdaptation(newAdaptation);
-      setNewAdaptation('');
-    };
-
-    const handleSuggestionClick = (suggestion: string) => {
-      addAdaptation(suggestion);
-    };
-  
-    return (
-      <FormItem>
-        <div className="flex items-center justify-between">
-          <FormLabel>Moyens et adaptations</FormLabel>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => handleSuggestAdaptations(objectiveIndex, objectiveId)}
-            disabled={isSuggestingAdaptations === objectiveId}
-          >
-            {isSuggestingAdaptations === objectiveId ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Suggérer par IA
-          </Button>
-        </div>
-        
-        {suggestions.length > 0 && (
-          <div className="p-3 bg-accent/50 rounded-md">
-            <p className="text-sm font-medium mb-2">Suggestions :</p>
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((suggestion, index) => (
-                <Button key={index} type="button" variant="outline" size="sm" onClick={() => handleSuggestionClick(suggestion)} className="h-auto whitespace-normal text-left">
-                  <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
-                  {suggestion}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex items-start gap-2">
-              <div className="flex-1">
-                 <FormField
-                  control={form.control}
-                  name={`objectives.${objectiveIndex}.adaptations.${index}`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Décrire une adaptation..."
-                          {...field}
-                          className="min-h-[40px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 mt-1">
-                <Trash2 className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex items-start gap-2 mt-2">
-           <div className="flex-1">
-            <ComboboxField
-              value={newAdaptation}
-              onChange={setNewAdaptation}
-              placeholder="Rechercher ou créer une adaptation..."
-              suggestions={adaptationsSuggestions}
-            />
-           </div>
-            <Button type="button" variant="outline" size="icon" onClick={handleAddClick} className="shrink-0" disabled={!newAdaptation.trim()}>
-                <PlusCircle className="h-4 w-4" />
-            </Button>
-        </div>
-      </FormItem>
-    );
-  };
   
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
@@ -376,7 +340,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             )}
           />
 
-          <AdaptationsManager objectiveIndex={originalIndex} objectiveId={item.field.id} />
+          <AdaptationsManager 
+            objectiveIndex={originalIndex} 
+            objectiveId={item.field.id}
+            adaptationsSuggestions={adaptationsSuggestions}
+          />
 
           <FormField
             control={form.control}

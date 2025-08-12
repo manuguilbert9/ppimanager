@@ -27,6 +27,7 @@ interface ComboboxInputProps {
   placeholder?: string;
   suggestions?: string[];
   badgeClassName?: string;
+  singleSelection?: boolean;
 }
 
 export function ComboboxInput({
@@ -35,6 +36,7 @@ export function ComboboxInput({
   placeholder,
   suggestions = [],
   badgeClassName,
+  singleSelection = false,
 }: ComboboxInputProps) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
@@ -45,8 +47,12 @@ export function ComboboxInput({
 
   const handleSelect = (item: string) => {
     const trimmedItem = item.trim();
-    if (trimmedItem && !value.includes(trimmedItem)) {
-        onChange([...value, trimmedItem]);
+    if (trimmedItem) {
+        if (singleSelection) {
+            onChange([trimmedItem]);
+        } else if (!value.includes(trimmedItem)) {
+            onChange([...value, trimmedItem]);
+        }
     }
     setInputValue('');
     setOpen(false);
@@ -129,7 +135,7 @@ export function ComboboxInput({
         </PopoverContent>
       </Popover>
 
-      <div className="flex flex-wrap gap-1">
+      {!singleSelection && <div className="flex flex-wrap gap-1">
         {value.map((item) => (
           <Badge
             key={item}
@@ -155,7 +161,7 @@ export function ComboboxInput({
             </button>
           </Badge>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
