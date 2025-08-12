@@ -24,6 +24,13 @@ export type GlobalProfile = {
   schoolHistory?: string;
   hobbies?: string[];
   personalProject?: string;
+};
+
+export type Strengths = {
+  academicSkills?: string[];
+  cognitiveStrengths?: string[];
+  socialSkills?: string[];
+  exploitableInterests?: string[];
 }
 
 export type Student = {
@@ -43,6 +50,7 @@ export type Student = {
   status: 'active' | 'archived' | 'draft';
   avatarUrl: string;
   globalProfile?: GlobalProfile;
+  strengths?: Strengths;
 };
 
 export type Ppi = {
@@ -56,7 +64,7 @@ export type Ppi = {
 export type LibraryItem = {
   id: string;
   text: string;
-  category: 'needs' | 'objectives' | 'adaptations' | 'indicators';
+  category: 'needs' | 'objectives' | 'adaptations' | 'indicators' | 'academicSkills' | 'cognitiveStrengths' | 'socialSkills' | 'exploitableInterests';
 };
 
 export type Classe = {

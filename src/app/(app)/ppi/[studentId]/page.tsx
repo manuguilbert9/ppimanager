@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlobalProfileForm } from "./global-profile";
+import { StrengthsForm } from "./strengths-form";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
@@ -34,6 +35,7 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
       
       <div className="space-y-8">
         <GlobalProfileForm student={student} />
+        <StrengthsForm student={student} />
       </div>
     </>
   );

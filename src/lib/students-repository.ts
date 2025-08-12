@@ -26,6 +26,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         status: data.status,
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
         globalProfile: data.globalProfile || {},
+        strengths: data.strengths || {},
     };
 }
 
@@ -44,7 +45,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'status' | 'avatarUrl' | 'globalProfile' | 'strengths'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
@@ -52,6 +53,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'la
             lastUpdate: serverTimestamp(),
             avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
             globalProfile: {},
+            strengths: {},
         });
         revalidatePath('/students');
     } catch (error) {

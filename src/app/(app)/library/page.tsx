@@ -29,6 +29,10 @@ export default async function LibraryPage() {
   const objectives = await getLibraryItems('objectives');
   const adaptations = await getLibraryItems('adaptations');
   const indicators = await getLibraryItems('indicators');
+  const academicSkills = await getLibraryItems('academicSkills');
+  const cognitiveStrengths = await getLibraryItems('cognitiveStrengths');
+  const socialSkills = await getLibraryItems('socialSkills');
+  const exploitableInterests = await getLibraryItems('exploitableInterests');
 
   return (
     <>
@@ -47,6 +51,10 @@ export default async function LibraryPage() {
           <TabsTrigger value="objectives">Objectifs</TabsTrigger>
           <TabsTrigger value="adaptations">Moyens et Adaptations</TabsTrigger>
           <TabsTrigger value="indicators">Indicateurs</TabsTrigger>
+          <TabsTrigger value="academicSkills">Compétences académiques</TabsTrigger>
+          <TabsTrigger value="cognitiveStrengths">Forces cognitives</TabsTrigger>
+          <TabsTrigger value="socialSkills">Habiletés sociales</TabsTrigger>
+          <TabsTrigger value="exploitableInterests">Intérêts exploitables</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="needs">
@@ -96,6 +104,50 @@ export default async function LibraryPage() {
               </CardHeader>
               <CardContent>
                 <LibraryContent items={indicators} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="academicSkills">
+            <Card>
+              <CardHeader>
+                <CardTitle>Compétences académiques</CardTitle>
+                <CardDescription>Compétences académiques réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={academicSkills} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="cognitiveStrengths">
+            <Card>
+              <CardHeader>
+                <CardTitle>Forces cognitives et comportementales</CardTitle>
+                <CardDescription>Forces cognitives réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={cognitiveStrengths} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="socialSkills">
+            <Card>
+              <CardHeader>
+                <CardTitle>Habiletés sociales et communicationnelles</CardTitle>
+                <CardDescription>Habiletés sociales réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={socialSkills} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="exploitableInterests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Intérêts spécifiques exploitables</CardTitle>
+                <CardDescription>Intérêts spécifiques réutilisables.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LibraryContent items={exploitableInterests} />
               </CardContent>
             </Card>
           </TabsContent>
