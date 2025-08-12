@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { updateStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
-import type { Student, Objective, Strengths, Difficulties, Needs } from '@/types';
+import type { Student, Objective } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ComboboxField } from '@/components/combobox-field';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -46,7 +47,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
@@ -154,7 +155,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" className="w-full" defaultValue={fields.map(f => f.id)}>
               {fields.map((field, index) => (
                 <AccordionItem value={field.id} key={field.id}>
                   <div className="flex items-center w-full">
@@ -173,7 +174,11 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
                         <FormItem>
                           <FormLabel>Intitulé de l'objectif</FormLabel>
                           <FormControl>
-                            <Input placeholder="Ex: Savoir écrire lisiblement 10 mots usuels" {...field} />
+                            <ComboboxField
+                              {...field}
+                              placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
+                              suggestions={objectivesSuggestions}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
