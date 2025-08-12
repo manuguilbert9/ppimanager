@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, useWatch, useFormContext, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -77,8 +77,7 @@ const SortableObjectiveItem = ({
   );
 };
 
-
-const AdaptationsManager = ({ objectiveIndex, objectiveId, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; objectiveId: string; adaptationsSuggestions: string[]; }) => {
+const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; adaptationsSuggestions: string[]; }) => {
     const { control, getValues } = useFormContext<z.infer<typeof formSchema>>();
     const { toast } = useToast();
 
@@ -89,8 +88,7 @@ const AdaptationsManager = ({ objectiveIndex, objectiveId, adaptationsSuggestion
 
     const [adaptationSuggestions, setAdaptationSuggestions] = useState<string[]>([]);
     const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState(false);
-    const [newAdaptation, setNewAdaptation] = useState('');
-
+    
     const handleSuggestAdaptations = async () => {
         const objectiveTitle = getValues(`objectives.${objectiveIndex}.title`);
         if (!objectiveTitle) {
@@ -122,11 +120,6 @@ const AdaptationsManager = ({ objectiveIndex, objectiveId, adaptationsSuggestion
             }
             setAdaptationSuggestions(prev => prev.filter(s => s !== adaptation));
         }
-    };
-
-    const handleAddClick = () => {
-        addAdaptation(newAdaptation);
-        setNewAdaptation('');
     };
 
     return (
@@ -342,7 +335,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
 
           <AdaptationsManager 
             objectiveIndex={originalIndex} 
-            objectiveId={item.field.id}
             adaptationsSuggestions={adaptationsSuggestions}
           />
 
