@@ -52,6 +52,7 @@ function createSectionTitle(title: string, color: string, textColor = "000000"):
                 margins: { top: 200, bottom: 200 },
             }),
         ],
+        tableHeader: false,
     });
 }
 
@@ -181,7 +182,7 @@ function createSpacerRow(): TableRow {
 
 function createSection(title: string, color: string, rows: (TableRow | null | (TableRow | null)[])[], pageBreakBefore = true) {
     const tableRows = [
-        createSectionTitle(title, color, "FFFFFF"),
+        createSectionTitle(title, color, "000000"),
         ...rows.flat().filter((row): row is TableRow => row !== null),
     ];
 
@@ -231,7 +232,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 new Paragraph({
                     children: [
                         new TextRun({
-                            text: 'Projet Personnalisé d\'Inclusion (PPI)',
+                            text: 'Projet Pédagogique Individualisé (PPI)',
                             bold: true,
                             size: 48, // 24pt
                         }),

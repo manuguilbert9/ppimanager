@@ -85,7 +85,7 @@ export default async function PpiPage() {
   return (
     <>
       <PageHeader
-        title="Gestion des PPI"
+        title="Gestion des Projets Pédagogiques Individualisés (PPI)"
         description="Créez, mettez à jour et gérez tous les PPI des élèves."
       />
       <div className="space-y-8">
