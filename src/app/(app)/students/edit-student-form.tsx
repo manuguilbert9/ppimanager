@@ -202,7 +202,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                <h3 className="text-lg font-medium border-b pb-2 pt-4">Orientation et Référents</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <FormLabel>Référent éducatif</FormLabel>
+                        <FormLabel>Enseignant</FormLabel>
                         <Input readOnly value={selectedClass?.teacherName || 'Aucun enseignant défini pour cette classe'} className="mt-2 bg-gray-100" />
                     </div>
                 </div>
