@@ -11,18 +11,18 @@ export default function PpiPage() {
   return (
     <>
       <PageHeader
-        title="PPI Management"
-        description="Create, update, and manage all student PPIs."
+        title="Gestion des PPI"
+        description="Créez, mettez à jour et gérez tous les PPI des élèves."
       />
       <Card>
         <CardHeader>
-          <CardTitle>PPI List</CardTitle>
+          <CardTitle>Liste des PPI</CardTitle>
           <CardDescription>
-            This section will display a list of all PPIs. The full PPI editor will be available at `/ppi/[id]`.
+            Cette section affichera une liste de tous les PPI. L'éditeur PPI complet sera disponible à l'adresse `/ppi/[id]`.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>PPI list implementation is pending.</p>
+          <p>L'implémentation de la liste des PPI est en attente.</p>
         </CardContent>
       </Card>
     </>

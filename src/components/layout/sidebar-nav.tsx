@@ -23,41 +23,41 @@ export function SidebarNav() {
     <SidebarMenu>
       <SidebarMenuItem>
         <Link href="/dashboard" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Dashboard">
+          <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Tableau de bord">
             <LayoutDashboard />
-            Dashboard
+            Tableau de bord
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <Link href="/students" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/students')} tooltip="Students">
+          <SidebarMenuButton isActive={isActive('/students')} tooltip="Élèves">
             <Users />
-            Students
+            Élèves
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <Link href="/ppi" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/ppi')} tooltip="PPIs">
+          <SidebarMenuButton isActive={isActive('/ppi')} tooltip="PPI">
             <FileText />
-            PPIs
+            PPI
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <Link href="/library" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/library')} tooltip="Library">
+          <SidebarMenuButton isActive={isActive('/library')} tooltip="Bibliothèque">
             <Library />
-            Library
+            Bibliothèque
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <Link href="/settings" passHref legacyBehavior>
-          <SidebarMenuButton isActive={isActive('/settings')} tooltip="Settings">
+          <SidebarMenuButton isActive={isActive('/settings')} tooltip="Paramètres">
             <Settings />
-            Settings
+            Paramètres
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>

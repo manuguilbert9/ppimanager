@@ -29,38 +29,44 @@ export default function DashboardPage() {
     archived: 'outline',
   } as const;
 
+  const statusText = {
+    validated: 'Validé',
+    draft: 'Brouillon',
+    archived: 'Archivé',
+  }
+
   return (
     <>
-      <PageHeader title="Dashboard" description="Welcome back, here's a summary of your activities." />
+      <PageHeader title="Tableau de bord" description="Ravi de vous revoir, voici un résumé de vos activités." />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Nombre total d'élèves</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{students.length}</div>
-            <p className="text-xs text-muted-foreground">Managed in the system</p>
+            <p className="text-xs text-muted-foreground">Gérés dans le système</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active PPIs</CardTitle>
+            <CardTitle className="text-sm font-medium">PPI Actifs</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{ppis.filter(p => p.status !== 'archived').length}</div>
-            <p className="text-xs text-muted-foreground">Across all students</p>
+            <p className="text-xs text-muted-foreground">Pour tous les élèves</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Library Items</CardTitle>
+            <CardTitle className="text-sm font-medium">Éléments de la bibliothèque</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{libraryItemsCount}</div>
-            <p className="text-xs text-muted-foreground">Reusable objectives, needs, etc.</p>
+            <p className="text-xs text-muted-foreground">Objectifs, besoins, etc. réutilisables.</p>
           </CardContent>
         </Card>
       </div>
@@ -70,12 +76,12 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent PPI Updates</CardTitle>
-                <CardDescription>A log of the latest changes to PPIs.</CardDescription>
+                <CardTitle>Mises à jour récentes des PPI</CardTitle>
+                <CardDescription>Un journal des dernières modifications apportées aux PPI.</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/ppi">
-                  View All
+                  Voir tout
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -85,9 +91,9 @@ export default function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Updated</TableHead>
+                  <TableHead>Élève</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Dernière mise à jour</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -96,12 +102,12 @@ export default function DashboardPage() {
                   <TableRow key={ppi.id}>
                     <TableCell className="font-medium">{ppi.studentName}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant[ppi.status]}>{ppi.status}</Badge>
+                      <Badge variant={statusVariant[ppi.status]}>{statusText[ppi.status]}</Badge>
                     </TableCell>
                     <TableCell>{ppi.lastUpdate}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/ppi/${ppi.id}`}>View PPI</Link>
+                        <Link href={`/ppi/${ppi.id}`}>Voir le PPI</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

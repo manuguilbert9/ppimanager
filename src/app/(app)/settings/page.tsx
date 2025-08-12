@@ -12,37 +12,37 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Manage application settings, user roles, and preferences."
+        title="Paramètres"
+        description="Gérez les paramètres de l'application, les rôles des utilisateurs et les préférences."
       />
       <Tabs defaultValue="profile">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="roles">Role Management</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="roles">Gestion des rôles</TabsTrigger>
+          <TabsTrigger value="system">Système</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Your Profile</CardTitle>
-                <CardDescription>Update your personal information.</CardDescription>
+                <CardTitle>Votre profil</CardTitle>
+                <CardDescription>Mettez à jour vos informations personnelles.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p>Profile settings form will be here.</p>
+                <p>Le formulaire de paramètres du profil sera ici.</p>
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="roles">
             <Card>
               <CardHeader>
-                <CardTitle>Role Management</CardTitle>
+                <CardTitle>Gestion des rôles</CardTitle>
                 <CardDescription>
-                  Manage user roles and permissions (admin, coordinator, teacher, etc.).
+                  Gérez les rôles et les autorisations des utilisateurs (administrateur, coordinateur, enseignant, etc.).
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p>User and role management table will be here.</p>
+                <p>Le tableau de gestion des utilisateurs et des rôles sera ici.</p>
               </CardContent>
             </Card>
           </TabsContent>

@@ -14,43 +14,43 @@ export default function LibraryPage() {
   return (
     <>
       <PageHeader
-        title="Library Management"
-        description="Centralize reusable elements for quick insertion into PPIs."
+        title="Gestion de la bibliothèque"
+        description="Centralisez les éléments réutilisables pour une insertion rapide dans les PPI."
       >
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add to Library
+          Ajouter à la bibliothèque
         </Button>
       </PageHeader>
       <Tabs defaultValue="needs">
         <TabsList>
-          <TabsTrigger value="needs">Needs</TabsTrigger>
-          <TabsTrigger value="objectives">Objectives</TabsTrigger>
-          <TabsTrigger value="adaptations">Means & Adaptations</TabsTrigger>
-          <TabsTrigger value="indicators">Indicators</TabsTrigger>
+          <TabsTrigger value="needs">Besoins</TabsTrigger>
+          <TabsTrigger value="objectives">Objectifs</TabsTrigger>
+          <TabsTrigger value="adaptations">Moyens et Adaptations</TabsTrigger>
+          <TabsTrigger value="indicators">Indicateurs</TabsTrigger>
         </TabsList>
         <div className="mt-4">
           <TabsContent value="needs">
             <Card>
               <CardHeader>
-                <CardTitle>Needs</CardTitle>
-                <CardDescription>Reusable needs for students.</CardDescription>
+                <CardTitle>Besoins</CardTitle>
+                <CardDescription>Besoins réutilisables pour les élèves.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p>List of needs will be displayed here.</p>
+                <p>La liste des besoins sera affichée ici.</p>
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="objectives">
             <Card>
               <CardHeader>
-                <CardTitle>Objectives</CardTitle>
+                <CardTitle>Objectifs</CardTitle>
                 <CardDescription>
-                  Common objectives that can be assigned to students.
+                  Objectifs communs pouvant être assignés aux élèves.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p>List of objectives will be displayed here.</p>
+                <p>La liste des objectifs sera affichée ici.</p>
               </CardContent>
             </Card>
           </TabsContent>

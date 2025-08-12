@@ -35,31 +35,37 @@ export default function StudentsPage() {
     archived: 'outline',
   } as const;
 
+  const statusText = {
+    active: 'Actif',
+    draft: 'Brouillon',
+    archived: 'Archivé',
+  }
+
   return (
     <>
       <PageHeader
-        title="Student Management"
-        description="Manage student profiles and their associated PPIs."
+        title="Gestion des élèves"
+        description="Gérez les profils des élèves et leurs PPI associés."
       >
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Student
+          Ajouter un élève
         </Button>
       </PageHeader>
 
       <Card>
         <CardHeader>
-          <CardTitle>Student List</CardTitle>
-          <CardDescription>A list of all students in the system.</CardDescription>
+          <CardTitle>Liste des élèves</CardTitle>
+          <CardDescription>Une liste de tous les élèves du système.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last PPI Update</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Classe</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Dernière mise à jour du PPI</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -79,7 +85,7 @@ export default function StudentsPage() {
                   </TableCell>
                   <TableCell>{student.class}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[student.status]}>{student.status}</Badge>
+                    <Badge variant={statusVariant[student.status]}>{statusText[student.status]}</Badge>
                   </TableCell>
                   <TableCell>{student.lastUpdate}</TableCell>
                   <TableCell>
@@ -88,16 +94,16 @@ export default function StudentsPage() {
                         <DropdownMenuTrigger asChild>
                           <Button aria-haspopup="true" size="icon" variant="ghost">
                             <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
+                            <span className="sr-only">Ouvrir le menu</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link href={`/ppi/${student.id}`}>View PPI</Link>
+                            <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Edit Student</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem>Modifier l'élève</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
