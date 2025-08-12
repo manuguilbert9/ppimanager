@@ -5,7 +5,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { FileText, LayoutDashboard, Library, Settings, Users } from 'lucide-react';
+import { FileText, LayoutDashboard, Library, Settings, Users, School } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -31,6 +31,14 @@ export function SidebarNav() {
           <Link href="/students">
             <Users />
             Élèves
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/classes')} tooltip="Classes">
+          <Link href="/classes">
+            <School />
+            Classes
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

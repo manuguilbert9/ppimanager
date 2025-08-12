@@ -6,15 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { updateStudent } from '@/lib/students-repository';
-import type { Student, Classe } from '@/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { updateClasse } from '@/lib/classes-repository';
+import type { Classe } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,15 +31,12 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Le nom doit contenir au moins 2 caractères.',
-  }),
-  classId: z.string({
-    required_error: 'Veuillez sélectionner une classe.',
+  name: z.string().min(1, {
+    message: 'Le nom de la classe est requis.',
   }),
 });
 
-export function EditStudentForm({ student, classes }: { student: Student, classes: Classe[] }) {
+export function EditClasseForm({ classe }: { classe: Classe }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -54,17 +44,16 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: student.name,
-      classId: student.classId,
+      name: classe.name,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await updateStudent(student.id, values);
+      await updateClasse(classe.id, values);
       toast({
-        title: 'Élève modifié',
-        description: `${values.name} a été mis à jour avec succès.`,
+        title: 'Classe modifiée',
+        description: `La classe ${values.name} a été mise à jour avec succès.`,
       });
       form.reset();
       setOpen(false);
@@ -72,7 +61,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: "Erreur lors de la modification de l'élève",
+        title: "Erreur lors de la modification de la classe",
         description: 'Une erreur est survenue. Veuillez réessayer.',
       });
     }
@@ -82,14 +71,14 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          Modifier l'élève
+          Modifier la classe
         </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Modifier l'élève</DialogTitle>
+          <DialogTitle>Modifier la classe</DialogTitle>
           <DialogDescription>
-            Mettez à jour les informations de l'élève ci-dessous.
+            Mettez à jour les informations de la classe ci-dessous.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -100,34 +89,10 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom de l'élève</FormLabel>
+                    <FormLabel>Nom de la classe</FormLabel>
                     <FormControl>
-                      <Input placeholder="ex: Jean Dupont" {...field} />
+                      <Input placeholder="ex: CM2" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="classId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Classe</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une classe" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {classes.map((classe) => (
-                          <SelectItem key={classe.id} value={classe.id}>
-                            {classe.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

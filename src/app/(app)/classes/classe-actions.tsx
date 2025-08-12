@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,11 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Student, Classe } from '@/types';
-import { DeleteStudentDialog } from './delete-student-dialog';
-import { EditStudentForm } from './edit-student-form';
+import type { Classe } from '@/types';
+import { DeleteClasseDialog } from './delete-classe-dialog';
+import { EditClasseForm } from './edit-classe-form';
 
-export function StudentActions({ student, classes }: { student: Student, classes: Classe[] }) {
+export function ClasseActions({ classe }: { classe: Classe }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,12 +25,9 @@ export function StudentActions({ student, classes }: { student: Student, classes
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
-        </DropdownMenuItem>
+        <EditClasseForm classe={classe} />
         <DropdownMenuSeparator />
-        <EditStudentForm student={student} classes={classes} />
-        <DeleteStudentDialog studentId={student.id} />
+        <DeleteClasseDialog classeId={classe.id} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

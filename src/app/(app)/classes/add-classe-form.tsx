@@ -24,28 +24,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { addStudent } from '@/lib/students-repository';
+import { addClasse } from '@/lib/classes-repository';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import type { Classe } from '@/types';
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Le nom doit contenir au moins 2 caractères.',
-  }),
-  classId: z.string({
-    required_error: 'Veuillez sélectionner une classe.',
+  name: z.string().min(1, {
+    message: 'Le nom de la classe est requis.',
   }),
 });
 
-export function AddStudentForm({ classes }: { classes: Classe[] }) {
+export function AddClasseForm() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -59,10 +48,10 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await addStudent(values);
+      await addClasse(values);
       toast({
-        title: 'Élève ajouté',
-        description: `${values.name} a été ajouté avec succès.`,
+        title: 'Classe ajoutée',
+        description: `La classe ${values.name} a été ajoutée avec succès.`,
       });
       form.reset();
       setOpen(false);
@@ -70,7 +59,7 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: "Erreur lors de l'ajout de l'élève",
+        title: "Erreur lors de l'ajout de la classe",
         description:
           'Une erreur est survenue. Veuillez réessayer.',
       });
@@ -82,14 +71,14 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un élève
+          Ajouter une classe
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouvel élève</DialogTitle>
+          <DialogTitle>Ajouter une nouvelle classe</DialogTitle>
           <DialogDescription>
-            Remplissez les informations ci-dessous pour ajouter un nouvel élève.
+            Remplissez les informations ci-dessous pour ajouter une nouvelle classe.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -100,34 +89,10 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom de l'élève</FormLabel>
+                    <FormLabel>Nom de la classe</FormLabel>
                     <FormControl>
-                      <Input placeholder="ex: Jean Dupont" {...field} />
+                      <Input placeholder="ex: CM2" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="classId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Classe</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une classe" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {classes.map((classe) => (
-                          <SelectItem key={classe.id} value={classe.id}>
-                            {classe.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

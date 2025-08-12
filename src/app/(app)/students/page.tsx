@@ -16,14 +16,15 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Link from 'next/link';
 import { getStudents } from '@/lib/students-repository';
 import type { Student } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
+import { getClasses } from '@/lib/classes-repository';
 
 export default async function StudentsPage() {
   const students = await getStudents();
+  const classes = await getClasses();
 
   const statusVariant = {
     active: 'default',
@@ -43,7 +44,7 @@ export default async function StudentsPage() {
         title="Gestion des élèves"
         description="Gérez les profils des élèves et leurs PPI associés."
       >
-        <AddStudentForm />
+        <AddStudentForm classes={classes} />
       </PageHeader>
 
       <Card>
@@ -84,7 +85,7 @@ export default async function StudentsPage() {
                       <span className="font-medium">{student.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{student.class}</TableCell>
+                  <TableCell>{student.className}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[student.status]}>
                       {statusText[student.status]}
@@ -93,7 +94,7 @@ export default async function StudentsPage() {
                   <TableCell>{student.lastUpdate}</TableCell>
                   <TableCell>
                     <div className="flex justify-end">
-                      <StudentActions student={student} />
+                      <StudentActions student={student} classes={classes} />
                     </div>
                   </TableCell>
                 </TableRow>

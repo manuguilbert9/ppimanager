@@ -2,15 +2,18 @@
 
 import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Student } from '@/types';
+import type { Student, Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
+import { getClasse } from './classes-repository';
 
-function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Student {
+async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
     const data = doc.data();
+    const classe = await getClasse(data.classId);
     return {
         id: doc.id,
         name: data.name,
-        class: data.class,
+        classId: data.classId,
+        className: classe?.name ?? 'N/A',
         lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
         status: data.status,
         avatarUrl: data.avatarUrl || 'https://placehold.co/40x40.png'
@@ -19,7 +22,7 @@ function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData)
 
 export async function getStudents(): Promise<Student[]> {
     const querySnapshot = await getDocs(collection(db, 'students'));
-    return querySnapshot.docs.map(studentFromDoc);
+    return Promise.all(querySnapshot.docs.map(studentFromDoc));
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
@@ -32,7 +35,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: { name: string; class: string; }) {
+export async function addStudent(student: { name: string; classId: string; }) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
@@ -47,7 +50,7 @@ export async function addStudent(student: { name: string; class: string; }) {
     }
 }
 
-export async function updateStudent(id: string, student: { name: string; class: string; }) {
+export async function updateStudent(id: string, student: { name: string; classId: string; }) {
     try {
         const studentRef = doc(db, 'students', id);
         await updateDoc(studentRef, {
