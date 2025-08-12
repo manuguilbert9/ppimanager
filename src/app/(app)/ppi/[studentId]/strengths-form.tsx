@@ -77,7 +77,7 @@ export function StrengthsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Points forts de l’élève (« points d’appui »)</CardTitle>
+        <CardTitle>Points d'appuis</CardTitle>
         <CardDescription>
             Liste des capacités, acquis et atouts sur lesquels on peut s’appuyer pour les apprentissages.
         </CardDescription>
