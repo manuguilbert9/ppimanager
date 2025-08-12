@@ -63,8 +63,8 @@ const SortableObjectiveItem = ({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center w-full gap-2">
-      <div {...attributes} {...listeners} className="cursor-grab touch-none p-2">
+    <div ref={setNodeRef} style={style} className="flex items-start w-full gap-2">
+      <div {...attributes} {...listeners} className="cursor-grab touch-none p-2 mt-2">
         <GripVertical className="h-5 w-5 text-muted-foreground" />
       </div>
       <div className="flex-grow">{children}</div>
@@ -174,16 +174,16 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
     const objectiveContent = (
-      <AccordionItem value={field.id} className="w-full border rounded-md px-4 bg-card">
+      <AccordionItem value={field.id} className="w-full border-purple-200 dark:border-purple-800 border rounded-md px-4 bg-purple-50 dark:bg-purple-900/20">
         <div className="flex items-center w-full">
-          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-2 text-purple-600 dark:text-purple-500">
+          <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-3 text-purple-600 dark:text-purple-400">
             <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
           </AccordionTrigger>
           <Button type="button" variant="ghost" size="icon" onClick={() => remove(originalIndex)} className="ml-2">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
-        <AccordionContent className="space-y-4 pt-4">
+        <AccordionContent className="space-y-4 pt-2 pb-4">
           <FormField
             control={form.control}
             name={`objectives.${originalIndex}.title`}
@@ -255,8 +255,8 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
     }
     
     return (
-      <div key={field.id} className="flex items-center w-full gap-2">
-        <div className="p-2">
+      <div key={field.id} className="flex items-start w-full gap-2">
+        <div className="p-2 mt-2">
           <div className="h-5 w-5" /> 
         </div>
         <div className="flex-grow">{objectiveContent}</div>
@@ -318,7 +318,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
             <h3 className="text-xl font-semibold tracking-tight">Objectifs en cours</h3>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
-                <Accordion type="multiple" className="w-full space-y-2" defaultValue={fields.map(f => f.id)}>
+                <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
                   {activeObjectives.map((item) => renderObjective(item, true))}
                 </Accordion>
               </SortableContext>
@@ -333,7 +333,7 @@ export function ObjectivesForm({ student, objectivesSuggestions }: ObjectivesFor
                 <>
                     <Separator className="my-8" />
                     <h3 className="text-xl font-semibold tracking-tight">Objectifs atteints</h3>
-                    <Accordion type="multiple" className="w-full space-y-2" defaultValue={fields.map(f => f.id)}>
+                    <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
                         {validatedObjectives.map((item) => renderObjective(item, false))}
                     </Accordion>
                 </>
