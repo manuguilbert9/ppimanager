@@ -57,8 +57,8 @@ export function AddStudentForm() {
         title: 'Élève ajouté',
         description: `${values.name} a été ajouté avec succès.`,
       });
-      setOpen(false);
       form.reset();
+      setOpen(false);
       router.refresh();
     } catch (error) {
       toast({
@@ -86,7 +86,7 @@ export function AddStudentForm() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 py-4">
               <FormField
                 control={form.control}
