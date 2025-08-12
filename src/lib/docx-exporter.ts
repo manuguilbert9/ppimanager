@@ -4,7 +4,6 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation } from 'docx';
 import type { Student } from '@/types';
 
-const HEADING_COLOR = "4F46E5"; // A nice shade of purple, similar to primary color
 const TABLE_WIDTH = 9000;
 const FULL_WIDTH = {
     size: TABLE_WIDTH,
@@ -19,7 +18,18 @@ const NO_BORDER = {
     right: { style: "none", size: 0, color: "FFFFFF" },
 };
 
-function createSectionTitle(title: string): TableRow {
+// New color palette
+const SECTION_COLORS = {
+    administrative: "c8dee9",
+    globalProfile: "E6E5C5",
+    strengths: "b4e2cc",
+    difficulties: "e4c9c9",
+    needs: "d0ebe8",
+    objectives: "abb3dd",
+};
+
+
+function createSectionTitle(title: string, color: string, textColor = "000000"): TableRow {
     return new TableRow({
         children: [
             new TableCell({
@@ -28,21 +38,20 @@ function createSectionTitle(title: string): TableRow {
                         text: title,
                         bold: true,
                         size: 32, // 16pt
-                        color: "FFFFFF"
+                        color: textColor,
                     })],
                     alignment: AlignmentType.CENTER,
                 })],
                 shading: {
                     type: ShadingType.SOLID,
-                    color: HEADING_COLOR,
-                    fill: HEADING_COLOR,
+                    color: color,
+                    fill: color,
                 },
                 verticalAlign: VerticalAlign.CENTER,
                 columnSpan: 2,
                 margins: { top: 200, bottom: 200 },
             }),
         ],
-        tableHeader: true,
     });
 }
 
@@ -55,7 +64,7 @@ function createSubHeadingRow(text: string): TableRow {
                         text,
                         bold: true,
                         size: 28, // 14pt
-                        color: HEADING_COLOR,
+                        color: "444444",
                     })],
                 })],
                 columnSpan: 2,
@@ -170,9 +179,9 @@ function createSpacerRow(): TableRow {
 }
 
 
-function createSection(title: string, rows: (TableRow | null | (TableRow | null)[])[], pageBreakBefore = true) {
+function createSection(title: string, color: string, rows: (TableRow | null | (TableRow | null)[])[], pageBreakBefore = true) {
     const tableRows = [
-        createSectionTitle(title),
+        createSectionTitle(title, color, "FFFFFF"),
         ...rows.flat().filter((row): row is TableRow => row !== null),
     ];
 
@@ -253,7 +262,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 }),
 
                 // Part 2: Informations Administratives
-                ...createSection('Informations Administratives', [
+                ...createSection('Informations Administratives', SECTION_COLORS.administrative, [
                     createSubHeadingRow('Identité de l’élève'),
                     createDataRow('Nom', student.lastName),
                     createDataRow('Prénom', student.firstName),
@@ -280,7 +289,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ]),
 
                 // Part 3: Profil Global
-                ...createSection('Profil Global de l’élève', [
+                ...createSection('Profil Global de l’élève', SECTION_COLORS.globalProfile, [
                     createSubHeadingRow('Nature du handicap et troubles associés'),
                     ...createListRow("Diagnostics principaux", student.globalProfile?.disabilityNatures),
                     ...createListRow("Autres troubles ou déficiences associées", student.globalProfile?.associatedDisorders),
@@ -305,7 +314,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ]),
                 
                 // Part 4 : Points d'appui
-                ...createSection("Points d'appui", [
+                ...createSection("Points d'appui", SECTION_COLORS.strengths, [
                     ...createListRow('Compétences acquises', student.strengths?.academicSkills),
                     ...createListRow('Forces cognitives et comportementales', student.strengths?.cognitiveStrengths),
                     ...createListRow('Habiletés sociales ou communicationnelles', student.strengths?.socialSkills),
@@ -313,7 +322,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ]),
 
                 // Part 5: Difficultés
-                ...createSection('Difficultés', [
+                ...createSection('Difficultés', SECTION_COLORS.difficulties, [
                      ...createListRow('Difficultés cognitives', student.difficulties?.cognitiveDifficulties),
                      ...createListRow('Difficultés scolaires', student.difficulties?.schoolDifficulties),
                      ...createListRow('Difficultés motrices et fonctionnelles', student.difficulties?.motorDifficulties),
@@ -322,7 +331,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ]),
                 
                 // Part 6: Besoins Éducatifs Particuliers
-                ...createSection('Besoins Éducatifs Particuliers', [
+                ...createSection('Besoins Éducatifs Particuliers', SECTION_COLORS.needs, [
                      ...createListRow('Besoin d’aménagements pédagogiques', student.needs?.pedagogicalAccommodations),
                      ...createListRow('Besoin d’aide humaine', student.needs?.humanAssistance),
                      ...createListRow('Besoin d’outils de compensation', student.needs?.compensatoryTools),
@@ -331,7 +340,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ]),
 
                 // Part 7: Objectifs
-                ...createSection('Objectifs prioritaires d’apprentissage', (student.objectives || []).flatMap((objective, index) => [
+                ...createSection('Objectifs prioritaires d’apprentissage', SECTION_COLORS.objectives, (student.objectives || []).flatMap((objective, index) => [
                     createSubHeadingRow(`Objectif ${index + 1}: ${objective.title}`),
                     createDataRow('Critère de réussite attendue', objective.successCriteria),
                     createDataRow('Échéance', objective.deadline),
@@ -345,3 +354,5 @@ export async function generateDocx(student: Student): Promise<Blob> {
     const blob = await Packer.toBlob(doc);
     return blob;
 }
+
+    
