@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -45,7 +46,7 @@ export default async function PpiPage() {
         <CardHeader>
           <CardTitle>Liste des PPI</CardTitle>
           <CardDescription>
-            Cette section affichera une liste de tous les PPI.
+            Cette section affichera une liste de tous les PPI des élèves.
           </CardDescription>
         </CardHeader>
         <CardContent>
