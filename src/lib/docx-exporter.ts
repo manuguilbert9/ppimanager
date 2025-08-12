@@ -308,7 +308,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                 ...createSection("Points d'appui", [
                     ...createListRow('Compétences acquises', student.strengths?.academicSkills),
                     ...createListRow('Forces cognitives et comportementales', student.strengths?.cognitiveStrengths),
-                    ...createListRow('Habiletés sociales ou communicationnelles préservées', student.strengths?.socialSkills),
+                    ...createListRow('Habiletés sociales ou communicationnelles', student.strengths?.socialSkills),
                     ...createListRow('Intérêts spécifiques exploitables', student.strengths?.exploitableInterests),
                 ]),
 

@@ -105,7 +105,7 @@ export function StrengthsForm({
                         )} />
                         <FormField control={form.control} name="socialSkills" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Habiletés sociales ou communicationnelles préservées</FormLabel>
+                                <FormLabel>Habiletés sociales ou communicationnelles</FormLabel>
                                 <FormControl><ComboboxInput placeholder="Cherche à entrer en interaction..." {...field} suggestions={socialSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
