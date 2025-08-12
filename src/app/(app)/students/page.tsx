@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -40,14 +41,26 @@ export default async function StudentsPage() {
 
   const getAge = (birthDate?: string) => {
     if (!birthDate) return 'N/A';
+    
+    // Handle "JJ/MM/AAAA" format by converting it to "AAAA-MM-JJ"
+    const parts = birthDate.split('/');
+    let formattedDate = birthDate;
+    if (parts.length === 3) {
+      formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    const birth = new Date(formattedDate);
+    if (isNaN(birth.getTime())) {
+        return 'N/A';
+    }
+
     const today = new Date();
-    const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    return age;
+    return isNaN(age) ? 'N/A' : age;
   }
 
   return (
