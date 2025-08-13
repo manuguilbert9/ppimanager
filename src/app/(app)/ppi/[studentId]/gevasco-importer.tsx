@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Paperclip, Loader2, WandSparkles, AlertTriangle, User, FileText, HeartHand, Accessibility, Stethoscope, Briefcase } from 'lucide-react';
+import { Paperclip, Loader2, WandSparkles, AlertTriangle, User, FileText, HeartHand, Accessibility, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
