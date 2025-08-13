@@ -1,12 +1,11 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,8 @@ import type { Student, GlobalProfile } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useDebounce } from '@/hooks/use-debounce';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 const formSchema = z.object({
   disabilityNatures: z.array(z.string()).optional(),
@@ -52,6 +53,8 @@ export function GlobalProfileForm({
   hobbiesSuggestions
 }: GlobalProfileFormProps) {
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,41 +76,61 @@ export function GlobalProfileForm({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const globalProfile: GlobalProfile = values;
-      await updateStudent(student.id, { globalProfile });
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
 
-      if (values.disabilityNatures) addLibraryItems(values.disabilityNatures, 'disabilityNatures');
-      if (values.associatedDisorders) addLibraryItems(values.associatedDisorders, 'associatedDisorders');
-      if (values.medicalNeeds) addLibraryItems(values.medicalNeeds, 'medicalNeeds');
-      if (values.equipment) addLibraryItems(values.equipment, 'equipment');
-      if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
-      
-      toast({
-        title: 'Profil mis à jour',
-        description: `Le profil de ${student.firstName} ${student.lastName} a été enregistré.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
+  useEffect(() => {
+    async function saveForm(values: z.infer<typeof formSchema>) {
+      setIsSaving(true);
+      setIsSaved(false);
+      try {
+        const globalProfile: GlobalProfile = values;
+        await updateStudent(student.id, { globalProfile });
+
+        if (values.disabilityNatures) addLibraryItems(values.disabilityNatures, 'disabilityNatures');
+        if (values.associatedDisorders) addLibraryItems(values.associatedDisorders, 'associatedDisorders');
+        if (values.medicalNeeds) addLibraryItems(values.medicalNeeds, 'medicalNeeds');
+        if (values.equipment) addLibraryItems(values.equipment, 'equipment');
+        if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
+        
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la sauvegarde.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
-  }
+    
+    // Do not save on initial render
+    if (form.formState.isDirty) {
+      saveForm(debouncedValues);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValues]);
 
   return (
-    <Card style={{ backgroundColor: '#F3F4F6' }}>
-      <CardHeader>
-        <CardTitle>Profil global de l’élève</CardTitle>
-        <CardDescription>
-          Description synthétique de la situation de handicap et du développement global.
-        </CardDescription>
+    <Card className="bg-gray-50/50">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Profil global de l’élève</CardTitle>
+          <CardDescription>
+            Description synthétique de la situation de handicap et du développement global.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
+          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form className="space-y-8">
             <Accordion type="multiple" className="w-full" defaultValue={['item-1', 'item-2', 'item-3', 'item-4', 'item-5']}>
               
               <AccordionItem value="item-1">
@@ -245,12 +268,6 @@ export function GlobalProfileForm({
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Sauvegarde...' : 'Sauvegarder le profil'}
-              </Button>
-            </div>
           </form>
         </Form>
       </CardContent>

@@ -1,10 +1,10 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { updateStudent } from '@/lib/students-repository';
@@ -13,6 +13,8 @@ import type { Student, Difficulties } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useDebounce } from '@/hooks/use-debounce';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 const formSchema = z.object({
   cognitiveDifficulties: z.array(z.string()).optional(),
@@ -41,6 +43,8 @@ export function DifficultiesForm({
   disabilityConstraintsSuggestions,
 }: DifficultiesFormProps) {
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,44 +57,63 @@ export function DifficultiesForm({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const difficulties: Difficulties = values;
-      await updateStudent(student.id, { difficulties });
-      
-      // Add new tags to the library
-      if (values.cognitiveDifficulties) addLibraryItems(values.cognitiveDifficulties, 'cognitiveDifficulties');
-      if (values.schoolDifficulties) addLibraryItems(values.schoolDifficulties, 'schoolDifficulties');
-      if (values.motorDifficulties) addLibraryItems(values.motorDifficulties, 'motorDifficulties');
-      if (values.socioEmotionalDifficulties) addLibraryItems(values.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
-      if (values.disabilityConstraints) addLibraryItems(values.disabilityConstraints, 'disabilityConstraints');
-      
-      toast({
-        title: 'Difficultés mises à jour',
-        description: `Les difficultés de ${student.firstName} ${student.lastName} ont été enregistrées.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
+
+  useEffect(() => {
+    async function saveForm(values: z.infer<typeof formSchema>) {
+      setIsSaving(true);
+      setIsSaved(false);
+      try {
+        const difficulties: Difficulties = values;
+        await updateStudent(student.id, { difficulties });
+        
+        if (values.cognitiveDifficulties) addLibraryItems(values.cognitiveDifficulties, 'cognitiveDifficulties');
+        if (values.schoolDifficulties) addLibraryItems(values.schoolDifficulties, 'schoolDifficulties');
+        if (values.motorDifficulties) addLibraryItems(values.motorDifficulties, 'motorDifficulties');
+        if (values.socioEmotionalDifficulties) addLibraryItems(values.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
+        if (values.disabilityConstraints) addLibraryItems(values.disabilityConstraints, 'disabilityConstraints');
+        
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+        
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la sauvegarde.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
-  }
+
+    if (form.formState.isDirty) {
+        saveForm(debouncedValues);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValues]);
+
 
   const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
 
   return (
-    <Card style={{ backgroundColor: '#FFEBEE' }}>
-      <CardHeader>
-        <CardTitle>Difficultés de l’élève</CardTitle>
-        <CardDescription>
-            Identification des obstacles et limitations qui impactent ses apprentissages.
-        </CardDescription>
+    <Card className="bg-red-50/40">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Difficultés de l’élève</CardTitle>
+          <CardDescription>
+              Identification des obstacles et limitations qui impactent ses apprentissages.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
+          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form className="space-y-8">
              <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
                     <AccordionTrigger className="text-lg font-medium text-red-800">Points de vigilance</AccordionTrigger>
@@ -133,12 +156,6 @@ export function DifficultiesForm({
                     </AccordionContent>
                 </AccordionItem>
              </Accordion>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Sauvegarde...' : 'Sauvegarder les difficultés'}
-              </Button>
-            </div>
           </form>
         </Form>
       </CardContent>

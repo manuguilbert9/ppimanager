@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,9 +14,10 @@ import type { Student, Needs } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
-import { Sparkles, Loader2, PlusCircle, WandSparkles } from 'lucide-react';
+import { Sparkles, Loader2, PlusCircle, WandSparkles, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const formSchema = z.object({
   pedagogicalAccommodations: z.array(z.string()).optional(),
@@ -70,6 +71,8 @@ export function NeedsForm({
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,6 +84,44 @@ export function NeedsForm({
       complementaryCare: student.needs?.complementaryCare || [],
     },
   });
+
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
+
+  useEffect(() => {
+    async function saveForm(values: z.infer<typeof formSchema>) {
+      setIsSaving(true);
+      setIsSaved(false);
+      try {
+        const needs: Needs = values;
+        await updateStudent(student.id, { needs });
+        
+        if (values.pedagogicalAccommodations) addLibraryItems(values.pedagogicalAccommodations, 'pedagogicalAccommodations');
+        if (values.humanAssistance) addLibraryItems(values.humanAssistance, 'humanAssistance');
+        if (values.compensatoryTools) addLibraryItems(values.compensatoryTools, 'compensatoryTools');
+        if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
+        if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
+        
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la sauvegarde.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }
+    
+    if (form.formState.isDirty) {
+      saveForm(debouncedValues);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValues]);
+
 
   const handleSuggestNeeds = async () => {
     setIsSuggesting(true);
@@ -107,7 +148,7 @@ export function NeedsForm({
   const addSuggestion = (suggestion: string, field: keyof Needs) => {
     const currentValues = form.getValues(field) || [];
     if (!currentValues.includes(suggestion)) {
-      form.setValue(field, [...currentValues, suggestion]);
+      form.setValue(field, [...currentValues, suggestion], { shouldDirty: true });
       addLibraryItems([suggestion], field); // Add to library as well
     }
     // Remove from suggestions list to avoid clutter
@@ -119,41 +160,21 @@ export function NeedsForm({
     }
   };
 
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const needs: Needs = values;
-      await updateStudent(student.id, { needs });
-      
-      // Add new tags to the library
-      if (values.pedagogicalAccommodations) addLibraryItems(values.pedagogicalAccommodations, 'pedagogicalAccommodations');
-      if (values.humanAssistance) addLibraryItems(values.humanAssistance, 'humanAssistance');
-      if (values.compensatoryTools) addLibraryItems(values.compensatoryTools, 'compensatoryTools');
-      if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
-      if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
-      
-      toast({
-        title: 'Besoins mis à jour',
-        description: `Les besoins de ${student.firstName} ${student.lastName} ont été enregistrés.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
-    }
-  }
-
   const badgeClassName = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
 
   return (
-    <Card style={{ backgroundColor: '#E3F2FD' }}>
-      <CardHeader>
-        <CardTitle>Besoins éducatifs particuliers</CardTitle>
-        <CardDescription>
-            Liste des besoins spécifiques de l’élève pour compenser son handicap et progresser.
-        </CardDescription>
+    <Card className="bg-sky-50/50">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Besoins éducatifs particuliers</CardTitle>
+          <CardDescription>
+              Liste des besoins spécifiques de l’élève pour compenser son handicap et progresser.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
+          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="mb-6 flex gap-2">
@@ -210,10 +231,10 @@ export function NeedsForm({
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form className="space-y-8">
              <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium text-blue-800">Identifier les besoins</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-sky-800">Identifier les besoins</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="pedagogicalAccommodations" render={({ field }) => (
                             <FormItem>
@@ -253,12 +274,6 @@ export function NeedsForm({
                     </AccordionContent>
                 </AccordionItem>
              </Accordion>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Sauvegarde...' : 'Sauvegarder les besoins'}
-              </Button>
-            </div>
           </form>
         </Form>
       </CardContent>

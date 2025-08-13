@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, useFormContext, Controller, FormProvider } from 'react-hook-form';
+import { useForm, useFieldArray, Controller, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -19,14 +19,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { addLibraryItems } from '@/lib/library-repository';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical } from 'lucide-react';
+import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical, CheckCircle } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
 import { suggestAdaptations } from '@/ai/flows/suggest-adaptations-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import { ComboboxInput } from '@/components/combobox-input';
-import type { DragEndEvent } from '@dnd-kit/core';
 import { Separator } from '@/components/ui/separator';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -78,7 +78,7 @@ const SortableObjectiveItem = ({
 };
 
 const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; adaptationsSuggestions: string[]; }) => {
-    const { control, getValues } = useFormContext<z.infer<typeof formSchema>>();
+    const { control, getValues, setValue } = useFormContext<z.infer<typeof formSchema>>();
     const { toast } = useToast();
 
     const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray({
@@ -115,7 +115,7 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
         if (trimmedAdaptation) {
             const currentAdaptations = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
             if (!currentAdaptations.includes(trimmedAdaptation)) {
-                appendAdaptation(trimmedAdaptation);
+                setValue(`objectives.${objectiveIndex}.adaptations`, [...currentAdaptations, trimmedAdaptation], { shouldDirty: true });
                 addLibraryItems([trimmedAdaptation], 'adaptations');
             }
             setAdaptationSuggestions(prev => prev.filter(s => s !== adaptation));
@@ -187,6 +187,8 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const [isSuggestingObjectives, setIsSuggestingObjectives] = useState(false);
   const [objectiveSuggestions, setObjectiveSuggestions] = useState<Objective[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -204,10 +206,52 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     },
   });
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { control, fields, append, remove, move, formState: { isDirty } } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
+
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
+
+  useEffect(() => {
+    async function saveForm(values: z.infer<typeof formSchema>) {
+      setIsSaving(true);
+      setIsSaved(false);
+      try {
+        const objectivesToSave = values.objectives.map(o => ({
+            ...o,
+            adaptations: o.adaptations || [],
+        }));
+
+        await updateStudent(student.id, { objectives: objectivesToSave });
+        
+        if (values.objectives) {
+            addLibraryItems(values.objectives.map(o => o.title), 'objectives');
+            const allAdaptations = objectivesToSave.flatMap(o => o.adaptations || []);
+            addLibraryItems(allAdaptations, 'adaptations');
+        }
+
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la sauvegarde.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
+    if (isDirty) {
+        saveForm(debouncedValues);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValues, isDirty]);
+
+
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -273,33 +317,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     });
     setObjectiveSuggestions(objectiveSuggestions.filter(s => s.title !== suggestion.title));
   }
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const objectivesToSave = values.objectives.map(o => ({
-        ...o,
-        adaptations: o.adaptations || [],
-      }));
-
-      await updateStudent(student.id, { objectives: objectivesToSave });
-      
-      if (values.objectives) {
-        addLibraryItems(values.objectives.map(o => o.title), 'objectives');
-        const allAdaptations = objectivesToSave.flatMap(o => o.adaptations || []);
-        addLibraryItems(allAdaptations, 'adaptations');
-      }
-      toast({
-        title: 'Objectifs mis à jour',
-        description: `Les objectifs de ${student.firstName} ${student.lastName} ont été enregistrés.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
-    }
-  }
   
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
@@ -314,7 +331,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
           </Button>
         </div>
         <AccordionContent className="space-y-4 pt-2 pb-4">
-          <FormProvider {...form}>
             <FormField
               control={form.control}
               name={`objectives.${originalIndex}.title`}
@@ -378,7 +394,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 )}
                 />
             </div>
-          </FormProvider>
         </AccordionContent>
       </AccordionItem>
     );
@@ -402,93 +417,96 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   return (
-    <Card style={{ backgroundColor: '#EDE7F6' }}>
-      <CardHeader>
-        <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>
-        <CardDescription>
-          Objectifs individualisés, précis et évaluables, fixés pour une période donnée.
-        </CardDescription>
+    <Card className="bg-fuchsia-50/40">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>
+          <CardDescription>
+            Objectifs individualisés, précis et évaluables, fixés pour une période donnée.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
+          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 flex gap-2">
-          <Button type="button" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
-            {isSuggestingObjectives ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Génération en cours...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Suggérer des objectifs par IA
-              </>
-            )}
-          </Button>
-           {objectiveSuggestions.length > 0 && !isSuggestingObjectives && (
-            <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
-              <RefreshCw className="mr-2 h-4" />
-              Relancer
-            </Button>
-          )}
-        </div>
-        
-        {objectiveSuggestions.length > 0 && (
-            <Alert className="mb-6">
-                 <WandSparkles className="h-4 w-4" />
-                <AlertTitle>Suggestions d'objectifs</AlertTitle>
-                <AlertDescription>
-                   Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter.
-                </AlertDescription>
-                <div className="mt-4 flex flex-wrap gap-2">
-                    {objectiveSuggestions.map((suggestion, index) => (
-                        <Button key={index} variant="outline" size="sm" onClick={() => addObjectiveSuggestionToForm(suggestion)}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            {suggestion.title}
-                        </Button>
-                    ))}
+         <FormProvider {...form}>
+            <Form {...form}>
+            <form className="space-y-8">
+                <div className="mb-6 flex gap-2">
+                <Button type="button" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
+                    {isSuggestingObjectives ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Génération en cours...
+                    </>
+                    ) : (
+                    <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Suggérer des objectifs par IA
+                    </>
+                    )}
+                </Button>
+                {objectiveSuggestions.length > 0 && !isSuggestingObjectives && (
+                    <Button type="button" variant="outline" onClick={handleSuggestObjectives} disabled={isSuggestingObjectives}>
+                    <RefreshCw className="mr-2 h-4" />
+                    Relancer
+                    </Button>
+                )}
                 </div>
-            </Alert>
-        )}
+                
+                {objectiveSuggestions.length > 0 && (
+                    <Alert className="mb-6">
+                        <WandSparkles className="h-4 w-4" />
+                        <AlertTitle>Suggestions d'objectifs</AlertTitle>
+                        <AlertDescription>
+                        Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter.
+                        </AlertDescription>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {objectiveSuggestions.map((suggestion, index) => (
+                                <Button key={index} variant="outline" size="sm" onClick={() => addObjectiveSuggestionToForm(suggestion)}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    {suggestion.title}
+                                </Button>
+                            ))}
+                        </div>
+                    </Alert>
+                )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <h3 className="text-xl font-semibold tracking-tight">Objectifs en cours</h3>
-            {isMounted ? (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
-                        <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
-                        {activeObjectives.map((item) => renderObjective(item, true))}
-                        </Accordion>
-                    </SortableContext>
-                </DndContext>
-            ) : (
-                <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
-                    {activeObjectives.map((item) => renderObjective(item, false))}
-                </Accordion>
-            )}
-            
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: Math.random().toString(36).substring(7), title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Ajouter un objectif
-            </Button>
-            
-            {validatedObjectives.length > 0 && (
-                <>
-                    <Separator className="my-8" />
-                    <h3 className="text-xl font-semibold tracking-tight">Objectifs atteints</h3>
+                <h3 className="text-xl font-semibold tracking-tight">Objectifs en cours</h3>
+                {isMounted ? (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={activeObjectives.map(item => item.field.id)} strategy={verticalListSortingStrategy}>
+                            <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
+                            {activeObjectives.map((item) => renderObjective(item, true))}
+                            </Accordion>
+                        </SortableContext>
+                    </DndContext>
+                ) : (
                     <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
-                        {validatedObjectives.map((item) => renderObjective(item, false))}
+                        {activeObjectives.map((item) => renderObjective(item, false))}
                     </Accordion>
-                </>
-            )}
+                )}
+                
+                <Button type="button" variant="outline" size="sm" onClick={() => append({ id: Math.random().toString(36).substring(7), title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajouter un objectif
+                </Button>
+                
+                {validatedObjectives.length > 0 && (
+                    <>
+                        <Separator className="my-8" />
+                        <h3 className="text-xl font-semibold tracking-tight">Objectifs atteints</h3>
+                        <Accordion type="multiple" className="w-full space-y-4 border-none" defaultValue={fields.map(f => f.id)}>
+                            {validatedObjectives.map((item) => renderObjective(item, false))}
+                        </Accordion>
+                    </>
+                )}
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Sauvegarde...' : 'Sauvegarder les objectifs'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+            </Form>
+        </FormProvider>
       </CardContent>
     </Card>
   );

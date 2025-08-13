@@ -1,10 +1,10 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { updateStudent } from '@/lib/students-repository';
@@ -13,6 +13,8 @@ import type { Student, Strengths } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useDebounce } from '@/hooks/use-debounce';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 const formSchema = z.object({
   academicSkills: z.array(z.string()).optional(),
@@ -38,6 +40,8 @@ export function StrengthsForm({
   exploitableInterestsSuggestions
 }: StrengthsFormProps) {
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,46 +53,65 @@ export function StrengthsForm({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const strengths: Strengths = values;
-      await updateStudent(student.id, { strengths });
-      
-      // Add new tags to the library, without waiting for the result
-      if (values.academicSkills) addLibraryItems(values.academicSkills, 'academicSkills');
-      if (values.cognitiveStrengths) addLibraryItems(values.cognitiveStrengths, 'cognitiveStrengths');
-      if (values.socialSkills) addLibraryItems(values.socialSkills, 'socialSkills');
-      if (values.exploitableInterests) addLibraryItems(values.exploitableInterests, 'exploitableInterests');
-      
-      toast({
-        title: 'Points forts mis à jour',
-        description: `Les points forts de ${student.firstName} ${student.lastName} ont été enregistrés.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
+
+  useEffect(() => {
+    async function saveForm(values: z.infer<typeof formSchema>) {
+      setIsSaving(true);
+      setIsSaved(false);
+      try {
+        const strengths: Strengths = values;
+        await updateStudent(student.id, { strengths });
+        
+        if (values.academicSkills) addLibraryItems(values.academicSkills, 'academicSkills');
+        if (values.cognitiveStrengths) addLibraryItems(values.cognitiveStrengths, 'cognitiveStrengths');
+        if (values.socialSkills) addLibraryItems(values.socialSkills, 'socialSkills');
+        if (values.exploitableInterests) addLibraryItems(values.exploitableInterests, 'exploitableInterests');
+        
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la sauvegarde.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
-  }
+
+    if (form.formState.isDirty) {
+        saveForm(debouncedValues);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValues]);
+
 
   const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
 
   return (
-    <Card style={{ backgroundColor: '#E0F2F1' }}>
-      <CardHeader>
-        <CardTitle>Points d'appuis</CardTitle>
-        <CardDescription>
-            Liste des capacités, acquis et atouts sur lesquels on peut s’appuyer pour les apprentissages.
-        </CardDescription>
+    <Card className="bg-emerald-50/50">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Points d'appuis</CardTitle>
+          <CardDescription>
+              Liste des capacités, acquis et atouts sur lesquels on peut s’appuyer pour les apprentissages.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
+          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form className="space-y-8">
              <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium text-green-800">Points forts de l'élève</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium text-emerald-800">Points forts de l'élève</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
@@ -121,12 +144,6 @@ export function StrengthsForm({
                     </AccordionContent>
                 </AccordionItem>
              </Accordion>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Sauvegarde...' : 'Sauvegarder les points forts'}
-              </Button>
-            </div>
           </form>
         </Form>
       </CardContent>
