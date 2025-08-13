@@ -9,11 +9,13 @@ import { getAllLibraryItems } from "@/lib/library-repository";
 import { DifficultiesForm } from "./difficulties-form";
 import { NeedsForm } from "./needs-form";
 import { ObjectivesForm } from "./objectives-form";
-import { AdministrativeInfo } from "./administrative-info";
+import { AdministrativeForm } from "./administrative-form";
+import { getClasses } from "@/lib/classes-repository";
 
 export default async function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const student = await getStudent(params.studentId);
   const libraryItems = await getAllLibraryItems();
+  const classes = await getClasses();
 
   if (!student) {
     notFound();
@@ -45,7 +47,7 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
       </PageHeader>
       
       <div className="space-y-8">
-        <AdministrativeInfo student={student} />
+        <AdministrativeForm student={student} classes={classes} />
         <GlobalProfileForm 
           student={student} 
           disabilityNaturesSuggestions={getSuggestions('disabilityNatures')}
@@ -53,6 +55,12 @@ export default async function PpiStudentPage({ params }: { params: { studentId: 
           medicalNeedsSuggestions={getSuggestions('medicalNeeds')}
           equipmentSuggestions={getSuggestions('equipment')}
           hobbiesSuggestions={getSuggestions('hobbies')}
+          dailyLifeAutonomySuggestions={getSuggestions('dailyLifeAutonomy')}
+          motorSkillsSuggestions={getSuggestions('motorSkills')}
+          communicationSkillsSuggestions={getSuggestions('communicationSkills')}
+          sensorySkillsSuggestions={getSuggestions('sensorySkills')}
+          schoolHistorySuggestions={getSuggestions('schoolHistory')}
+          personalProjectSuggestions={getSuggestions('personalProject')}
         />
         <StrengthsForm
           student={student}
