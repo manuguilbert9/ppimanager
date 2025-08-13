@@ -24,7 +24,15 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
 function ExtractedDataSection({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) {
-    const hasContent = React.Children.toArray(children).some(child => child !== null && child !== undefined && (Array.isArray(child) ? child.length > 0 : true));
+    const hasContent = React.Children.toArray(children).some(child => {
+        if (child === null || child === undefined) return false;
+        // Check if the child is a component that returns null (like DataField or DataList)
+        if (typeof child === 'object' && 'props' in child && Object.keys(child.props).length === 0) {
+            return false;
+        }
+        return true;
+    });
+
     if (!hasContent) return null;
 
     return (
@@ -136,9 +144,7 @@ export function GevascoImporter({ student }: { student: Student }) {
     const isEmpty = Object.values(dataToRender).every(category => {
         if (!category) return true;
         if (typeof category !== 'object' || category === null) return true;
-        
         if (Array.isArray(category)) return category.length === 0;
-
         return Object.values(category).every(value => 
             !value || (Array.isArray(value) && value.length === 0)
         );
@@ -161,11 +167,11 @@ export function GevascoImporter({ student }: { student: Student }) {
         
         {extractedData.administrativeData && (
           <ExtractedDataSection title="Données Administratives" icon={<FileText className="h-6 w-6 text-blue-600" />}>
-              <DataField label="Date de naissance" value={extractedData.administrativeData.birthDate} />
-              <DataField label="Niveau scolaire" value={extractedData.administrativeData.level} />
-              <DataField label="Notification MDPH" value={extractedData.administrativeData.mdphNotificationTitle} />
-              <DataField label="Expiration MDPH" value={extractedData.administrativeData.mdphNotificationExpiration} />
-              {extractedData.administrativeData.familyContacts && (
+              <DataField label="Date de naissance" value={extractedData.administrativeData?.birthDate} />
+              <DataField label="Niveau scolaire" value={extractedData.administrativeData?.level} />
+              <DataField label="Notification MDPH" value={extractedData.administrativeData?.mdphNotificationTitle} />
+              <DataField label="Expiration MDPH" value={extractedData.administrativeData?.mdphNotificationExpiration} />
+              {extractedData.administrativeData?.familyContacts && (
                   <div>
                       <p className="font-medium text-gray-600">Contacts familiaux</p>
                       {extractedData.administrativeData.familyContacts.map((c, i) => (
@@ -180,39 +186,39 @@ export function GevascoImporter({ student }: { student: Student }) {
 
         {extractedData.globalProfile && (
            <ExtractedDataSection title="Profil Global" icon={<User className="h-6 w-6 text-amber-600" />}>
-                <DataList label="Nature du handicap" items={extractedData.globalProfile.disabilityNatures} />
-                <DataList label="Troubles associés" items={extractedData.globalProfile.associatedDisorders} />
-                <DataList label="Besoins médicaux" items={extractedData.globalProfile.medicalNeeds} />
-                <DataList label="Équipements" items={extractedData.globalProfile.equipment} />
+                <DataList label="Nature du handicap" items={extractedData.globalProfile?.disabilityNatures} />
+                <DataList label="Troubles associés" items={extractedData.globalProfile?.associatedDisorders} />
+                <DataList label="Besoins médicaux" items={extractedData.globalProfile?.medicalNeeds} />
+                <DataList label="Équipements" items={extractedData.globalProfile?.equipment} />
            </ExtractedDataSection>
         )}
         
         {extractedData.strengths && (
             <ExtractedDataSection title="Points d'Appui" icon={<HeartHand className="h-6 w-6 text-green-600" />}>
-                <DataList label="Compétences scolaires" items={extractedData.strengths.academicSkills} />
-                <DataList label="Forces cognitives" items={extractedData.strengths.cognitiveStrengths} />
-                <DataList label="Habiletés sociales" items={extractedData.strengths.socialSkills} />
-                <DataList label="Intérêts" items={extractedData.strengths.exploitableInterests} />
+                <DataList label="Compétences scolaires" items={extractedData.strengths?.academicSkills} />
+                <DataList label="Forces cognitives" items={extractedData.strengths?.cognitiveStrengths} />
+                <DataList label="Habiletés sociales" items={extractedData.strengths?.socialSkills} />
+                <DataList label="Intérêts" items={extractedData.strengths?.exploitableInterests} />
             </ExtractedDataSection>
         )}
         
         {extractedData.difficulties && (
             <ExtractedDataSection title="Difficultés" icon={<Accessibility className="h-6 w-6 text-red-600" />}>
-                <DataList label="Difficultés cognitives" items={extractedData.difficulties.cognitiveDifficulties} />
-                <DataList label="Difficultés scolaires" items={extractedData.difficulties.schoolDifficulties} />
-                <DataList label="Difficultés motrices" items={extractedData.difficulties.motorDifficulties} />
-                <DataList label="Difficultés socio-émotionnelles" items={extractedData.difficulties.socioEmotionalDifficulties} />
-                <DataList label="Contraintes du handicap" items={extractedData.difficulties.disabilityConstraints} />
+                <DataList label="Difficultés cognitives" items={extractedData.difficulties?.cognitiveDifficulties} />
+                <DataList label="Difficultés scolaires" items={extractedData.difficulties?.schoolDifficulties} />
+                <DataList label="Difficultés motrices" items={extractedData.difficulties?.motorDifficulties} />
+                <DataList label="Difficultés socio-émotionnelles" items={extractedData.difficulties?.socioEmotionalDifficulties} />
+                <DataList label="Contraintes du handicap" items={extractedData.difficulties?.disabilityConstraints} />
             </ExtractedDataSection>
         )}
         
         {extractedData.needs && (
              <ExtractedDataSection title="Besoins Éducatifs" icon={<Stethoscope className="h-6 w-6 text-teal-600" />}>
-                <DataList label="Aménagements pédagogiques" items={extractedData.needs.pedagogicalAccommodations} />
-                <DataList label="Aide humaine" items={extractedData.needs.humanAssistance} />
-                <DataList label="Outils de compensation" items={extractedData.needs.compensatoryTools} />
-                <DataList label="Approche éducative" items={extractedData.needs.specialEducationalApproach} />
-                <DataList label="Soins complémentaires" items={extractedData.needs.complementaryCare} />
+                <DataList label="Aménagements pédagogiques" items={extractedData.needs?.pedagogicalAccommodations} />
+                <DataList label="Aide humaine" items={extractedData.needs?.humanAssistance} />
+                <DataList label="Outils de compensation" items={extractedData.needs?.compensatoryTools} />
+                <DataList label="Approche éducative" items={extractedData.needs?.specialEducationalApproach} />
+                <DataList label="Soins complémentaires" items={extractedData.needs?.complementaryCare} />
             </ExtractedDataSection>
         )}
 
