@@ -69,10 +69,6 @@ const ExtractGevascoOutputSchema = z.object({
 });
 export type ExtractGevascoOutput = z.infer<typeof ExtractGevascoOutputSchema>;
 
-export async function extractGevascoData(input: ExtractGevascoInput): Promise<ExtractGevascoOutput> {
-  return extractGevascoFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'extractGevascoPrompt',
   input: { schema: ExtractGevascoInputSchema },
@@ -87,7 +83,7 @@ const prompt = ai.definePrompt({
     INSTRUCTIONS DÉTAILLÉES :
     1.  **Analyse Approfondie** : Lis attentivement l'intégralité du document. Fais particulièrement attention aux sections "Synthèse", "Attentes", "Préconisations", "Recommandations", et aux cadres administratifs.
     2.  **Reformulation** : Ne te contente JAMAIS de copier/coller. Reformule chaque information sous forme de phrases ou d'éléments de liste clairs, concis et exploitables.
-    3.  **Extraction Structurée** : Extrais les informations suivantes et classe-les précisément :
+    3.  **Extraction Structurée** : Extrais les informations suivantes et classe-les précisément. Si une information n'est pas présente, laisse le champ vide. Ne déduis pas d'informations non écrites.
 
         a.  **Données Administratives (administrativeData)**:
             -   \`birthDate\`: La date de naissance de l'élève.
@@ -121,8 +117,6 @@ const prompt = ai.definePrompt({
             -   \`compensatoryTools\`: Les outils de compensation à mettre en place (ex: "Ordinateur avec logiciel de synthèse vocale", "Calculatrice").
             -   \`specialEducationalApproach\`: Les approches éducatives spécifiques (ex: "Utiliser une communication par pictogrammes (PECS)", "Approche structurée de type TEACCH").
             -   \`complementaryCare\`: Les soins et rééducations (ex: "Séances d'orthophonie", "Suivi en psychomotricité", "SESSAD").
-
-    4.  **Champs Vides** : Si une information n'est pas présente dans le document, laisse le champ correspondant vide dans ta réponse. Ne déduis pas d'informations non écrites.
   `,
 });
 
@@ -137,3 +131,8 @@ const extractGevascoFlow = ai.defineFlow(
     return output!;
   }
 );
+
+// We keep the old export for compatibility, but the main logic is now in gevasco-actions.ts
+export async function extractGevascoData(input: ExtractGevascoInput): Promise<ExtractGevascoOutput> {
+  return extractGevascoFlow(input);
+}
