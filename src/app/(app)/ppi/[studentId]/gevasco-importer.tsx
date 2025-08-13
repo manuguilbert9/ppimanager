@@ -23,8 +23,8 @@ import { processGevascoFile } from '@/lib/gevasco-actions';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
-const ExtractedDataSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => {
-    const hasContent = React.Children.toArray(children).some(child => child !== null);
+function ExtractedDataSection({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) {
+    const hasContent = React.Children.toArray(children).some(child => child !== null && child !== undefined && (Array.isArray(child) ? child.length > 0 : true));
     if (!hasContent) return null;
 
     return (
@@ -41,7 +41,7 @@ const ExtractedDataSection = ({ title, icon, children }: { title: string, icon: 
     );
 }
 
-const DataField = ({ label, value }: { label: string, value?: string | null }) => {
+function DataField({ label, value }: { label: string, value?: string | null }) {
     if (!value) return null;
     return (
         <div>
@@ -51,7 +51,7 @@ const DataField = ({ label, value }: { label: string, value?: string | null }) =
     )
 }
 
-const DataList = ({ label, items }: { label: string, items?: string[] | null }) => {
+function DataList({ label, items }: { label: string, items?: string[] | null }) {
     if (!items || items.length === 0) return null;
     return (
         <div>
