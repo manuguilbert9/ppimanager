@@ -132,7 +132,6 @@ const extractGevascoFlow = ai.defineFlow(
   }
 );
 
-// We keep the old export for compatibility, but the main logic is now in gevasco-actions.ts
 export async function extractGevascoData(input: ExtractGevascoInput): Promise<ExtractGevascoOutput> {
   return extractGevascoFlow(input);
 }
