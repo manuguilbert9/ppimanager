@@ -78,7 +78,7 @@ const SortableObjectiveItem = ({
 };
 
 const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; adaptationsSuggestions: string[]; }) => {
-    const { control, getValues, setValue } = useFormContext<z.infer<typeof formSchema>>();
+    const { control, getValues, setValue } = useForm<z.infer<typeof formSchema>>();
     const { toast } = useToast();
 
     const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray({
@@ -206,7 +206,9 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     },
   });
 
-  const { control, fields, append, remove, move, formState: { isDirty } } = useFieldArray({
+  const { control, formState: { isDirty } } = form;
+
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: "objectives"
   });
