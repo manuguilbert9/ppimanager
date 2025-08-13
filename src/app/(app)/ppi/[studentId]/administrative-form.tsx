@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { updateStudent } from '@/lib/students-repository';
 import type { Student, Classe, FamilyContact } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const familyContactSchema = z.object({
   id: z.string().optional(),
@@ -59,6 +60,9 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
     name: "familyContacts"
   });
 
+  const watchedValues = form.watch();
+  const debouncedValues = useDebounce(watchedValues, 1500);
+
   const watchedClassId = useWatch({
     control: form.control,
     name: 'classId',
@@ -87,13 +91,10 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
 
   // Auto-save on form change
   useEffect(() => {
-    const subscription = form.watch((values, { name, type }) => {
-      if (form.formState.isDirty) {
-        saveForm(values as z.infer<typeof formSchema>);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, saveForm]);
+    if (form.formState.isDirty) {
+      saveForm(debouncedValues as z.infer<typeof formSchema>);
+    }
+  }, [debouncedValues, form.formState.isDirty, saveForm]);
 
 
   return (
@@ -262,3 +263,5 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
     </Card>
   );
 }
+
+  
