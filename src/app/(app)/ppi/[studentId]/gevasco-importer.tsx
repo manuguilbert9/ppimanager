@@ -16,60 +16,37 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { ExtractGevascoOutput } from '@/ai/flows/extract-gevasco-flow';
 import type { Student } from '@/types';
 import { processGevascoFile } from '@/lib/gevasco-actions';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
-function ExtractedDataSection({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) {
-    const hasContent = React.Children.toArray(children).some(child => {
-        if (child === null || child === undefined) return false;
-        // Check if the child is a component that returns null (like DataField or DataList)
-        if (typeof child === 'object' && 'props' in child && Object.keys(child.props).length === 0) {
-            return false;
-        }
-        return true;
-    });
+const DataField = ({ label, value }: { label: string; value?: string | null }) => {
+  if (!value) return null;
+  return (
+    <div>
+      <p className="font-medium text-gray-600">{label}</p>
+      <p className="text-gray-900">{value}</p>
+    </div>
+  );
+};
 
-    if (!hasContent) return null;
-
-    return (
-        <div className="space-y-3">
-            <div className="flex items-center gap-3">
-                {icon}
-                <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-            </div>
-            <div className="pl-8 space-y-3 text-sm">
-                {children}
-            </div>
-            <Separator className="my-4" />
-        </div>
-    );
-}
-
-function DataField({ label, value }: { label: string, value?: string | null }) {
-    if (!value) return null;
-    return (
-        <div>
-            <p className="font-medium text-gray-600">{label}</p>
-            <p className="text-gray-900">{value}</p>
-        </div>
-    )
-}
-
-function DataList({ label, items }: { label: string, items?: string[] | null }) {
-    if (!items || items.length === 0) return null;
-    return (
-        <div>
-            <p className="font-medium text-gray-600">{label}</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-                 {items.map((item, index) => <Badge key={index} variant="secondary" className="font-normal">{item}</Badge>)}
-            </div>
-        </div>
-    )
-}
+const DataList = ({ label, items }: { label: string; items?: string[] | null }) => {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <p className="font-medium text-gray-600">{label}</p>
+      <div className="flex flex-wrap gap-2 mt-1">
+        {items.map((item, index) => (
+          <Badge key={index} variant="secondary" className="font-normal">
+            {item}
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 
 export function GevascoImporter({ student }: { student: Student }) {
@@ -112,8 +89,6 @@ export function GevascoImporter({ student }: { student: Student }) {
           setError(result.error);
         } else if (result.extractedData) {
           setExtractedData(result.extractedData);
-          // Don't apply immediately, show dialog first
-          // This will trigger a re-render showing the dialog
         }
       } catch (e) {
         console.error(e);
@@ -123,10 +98,7 @@ export function GevascoImporter({ student }: { student: Student }) {
   };
 
   const handleApplyData = () => {
-    // The data is already merged on the server during processGevascoFile
-    // This action just closes the dialog and refreshes the page to show the new data
     if (!extractedData) return;
-
     toast({
         title: 'PPI mis à jour',
         description: "Les informations du GevaSco ont été fusionnées avec le profil de l'élève.",
@@ -135,96 +107,16 @@ export function GevascoImporter({ student }: { student: Student }) {
     router.refresh();
   };
 
-
-  const renderExtractedData = () => {
-    if (!extractedData) return null;
-  
-    const dataToRender = { ...extractedData };
-    
-    const isEmpty = Object.values(dataToRender).every(category => {
+  const isExtractedDataEmpty = (data: ExtractGevascoOutput | null): boolean => {
+    if (!data) return true;
+    return Object.values(data).every(category => {
         if (!category) return true;
         if (typeof category !== 'object' || category === null) return true;
-        if (Array.isArray(category)) return category.length === 0;
         return Object.values(category).every(value => 
             !value || (Array.isArray(value) && value.length === 0)
         );
     });
-
-    if (isEmpty) {
-        return <p className="text-center text-muted-foreground p-8">L'IA n'a trouvé aucune information exploitable à extraire dans ce document.</p>;
-    }
-    
-    return (
-      <div className="max-h-[65vh] overflow-y-auto p-1 pr-4 space-y-6 text-sm">
-        <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Vérification requise</AlertTitle>
-            <AlertDescription>
-                Les informations ci-dessous ont été extraites et fusionnées avec le profil existant.
-                Vérifiez les données avant de fermer cette fenêtre.
-            </AlertDescription>
-        </Alert>
-        
-        {extractedData.administrativeData && (
-          <ExtractedDataSection title="Données Administratives" icon={<FileText className="h-6 w-6 text-blue-600" />}>
-              <DataField label="Date de naissance" value={extractedData.administrativeData?.birthDate} />
-              <DataField label="Niveau scolaire" value={extractedData.administrativeData?.level} />
-              <DataField label="Notification MDPH" value={extractedData.administrativeData?.mdphNotificationTitle} />
-              <DataField label="Expiration MDPH" value={extractedData.administrativeData?.mdphNotificationExpiration} />
-              {extractedData.administrativeData?.familyContacts && (
-                  <div>
-                      <p className="font-medium text-gray-600">Contacts familiaux</p>
-                      {extractedData.administrativeData.familyContacts.map((c, i) => (
-                          <div key={i} className="pl-2 mt-1">
-                              <Badge variant="outline">{c.title}: {c.name}</Badge>
-                          </div>
-                      ))}
-                  </div>
-              )}
-          </ExtractedDataSection>
-        )}
-
-        {extractedData.globalProfile && (
-           <ExtractedDataSection title="Profil Global" icon={<User className="h-6 w-6 text-amber-600" />}>
-                <DataList label="Nature du handicap" items={extractedData.globalProfile?.disabilityNatures} />
-                <DataList label="Troubles associés" items={extractedData.globalProfile?.associatedDisorders} />
-                <DataList label="Besoins médicaux" items={extractedData.globalProfile?.medicalNeeds} />
-                <DataList label="Équipements" items={extractedData.globalProfile?.equipment} />
-           </ExtractedDataSection>
-        )}
-        
-        {extractedData.strengths && (
-            <ExtractedDataSection title="Points d'Appui" icon={<HeartHand className="h-6 w-6 text-green-600" />}>
-                <DataList label="Compétences scolaires" items={extractedData.strengths?.academicSkills} />
-                <DataList label="Forces cognitives" items={extractedData.strengths?.cognitiveStrengths} />
-                <DataList label="Habiletés sociales" items={extractedData.strengths?.socialSkills} />
-                <DataList label="Intérêts" items={extractedData.strengths?.exploitableInterests} />
-            </ExtractedDataSection>
-        )}
-        
-        {extractedData.difficulties && (
-            <ExtractedDataSection title="Difficultés" icon={<Accessibility className="h-6 w-6 text-red-600" />}>
-                <DataList label="Difficultés cognitives" items={extractedData.difficulties?.cognitiveDifficulties} />
-                <DataList label="Difficultés scolaires" items={extractedData.difficulties?.schoolDifficulties} />
-                <DataList label="Difficultés motrices" items={extractedData.difficulties?.motorDifficulties} />
-                <DataList label="Difficultés socio-émotionnelles" items={extractedData.difficulties?.socioEmotionalDifficulties} />
-                <DataList label="Contraintes du handicap" items={extractedData.difficulties?.disabilityConstraints} />
-            </ExtractedDataSection>
-        )}
-        
-        {extractedData.needs && (
-             <ExtractedDataSection title="Besoins Éducatifs" icon={<Stethoscope className="h-6 w-6 text-teal-600" />}>
-                <DataList label="Aménagements pédagogiques" items={extractedData.needs?.pedagogicalAccommodations} />
-                <DataList label="Aide humaine" items={extractedData.needs?.humanAssistance} />
-                <DataList label="Outils de compensation" items={extractedData.needs?.compensatoryTools} />
-                <DataList label="Approche éducative" items={extractedData.needs?.specialEducationalApproach} />
-                <DataList label="Soins complémentaires" items={extractedData.needs?.complementaryCare} />
-            </ExtractedDataSection>
-        )}
-
-      </div>
-    )
-  }
+  };
 
   return (
     <>
@@ -259,7 +151,7 @@ export function GevascoImporter({ student }: { student: Student }) {
           if (!open) {
               setExtractedData(null);
               setError(null);
-              if (extractedData) router.refresh(); // Refresh if data was applied
+              if (extractedData) router.refresh(); 
           }
       }}>
         <DialogContent className="max-w-3xl">
@@ -280,7 +172,98 @@ export function GevascoImporter({ student }: { student: Student }) {
             </Alert>
           )}
 
-          {extractedData && renderExtractedData()}
+          {extractedData && (
+             <div className="max-h-[65vh] overflow-y-auto p-1 pr-4 space-y-6 text-sm">
+                {isExtractedDataEmpty(extractedData) ? (
+                    <p className="text-center text-muted-foreground p-8">L'IA n'a trouvé aucune information exploitable à extraire dans ce document.</p>
+                ) : (
+                    <>
+                        <Alert>
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Vérification requise</AlertTitle>
+                            <AlertDescription>
+                                Les informations ci-dessous ont été extraites et fusionnées avec le profil existant.
+                                Vérifiez les données avant de fermer cette fenêtre.
+                            </AlertDescription>
+                        </Alert>
+                        
+                        {extractedData.administrativeData && (
+                           <div className="space-y-3">
+                               <div className="flex items-center gap-3"><FileText className="h-6 w-6 text-blue-600" /><h3 className="text-lg font-semibold text-gray-800">Données Administratives</h3></div>
+                               <div className="pl-8 space-y-3 text-sm">
+                                   <DataField label="Date de naissance" value={extractedData.administrativeData.birthDate} />
+                                   <DataField label="Niveau scolaire" value={extractedData.administrativeData.level} />
+                                   <DataField label="Notification MDPH" value={extractedData.administrativeData.mdphNotificationTitle} />
+                                   <DataField label="Expiration MDPH" value={extractedData.administrativeData.mdphNotificationExpiration} />
+                                   {extractedData.administrativeData.familyContacts && (
+                                      <div>
+                                          <p className="font-medium text-gray-600">Contacts familiaux</p>
+                                          {extractedData.administrativeData.familyContacts.map((c, i) => (
+                                              <div key={i} className="pl-2 mt-1"><Badge variant="outline">{c.title}: {c.name}</Badge></div>
+                                          ))}
+                                      </div>
+                                  )}
+                               </div>
+                               <Separator className="my-4" />
+                           </div>
+                        )}
+                        
+                        {extractedData.globalProfile && (
+                           <div className="space-y-3">
+                               <div className="flex items-center gap-3"><User className="h-6 w-6 text-amber-600" /><h3 className="text-lg font-semibold text-gray-800">Profil Global</h3></div>
+                               <div className="pl-8 space-y-3 text-sm">
+                                   <DataList label="Nature du handicap" items={extractedData.globalProfile.disabilityNatures} />
+                                   <DataList label="Troubles associés" items={extractedData.globalProfile.associatedDisorders} />
+                                   <DataList label="Besoins médicaux" items={extractedData.globalProfile.medicalNeeds} />
+                                   <DataList label="Équipements" items={extractedData.globalProfile.equipment} />
+                               </div>
+                               <Separator className="my-4" />
+                           </div>
+                        )}
+
+                        {extractedData.strengths && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3"><HeartHand className="h-6 w-6 text-green-600" /><h3 className="text-lg font-semibold text-gray-800">Points d'Appui</h3></div>
+                                <div className="pl-8 space-y-3 text-sm">
+                                    <DataList label="Compétences scolaires" items={extractedData.strengths.academicSkills} />
+                                    <DataList label="Forces cognitives" items={extractedData.strengths.cognitiveStrengths} />
+                                    <DataList label="Habiletés sociales" items={extractedData.strengths.socialSkills} />
+                                    <DataList label="Intérêts" items={extractedData.strengths.exploitableInterests} />
+                                </div>
+                                <Separator className="my-4" />
+                            </div>
+                        )}
+
+                        {extractedData.difficulties && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3"><Accessibility className="h-6 w-6 text-red-600" /><h3 className="text-lg font-semibold text-gray-800">Difficultés</h3></div>
+                                <div className="pl-8 space-y-3 text-sm">
+                                    <DataList label="Difficultés cognitives" items={extractedData.difficulties.cognitiveDifficulties} />
+                                    <DataList label="Difficultés scolaires" items={extractedData.difficulties.schoolDifficulties} />
+                                    <DataList label="Difficultés motrices" items={extractedData.difficulties.motorDifficulties} />
+                                    <DataList label="Difficultés socio-émotionnelles" items={extractedData.difficulties.socioEmotionalDifficulties} />
+                                    <DataList label="Contraintes du handicap" items={extractedData.difficulties.disabilityConstraints} />
+                                </div>
+                                <Separator className="my-4" />
+                            </div>
+                        )}
+
+                        {extractedData.needs && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3"><Stethoscope className="h-6 w-6 text-teal-600" /><h3 className="text-lg font-semibold text-gray-800">Besoins Éducatifs</h3></div>
+                                <div className="pl-8 space-y-3 text-sm">
+                                    <DataList label="Aménagements pédagogiques" items={extractedData.needs.pedagogicalAccommodations} />
+                                    <DataList label="Aide humaine" items={extractedData.needs.humanAssistance} />
+                                    <DataList label="Outils de compensation" items={extractedData.needs.compensatoryTools} />
+                                    <DataList label="Approche éducative" items={extractedData.needs.specialEducationalApproach} />
+                                    <DataList label="Soins complémentaires" items={extractedData.needs.complementaryCare} />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+             </div>
+          )}
 
           <DialogFooter className="pt-4">
             <Button variant="outline" onClick={() => { setExtractedData(null); setError(null); }}>
