@@ -11,8 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getLibraryItems } from '@/lib/library-repository';
-import type { Strengths, Difficulties } from '@/types';
 
 export const SuggestNeedsInputSchema = z.object({
   strengths: z.object({
@@ -48,18 +46,9 @@ export async function suggestNeeds(input: SuggestNeedsInput): Promise<SuggestNee
 
 const prompt = ai.definePrompt({
   name: 'suggestNeedsPrompt',
-  input: { schema: z.object({
-    strengths: SuggestNeedsInputSchema.shape.strengths,
-    difficulties: SuggestNeedsInputSchema.shape.difficulties,
-    library: z.object({
-        pedagogicalAccommodations: z.array(z.string()),
-        humanAssistance: z.array(z.string()),
-        compensatoryTools: z.array(z.string()),
-        specialEducationalApproach: z.array(z.string()),
-        complementaryCare: z.array(z.string()),
-    }).describe("Bibliothèque d'éléments existants pour inspiration.")
-  }) },
+  input: { schema: SuggestNeedsInputSchema },
   output: { schema: SuggestNeedsOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
     Tu es un expert en ingénierie pédagogique.
     En te basant sur le profil de l'élève ci-dessous, suggère une liste pertinente de besoins éducatifs particuliers.
@@ -71,16 +60,9 @@ const prompt = ai.definePrompt({
     INSTRUCTIONS :
     1. Analyse les difficultés de l'élève pour déterminer les besoins de compensation nécessaires.
     2. Pour chaque catégorie de besoin ci-dessous, propose 2 à 3 suggestions pertinentes et concrètes.
-    3. Inspire-toi de la bibliothèque fournie, mais n'hésite pas à formuler de nouveaux besoins si c'est plus adapté.
-    4. NE SUGGÈRE PAS de besoins qui sont déjà comblés par les points forts de l'élève.
-    5. Formule les besoins sous forme d'actions ou de ressources claires.
-
-    Bibliothèque d'inspiration :
-    - Aménagements pédagogiques: {{{json library.pedagogicalAccommodations}}}
-    - Aide humaine: {{{json library.humanAssistance}}}
-    - Outils de compensation: {{{json library.compensatoryTools}}}
-    - Approche éducative: {{{json library.specialEducationalApproach}}}
-    - Soins et rééducations: {{{json library.complementaryCare}}}
+    3. NE SUGGÈRE PAS de besoins qui sont déjà comblés par les points forts de l'élève.
+    4. Formule les besoins sous forme d'actions ou de ressources claires et directement exploitables.
+    5. Sois concis et pertinent.
   `,
 });
 
@@ -91,31 +73,7 @@ const suggestNeedsFlow = ai.defineFlow(
     outputSchema: SuggestNeedsOutputSchema,
   },
   async (input) => {
-    const [
-        pedagogicalAccommodations,
-        humanAssistance,
-        compensatoryTools,
-        specialEducationalApproach,
-        complementaryCare,
-    ] = await Promise.all([
-        getLibraryItems('pedagogicalAccommodations').then(items => items.map(i => i.text)),
-        getLibraryItems('humanAssistance').then(items => items.map(i => i.text)),
-        getLibraryItems('compensatoryTools').then(items => items.map(i => i.text)),
-        getLibraryItems('specialEducationalApproach').then(items => items.map(i => i.text)),
-        getLibraryItems('complementaryCare').then(items => items.map(i => i.text)),
-    ]);
-
-    const { output } = await prompt({
-        ...input,
-        library: {
-            pedagogicalAccommodations,
-            humanAssistance,
-            compensatoryTools,
-            specialEducationalApproach,
-            complementaryCare,
-        }
-    });
-
+    const { output } = await prompt(input);
     return output!;
   }
 );
