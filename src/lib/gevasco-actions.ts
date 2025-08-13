@@ -18,12 +18,7 @@ async function fileToDataUri(file: File): Promise<string> {
     return `data:${file.type};base64,${buffer.toString('base64')}`;
 }
 
-async function mergeAndSaveData(studentId: string, extractedData: ExtractGevascoOutput): Promise<void> {
-    const student = await getStudent(studentId);
-    if (!student) {
-        throw new Error('Student not found');
-    }
-
+async function mergeAndSaveData(student: Student, extractedData: ExtractGevascoOutput): Promise<void> {
     const updatedStudentData: Partial<Student> = {};
 
     // Merge administrative data
@@ -37,7 +32,7 @@ async function mergeAndSaveData(studentId: string, extractedData: ExtractGevasco
         if (familyContacts && familyContacts.length > 0) {
             const existingContacts = student.familyContacts || [];
             const newContacts = familyContacts.filter(
-                newContact => newContact.name && !existingContacts.some(existing => existing.name.toLowerCase() === newContact.name.toLowerCase())
+                newContact => newContact.name && !existingContacts.some(existing => existing.name && existing.name.toLowerCase() === newContact.name.toLowerCase())
             );
             updatedStudentData.familyContacts = [...existingContacts, ...newContacts];
         }
@@ -46,24 +41,24 @@ async function mergeAndSaveData(studentId: string, extractedData: ExtractGevasco
     // Generic function to merge categorized list data
     const mergeCategory = (category: 'strengths' | 'difficulties' | 'needs' | 'globalProfile') => {
         const extractedCategoryData = extractedData[category];
-        if (!extractedCategoryData) return;
+        if (!extractedCategoryData || typeof extractedCategoryData !== 'object') return;
 
         // @ts-ignore
         const existingData = student[category] || {};
         const mergedData: typeof existingData = { ...existingData };
         
-        Object.keys(extractedCategoryData).forEach(key => {
+        for (const key of Object.keys(extractedCategoryData)) {
             const subKey = key as keyof typeof extractedCategoryData;
             // @ts-ignore
             const existingItems = existingData[subKey] || [];
             // @ts-ignore
-            const newItems = (extractedCategoryData[subKey] || []).filter(item => item && item.trim() !== '');
+            const newItems = (extractedCategoryData[subKey] || []).filter(item => typeof item === 'string' && item.trim() !== '');
             
             if (Array.isArray(existingItems) && Array.isArray(newItems) && newItems.length > 0) {
                 // @ts-ignore
                 mergedData[subKey] = Array.from(new Set([...existingItems, ...newItems]));
             }
-        });
+        }
         // @ts-ignore
         updatedStudentData[category] = mergedData;
     };
@@ -73,7 +68,9 @@ async function mergeAndSaveData(studentId: string, extractedData: ExtractGevasco
     mergeCategory('needs');
     mergeCategory('globalProfile');
     
-    await updateStudent(student.id, updatedStudentData);
+    if (Object.keys(updatedStudentData).length > 0) {
+      await updateStudent(student.id, updatedStudentData);
+    }
 }
 
 export async function processGevascoFile(studentId: string, formData: FormData): Promise<ProcessResult> {
@@ -84,6 +81,11 @@ export async function processGevascoFile(studentId: string, formData: FormData):
   }
 
   try {
+    const student = await getStudent(studentId);
+    if (!student) {
+        return { error: 'Étudiant non trouvé.' };
+    }
+
     const dataUri = await fileToDataUri(file);
     const extractedData = await extractGevascoData({ document: dataUri });
 
@@ -92,7 +94,7 @@ export async function processGevascoFile(studentId: string, formData: FormData):
     }
     
     // Merge the extracted data with the student's current data
-    await mergeAndSaveData(studentId, extractedData);
+    await mergeAndSaveData(student, extractedData);
     
     // Revalidate the path to show updated data on the page
     revalidatePath(`/ppi/${studentId}`);
