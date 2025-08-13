@@ -50,11 +50,11 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     if (!student) return;
 
     const updatedStudentData: Partial<Student> = {
-      ...(data.firstName && { firstName: data.firstName }),
-      ...(data.lastName && { lastName: data.lastName }),
-      ...(data.birthDate && { birthDate: data.birthDate }),
-      ...(data.school && { school: data.school }),
-      ...(data.level && { level: data.level }),
+      firstName: data.firstName || student.firstName,
+      lastName: data.lastName || student.lastName,
+      birthDate: data.birthDate || student.birthDate,
+      school: data.school || student.school,
+      level: data.level || student.level,
       familyContacts: data.familyContacts?.map(c => ({
           id: Math.random().toString(36).substring(7),
           title: c.title ?? "",
@@ -66,16 +66,26 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           city: c.city,
       })) || student.familyContacts,
       globalProfile: {
+          disabilityNatures: data.globalProfile?.disabilityNatures || student.globalProfile?.disabilityNatures,
+          associatedDisorders: data.globalProfile?.associatedDisorders || student.globalProfile?.associatedDisorders,
+          medicalNeeds: data.globalProfile?.medicalNeeds || student.globalProfile?.medicalNeeds,
+          motorSkills: data.globalProfile?.motorSkills || student.globalProfile?.motorSkills,
+          communicationSkills: data.globalProfile?.communicationSkills || student.globalProfile?.communicationSkills,
+          hobbies: data.globalProfile?.hobbies || student.globalProfile?.hobbies,
           ...student.globalProfile,
           ...data.globalProfile,
       },
       strengths: {
-          ...student.strengths,
-          ...data.strengths,
+          academicSkills: data.strengths?.academicSkills || student.strengths?.academicSkills,
+          cognitiveStrengths: data.strengths?.cognitiveStrengths || student.strengths?.cognitiveStrengths,
+          socialSkills: data.strengths?.socialSkills || student.strengths?.socialSkills,
+          exploitableInterests: data.strengths?.exploitableInterests || student.strengths?.exploitableInterests,
       },
       difficulties: {
-          ...student.difficulties,
-          ...data.difficulties,
+          cognitiveDifficulties: data.difficulties?.cognitiveDifficulties || student.difficulties?.cognitiveDifficulties,
+          schoolDifficulties: data.difficulties?.schoolDifficulties || student.difficulties?.schoolDifficulties,
+          motorDifficulties: data.difficulties?.motorDifficulties || student.difficulties?.motorDifficulties,
+          socioEmotionalDifficulties: data.difficulties?.socioEmotionalDifficulties || student.difficulties?.socioEmotionalDifficulties,
       },
     };
 
