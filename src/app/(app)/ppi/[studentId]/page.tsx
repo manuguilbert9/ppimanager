@@ -66,26 +66,16 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           city: c.city,
       })) || student.familyContacts,
       globalProfile: {
-          disabilityNatures: data.globalProfile?.disabilityNatures || student.globalProfile?.disabilityNatures,
-          associatedDisorders: data.globalProfile?.associatedDisorders || student.globalProfile?.associatedDisorders,
-          medicalNeeds: data.globalProfile?.medicalNeeds || student.globalProfile?.medicalNeeds,
-          motorSkills: data.globalProfile?.motorSkills || student.globalProfile?.motorSkills,
-          communicationSkills: data.globalProfile?.communicationSkills || student.globalProfile?.communicationSkills,
-          hobbies: data.globalProfile?.hobbies || student.globalProfile?.hobbies,
           ...student.globalProfile,
           ...data.globalProfile,
       },
       strengths: {
-          academicSkills: data.strengths?.academicSkills || student.strengths?.academicSkills,
-          cognitiveStrengths: data.strengths?.cognitiveStrengths || student.strengths?.cognitiveStrengths,
-          socialSkills: data.strengths?.socialSkills || student.strengths?.socialSkills,
-          exploitableInterests: data.strengths?.exploitableInterests || student.strengths?.exploitableInterests,
+          ...student.strengths,
+          ...data.strengths,
       },
       difficulties: {
-          cognitiveDifficulties: data.difficulties?.cognitiveDifficulties || student.difficulties?.cognitiveDifficulties,
-          schoolDifficulties: data.difficulties?.schoolDifficulties || student.difficulties?.schoolDifficulties,
-          motorDifficulties: data.difficulties?.motorDifficulties || student.difficulties?.motorDifficulties,
-          socioEmotionalDifficulties: data.difficulties?.socioEmotionalDifficulties || student.difficulties?.socioEmotionalDifficulties,
+          ...student.difficulties,
+          ...data.difficulties,
       },
     };
 
