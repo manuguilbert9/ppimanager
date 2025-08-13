@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -80,7 +81,7 @@ export function DifficultiesForm({
   const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
 
   return (
-    <Card style={{ backgroundColor: '#e4c9c9' }}>
+    <Card style={{ backgroundColor: '#FFEBEE' }}>
       <CardHeader>
         <CardTitle>Difficultés de l’élève</CardTitle>
         <CardDescription>
@@ -90,42 +91,42 @@ export function DifficultiesForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-             <Accordion type="multiple" className="w-full">
+             <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
                     <AccordionTrigger className="text-lg font-medium text-red-800">Points de vigilance</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="cognitiveDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés cognitives</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Troubles de l'attention..." {...field} suggestions={cognitiveDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={cognitiveDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="schoolDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés scolaires</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Niveau en retard..." {...field} suggestions={schoolDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={schoolDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="motorDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés motrices et fonctionnelles</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Maladresse graphique..." {...field} suggestions={motorDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={motorDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="socioEmotionalDifficulties" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Difficultés socio-émotionnelles ou comportementales</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Crises, anxiété..." {...field} suggestions={socioEmotionalDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={socioEmotionalDifficultiesSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="disabilityConstraints" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Contraintes liées au handicap</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Pauses fréquentes..." {...field} suggestions={disabilityConstraintsSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={disabilityConstraintsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

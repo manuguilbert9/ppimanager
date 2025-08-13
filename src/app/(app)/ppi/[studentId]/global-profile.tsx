@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -97,7 +98,7 @@ export function GlobalProfileForm({
   }
 
   return (
-    <Card style={{ backgroundColor: '#E6E5C5' }}>
+    <Card style={{ backgroundColor: '#F3F4F6' }}>
       <CardHeader>
         <CardTitle>Profil global de l’élève</CardTitle>
         <CardDescription>
@@ -107,22 +108,22 @@ export function GlobalProfileForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" className="w-full" defaultValue={['item-1', 'item-2', 'item-3', 'item-4', 'item-5']}>
               
               <AccordionItem value="item-1">
-                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Nature du handicap et troubles associés</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Nature du handicap et troubles associés</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                   <FormField control={form.control} name="disabilityNatures" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Diagnostics principaux</FormLabel>
-                      <FormControl><ComboboxInput placeholder="Ajouter un diagnostic..." {...field} suggestions={disabilityNaturesSuggestions} /></FormControl>
+                      <FormControl><ComboboxInput {...field} suggestions={disabilityNaturesSuggestions} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="associatedDisorders" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Autres troubles ou déficiences associées</FormLabel>
-                      <FormControl><ComboboxInput {...field} placeholder="Ajouter un trouble..." suggestions={associatedDisordersSuggestions} /></FormControl>
+                      <FormControl><ComboboxInput {...field} suggestions={associatedDisordersSuggestions} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -137,21 +138,21 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Santé et besoins médicaux</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Santé et besoins médicaux</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <FormField control={form.control} name="medicalNeeds" render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Besoins médicaux spécifiques</FormLabel>
-                                <FormControl><ComboboxInput {...field} placeholder="Ajouter un besoin..." suggestions={medicalNeedsSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={medicalNeedsSuggestions} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="equipment" render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Appareillages</FormLabel>
-                                <FormControl><ComboboxInput {...field} placeholder="Ajouter un appareillage..." suggestions={equipmentSuggestions} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={equipmentSuggestions} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )} />
@@ -178,33 +179,33 @@ export function GlobalProfileForm({
               </AccordionItem>
               
               <AccordionItem value="item-3">
-                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Développement et autonomie</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Développement et autonomie</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="dailyLifeAutonomy" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Autonomie dans les actes de la vie quotidienne</FormLabel>
-                            <FormControl><Textarea placeholder="Toilette, habillage, repas..." {...field} /></FormControl>
+                            <FormControl><Textarea {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="motorSkills" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Compétences motrices</FormLabel>
-                            <FormControl><Textarea placeholder="Marche, usage d'un fauteuil, préhension..." {...field} /></FormControl>
+                            <FormControl><Textarea {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="communicationSkills" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Capacités de communication</FormLabel>
-                            <FormControl><Textarea placeholder="Langage oral, LSF, PECS, etc." {...field} /></FormControl>
+                            <FormControl><Textarea {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="sensorySkills" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Capacités sensorielles</FormLabel>
-                            <FormControl><Textarea placeholder="Acuité visuelle/auditive, port de lunettes/appareil..." {...field} /></FormControl>
+                            <FormControl><Textarea {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -212,12 +213,12 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Histoire scolaire et parcours</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Histoire scolaire et parcours</AccordionTrigger>
                 <AccordionContent className="pt-4">
                     <FormField control={form.control} name="schoolHistory" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Résumé du parcours scolaire antérieur</FormLabel>
-                            <FormControl><Textarea rows={5} placeholder="Milieu ordinaire ou spécialisé, transitions, niveau..." {...field} /></FormControl>
+                            <FormControl><Textarea rows={5} {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -225,19 +226,19 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-5">
-                <AccordionTrigger className="text-lg font-medium text-amber-900/80">Centres d’intérêt et projet personnel</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Centres d’intérêt et projet personnel</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="hobbies" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Centres d'intérêt et points de motivation</FormLabel>
-                            <FormControl><ComboboxInput {...field} placeholder="Ajouter un centre d'intérêt..." suggestions={hobbiesSuggestions} /></FormControl>
+                            <FormControl><ComboboxInput {...field} suggestions={hobbiesSuggestions} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="personalProject" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Esquisse du projet d’avenir ou professionnel</FormLabel>
-                            <FormControl><Textarea placeholder="Pour un adolescent, s'il a exprimé des envies..." {...field} /></FormControl>
+                            <FormControl><Textarea {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />

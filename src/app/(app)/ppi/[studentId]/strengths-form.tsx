@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -75,7 +76,7 @@ export function StrengthsForm({
   const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
 
   return (
-    <Card style={{ backgroundColor: '#b4e2cc' }}>
+    <Card style={{ backgroundColor: '#E0F2F1' }}>
       <CardHeader>
         <CardTitle>Points d'appuis</CardTitle>
         <CardDescription>
@@ -85,35 +86,35 @@ export function StrengthsForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-             <Accordion type="multiple" className="w-full">
+             <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
                     <AccordionTrigger className="text-lg font-medium text-green-800">Points forts de l'élève</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <FormField control={form.control} name="academicSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Compétences acquises</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Sait reconnaître les lettres..." {...field} suggestions={academicSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={academicSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="cognitiveStrengths" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Forces cognitives et comportementales</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Bonne mémoire visuelle..." {...field} suggestions={cognitiveStrengthsSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={cognitiveStrengthsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="socialSkills" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Habiletés sociales ou communicationnelles</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Cherche à entrer en interaction..." {...field} suggestions={socialSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={socialSkillsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="exploitableInterests" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Intérêts spécifiques exploitables</FormLabel>
-                                <FormControl><ComboboxInput placeholder="Passion pour la musique..." {...field} suggestions={exploitableInterestsSuggestions} badgeClassName={badgeClassName} /></FormControl>
+                                <FormControl><ComboboxInput {...field} suggestions={exploitableInterestsSuggestions} badgeClassName={badgeClassName} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

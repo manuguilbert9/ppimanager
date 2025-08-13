@@ -85,7 +85,7 @@ export function ComboboxInput({
                 className="w-full justify-between"
                 >
                 <span className="truncate">
-                    {placeholder || "Sélectionner..."}
+                    {placeholder || ""}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>

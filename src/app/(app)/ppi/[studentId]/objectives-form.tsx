@@ -154,7 +154,6 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
                             name={`objectives.${objectiveIndex}.adaptations.${index}`}
                             render={({ field }) => (
                                 <Textarea
-                                    placeholder="Décrire une adaptation..."
                                     {...field}
                                     className="min-h-[40px] flex-1"
                                 />
@@ -305,7 +304,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
     const objectiveContent = (
-      <AccordionItem value={field.id} className="w-full bg-white/50 border-purple-200 dark:border-purple-800 border rounded-md px-4">
+      <AccordionItem value={field.id} className="w-full bg-background/50 border-purple-200 dark:border-purple-800 border rounded-md px-4">
         <div className="flex items-center w-full">
           <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-3 text-purple-800">
             <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
@@ -325,7 +324,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                   <FormControl>
                     <ComboboxField
                       {...field}
-                      placeholder="Ex: Savoir écrire lisiblement 10 mots usuels"
                       suggestions={objectivesSuggestions}
                     />
                   </FormControl>
@@ -346,7 +344,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 <FormItem>
                   <FormLabel>Critère de réussite attendue</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Ex: Réussite dans 4 cas sur 5..." {...field} />
+                    <Textarea {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -360,7 +358,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                     <FormItem>
                     <FormLabel>Échéance</FormLabel>
                     <FormControl>
-                        <Input placeholder="Ex: Fin du trimestre" {...field} />
+                        <Input {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -373,7 +371,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                     <FormItem>
                     <FormLabel>Date de validation</FormLabel>
                     <FormControl>
-                        <Input placeholder="JJ/MM/AAAA" {...field} />
+                        <Input {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -404,7 +402,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   return (
-    <Card style={{ backgroundColor: '#abb3dd' }}>
+    <Card style={{ backgroundColor: '#EDE7F6' }}>
       <CardHeader>
         <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>
         <CardDescription>

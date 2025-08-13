@@ -1,3 +1,4 @@
+
 import { getStudent } from "@/lib/students-repository";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";

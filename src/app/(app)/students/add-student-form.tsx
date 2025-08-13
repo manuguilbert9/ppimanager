@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -129,21 +130,21 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                 <FormField control={form.control} name="lastName" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nom</FormLabel>
-                    <FormControl><Input placeholder="Dupont" {...field} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="firstName" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Prénom</FormLabel>
-                    <FormControl><Input placeholder="Jean" {...field} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                  <FormField control={form.control} name="birthDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date de naissance</FormLabel>
-                    <FormControl><Input placeholder="JJ/MM/AAAA" {...field} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -168,7 +169,7 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                 <FormField control={form.control} name="school" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Établissement</FormLabel>
-                    <FormControl><Input placeholder="ex: Collège Jacques Prévert" {...field} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -185,7 +186,7 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                 <FormField control={form.control} name="level" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Niveau scolaire de référence</FormLabel>
-                    <FormControl><Input placeholder="ex: 6ème" {...field} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -202,14 +203,14 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                   <FormField control={form.control} name="mdphNotificationTitle" render={({ field }) => (
                       <FormItem>
                           <FormLabel>Intitulé Notification MDPH</FormLabel>
-                          <FormControl><Textarea placeholder="Type de placement, durée, etc." {...field} /></FormControl>
+                          <FormControl><Textarea {...field} /></FormControl>
                           <FormMessage />
                       </FormItem>
                   )} />
                   <FormField control={form.control} name="mdphNotificationExpiration" render={({ field }) => (
                       <FormItem>
                           <FormLabel>Date d'expiration MDPH</FormLabel>
-                          <FormControl><Input placeholder="JJ/MM/AAAA" {...field} /></FormControl>
+                          <FormControl><Input {...field} /></FormControl>
                           <FormMessage />
                       </FormItem>
                   )} />
@@ -224,32 +225,32 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
                        </Button>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField control={form.control} name={`familyContacts.${index}.title`} render={({ field }) => (
-                            <FormItem><FormLabel>Intitulé</FormLabel><FormControl><Input placeholder="Mère, Père..." {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Intitulé</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <FormField control={form.control} name={`familyContacts.${index}.name`} render={({ field }) => (
-                            <FormItem><FormLabel>Nom</FormLabel><FormControl><Input placeholder="Nom du contact" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Nom</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                       </div>
                       <div className="mt-4">
                           <FormLabel>Adresse</FormLabel>
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2">
                             <FormField control={form.control} name={`familyContacts.${index}.street`} render={({ field }) => (
-                              <FormItem><FormControl><Input placeholder="Rue" {...field} /></FormControl><FormMessage /></FormItem>
+                              <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name={`familyContacts.${index}.postalCode`} render={({ field }) => (
-                               <FormItem><FormControl><Input placeholder="Code Postal" {...field} /></FormControl><FormMessage /></FormItem>
+                               <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name={`familyContacts.${index}.city`} render={({ field }) => (
-                               <FormItem><FormControl><Input placeholder="Ville" {...field} /></FormControl><FormMessage /></FormItem>
+                               <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                           </div>
                       </div>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                           <FormField control={form.control} name={`familyContacts.${index}.phone`} render={({ field }) => (
-                            <FormItem><FormLabel>Téléphone</FormLabel><FormControl><Input placeholder="06..." {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Téléphone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <FormField control={form.control} name={`familyContacts.${index}.email`} render={({ field }) => (
-                            <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                       </div>
                     </div>
