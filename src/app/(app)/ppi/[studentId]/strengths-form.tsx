@@ -70,7 +70,7 @@ export function StrengthsForm({
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
+      
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -80,7 +80,7 @@ export function StrengthsForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
   useEffect(() => {
     if (form.formState.isDirty) {

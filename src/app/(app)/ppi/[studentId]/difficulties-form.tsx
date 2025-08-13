@@ -75,7 +75,7 @@ export function DifficultiesForm({
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
+      
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -85,7 +85,7 @@ export function DifficultiesForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
 
   useEffect(() => {

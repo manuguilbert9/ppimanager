@@ -73,7 +73,7 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
       await updateStudent(student.id, values);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
+      
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -83,7 +83,7 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
   // Auto-save on form change
   useEffect(() => {

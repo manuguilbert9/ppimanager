@@ -94,7 +94,7 @@ export function GlobalProfileForm({
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
+      
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -104,7 +104,7 @@ export function GlobalProfileForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
 
   useEffect(() => {
