@@ -2,3 +2,4 @@
 import './flows/suggest-objectives-flow';
 import './flows/suggest-adaptations-flow';
 import './flows/extract-gevasco-flow';
+import './flows/suggest-needs-flow';

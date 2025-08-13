@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +13,10 @@ import type { Student, Needs } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { Loader2, PlusCircle, Sparkles, WandSparkles } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { suggestNeeds, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
+import { set } from 'date-fns';
 
 const formSchema = z.object({
   pedagogicalAccommodations: z.array(z.string()).optional(),
@@ -39,6 +44,8 @@ export function NeedsForm({
   complementaryCareSuggestions,
 }: NeedsFormProps) {
   const { toast } = useToast();
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,6 +57,42 @@ export function NeedsForm({
       complementaryCare: student.needs?.complementaryCare || [],
     },
   });
+
+  const handleSuggestNeeds = async () => {
+    setIsSuggesting(true);
+    setSuggestions(null);
+    try {
+      const result = await suggestNeeds({
+        strengths: student.strengths,
+        difficulties: student.difficulties,
+      });
+      setSuggestions(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de suggestion',
+        description: "Une erreur est survenue lors de la suggestion des besoins.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const addSuggestion = (category: keyof Needs, value: string) => {
+    const currentValues = form.getValues(category) || [];
+    if (!currentValues.includes(value)) {
+      form.setValue(category, [...currentValues, value]);
+      // Also remove from suggestion list
+      if (suggestions && suggestions[category]) {
+        const newSuggestions = {
+          ...suggestions,
+          [category]: suggestions[category]?.filter((s) => s !== value),
+        };
+        setSuggestions(newSuggestions);
+      }
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -87,9 +130,68 @@ export function NeedsForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-6">
+            <Button type="button" onClick={handleSuggestNeeds} disabled={isSuggesting}>
+                {isSuggesting ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Génération en cours...
+                </>
+                ) : (
+                <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Suggérer des besoins par IA
+                </>
+                )}
+            </Button>
+        </div>
+
+        {suggestions && (
+          <Alert className="mb-6">
+            <WandSparkles className="h-4 w-4" />
+            <AlertTitle>Suggestions de besoins</AlertTitle>
+            <AlertDescription>
+              Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter.
+            </AlertDescription>
+            <div className="mt-4 space-y-4">
+              {Object.entries(suggestions).map(([category, items]) =>
+                items && items.length > 0 ? (
+                  <div key={category}>
+                    <h4 className="text-sm font-semibold mb-2 capitalize">
+                        {
+                            {
+                                pedagogicalAccommodations: 'Aménagements pédagogiques',
+                                humanAssistance: 'Aide humaine',
+                                compensatoryTools: 'Outils de compensation',
+                                specialEducationalApproach: 'Approche éducative',
+                                complementaryCare: 'Soins et rééducations',
+                            }[category]
+                        }
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {items.map((item) => (
+                        <Button
+                          key={item}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addSuggestion(category as keyof Needs, item)}
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          {item}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              )}
+            </div>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-             <Accordion type="multiple" className="w-full">
+             <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
                 <AccordionItem value="item-1">
                     <AccordionTrigger className="text-lg font-medium text-teal-800">Identifier les besoins</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
