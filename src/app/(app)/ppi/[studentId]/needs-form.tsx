@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +13,9 @@ import type { Student, Needs } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { Sparkles, Loader2, PlusCircle, WandSparkles } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
 
 const formSchema = z.object({
   pedagogicalAccommodations: z.array(z.string()).optional(),
@@ -30,6 +34,30 @@ interface NeedsFormProps {
   complementaryCareSuggestions: string[];
 }
 
+const SuggestionSection = ({ title, suggestions, onAdd }: { title: string; suggestions: string[]; onAdd: (suggestion: string) => void; }) => {
+  if (!suggestions || suggestions.length === 0) return null;
+  return (
+    <div className="mt-2">
+      <h4 className="text-sm font-semibold mb-2">{title}</h4>
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map((suggestion, index) => (
+          <Button
+            key={index}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onAdd(suggestion)}
+            className="h-auto whitespace-normal text-left"
+          >
+            <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
+            {suggestion}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function NeedsForm({
   student,
   pedagogicalAccommodationsSuggestions,
@@ -39,6 +67,8 @@ export function NeedsForm({
   complementaryCareSuggestions,
 }: NeedsFormProps) {
   const { toast } = useToast();
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,6 +80,44 @@ export function NeedsForm({
       complementaryCare: student.needs?.complementaryCare || [],
     },
   });
+
+  const handleSuggestNeeds = async () => {
+    setIsSuggesting(true);
+    setSuggestions(null);
+    try {
+      const studentProfile: SuggestNeedsInput = {
+        strengths: student.strengths || {},
+        difficulties: student.difficulties || {},
+      };
+      const result = await suggestNeeds(studentProfile);
+      setSuggestions(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de suggestion',
+        description: "Une erreur est survenue lors de la génération des suggestions de besoins.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const addSuggestion = (suggestion: string, field: keyof Needs) => {
+    const currentValues = form.getValues(field) || [];
+    if (!currentValues.includes(suggestion)) {
+      form.setValue(field, [...currentValues, suggestion]);
+      addLibraryItems([suggestion], field); // Add to library as well
+    }
+    // Remove from suggestions list to avoid clutter
+    if (suggestions) {
+      setSuggestions({
+        ...suggestions,
+        [field]: suggestions[field]?.filter(s => s !== suggestion) || [],
+      });
+    }
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -87,6 +155,59 @@ export function NeedsForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-6 flex gap-2">
+            <Button type="button" onClick={handleSuggestNeeds} disabled={isSuggesting}>
+                {isSuggesting ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Génération en cours...
+                </>
+                ) : (
+                <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Suggérer des besoins par IA
+                </>
+                )}
+            </Button>
+        </div>
+
+        {suggestions && (
+          <Alert className="mb-6">
+            <WandSparkles className="h-4 w-4" />
+            <AlertTitle>Suggestions de besoins</AlertTitle>
+            <AlertDescription>
+                Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter aux champs correspondants.
+            </AlertDescription>
+            <div className="mt-4 space-y-4">
+              <SuggestionSection
+                title="Aménagements pédagogiques"
+                suggestions={suggestions.pedagogicalAccommodations}
+                onAdd={(s) => addSuggestion(s, 'pedagogicalAccommodations')}
+              />
+              <SuggestionSection
+                title="Aide humaine"
+                suggestions={suggestions.humanAssistance}
+                onAdd={(s) => addSuggestion(s, 'humanAssistance')}
+              />
+               <SuggestionSection
+                title="Outils de compensation"
+                suggestions={suggestions.compensatoryTools}
+                onAdd={(s) => addSuggestion(s, 'compensatoryTools')}
+              />
+               <SuggestionSection
+                title="Approche éducative particulière"
+                suggestions={suggestions.specialEducationalApproach}
+                onAdd={(s) => addSuggestion(s, 'specialEducationalApproach')}
+              />
+               <SuggestionSection
+                title="Soins ou rééducations complémentaires"
+                suggestions={suggestions.complementaryCare}
+                onAdd={(s) => addSuggestion(s, 'complementaryCare')}
+              />
+            </div>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
              <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
