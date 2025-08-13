@@ -48,8 +48,8 @@ async function mergeAndSaveData(studentId: string, extractedData: ExtractGevasco
         const extractedCategoryData = extractedData[category];
         if (!extractedCategoryData) return;
 
-        const existingData = student[category] || {};
         // @ts-ignore
+        const existingData = student[category] || {};
         const mergedData: typeof existingData = { ...existingData };
         
         Object.keys(extractedCategoryData).forEach(key => {

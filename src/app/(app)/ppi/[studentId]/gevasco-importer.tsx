@@ -61,6 +61,8 @@ export function GevascoImporter({ student }: { student: Student }) {
           setError(result.error);
         } else if (result.extractedData) {
           setExtractedData(result.extractedData);
+          // Don't apply immediately, show dialog first
+          // This will trigger a re-render showing the dialog
         }
       } catch (e) {
         console.error(e);
@@ -69,36 +71,19 @@ export function GevascoImporter({ student }: { student: Student }) {
     });
   };
 
-  const handleApplyData = async () => {
+  const handleApplyData = () => {
+    // The data is already merged on the server during processGevascoFile
+    // This action just closes the dialog and refreshes the page to show the new data
     if (!extractedData) return;
 
-    startTransition(async () => {
-        try {
-            const formData = new FormData();
-            formData.append('studentId', student.id);
-            formData.append('extractedData', JSON.stringify(extractedData));
-            
-            // This would be a separate server action if we were to save the modified data
-            // For now, we assume the initial extraction is what is applied.
-            // The logic is already server-side, so we just refresh.
-
-            toast({
-                title: 'PPI mis à jour',
-                description: "Les informations du GevaSco ont été ajoutées au profil de l'élève.",
-            });
-            setExtractedData(null);
-            router.refresh();
-
-        } catch (updateError) {
-          console.error(updateError);
-          toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: 'Impossible de sauvegarder les données extraites.',
-          });
-        }
+    toast({
+        title: 'PPI mis à jour',
+        description: "Les informations du GevaSco ont été fusionnées avec le profil de l'élève.",
     });
+    setExtractedData(null);
+    router.refresh();
   };
+
 
   const renderExtractedData = () => {
     if (!extractedData) return null;
@@ -121,11 +106,11 @@ export function GevascoImporter({ student }: { student: Student }) {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Vérification requise</AlertTitle>
             <AlertDescription>
-                Les informations ci-dessous ont été extraites. Elles seront fusionnées avec les données existantes.
-                La modification des données ici n'est pas encore prise en charge. Cliquez sur "Appliquer" pour confirmer.
+                Les informations ci-dessous ont été extraites et fusionnées avec les données existantes.
+                Vérifiez les données avant de fermer cette fenêtre.
             </AlertDescription>
         </Alert>
-        {/* Simplified render logic for brevity. In a real app, you'd allow editing. */}
+        {/* Simplified render logic for brevity. */}
         <pre className="text-xs whitespace-pre-wrap bg-muted p-2 rounded-md">{JSON.stringify(extractedData, null, 2)}</pre>
       </div>
     )
@@ -164,6 +149,7 @@ export function GevascoImporter({ student }: { student: Student }) {
           if (!open) {
               setExtractedData(null);
               setError(null);
+              if (extractedData) router.refresh(); // Refresh if data was applied
           }
       }}>
         <DialogContent className="max-w-3xl">
@@ -188,11 +174,11 @@ export function GevascoImporter({ student }: { student: Student }) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => { setExtractedData(null); setError(null); }}>
-              Annuler
+              Fermer
             </Button>
-            {!error && (
-                <Button onClick={handleApplyData} disabled={isPending}>
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Appliquer au PPI'}
+            {!error && extractedData && (
+                <Button onClick={handleApplyData}>
+                    C'est noté, fermer
                 </Button>
             )}
           </DialogFooter>

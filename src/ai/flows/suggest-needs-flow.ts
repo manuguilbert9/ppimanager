@@ -51,18 +51,19 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
     Tu es un expert en ingénierie pédagogique.
-    En te basant sur le profil de l'élève ci-dessous, suggère une liste pertinente de besoins éducatifs particuliers.
+    Ton rôle est de déduire les besoins éducatifs particuliers d'un élève à partir de son profil.
 
     PROFIL DE L'ÉLÈVE :
-    - Points Forts : {{{json strengths}}}
-    - Difficultés : {{{json difficulties}}}
+    - Points Forts (ce qu'il peut faire) : {{{json strengths}}}
+    - Difficultés (ce qui le met en difficulté) : {{{json difficulties}}}
 
     INSTRUCTIONS :
-    1. Analyse les difficultés de l'élève pour déterminer les besoins de compensation nécessaires.
-    2. Pour chaque catégorie de besoin ci-dessous, propose 2 à 3 suggestions pertinentes et concrètes.
-    3. NE SUGGÈRE PAS de besoins qui sont déjà comblés par les points forts de l'élève.
-    4. Formule les besoins sous forme d'actions ou de ressources claires et directement exploitables.
-    5. Sois concis et pertinent.
+    1.  **Analyse les difficultés** : Concentre-toi principalement sur la section "Difficultés". Chaque difficulté est un indicateur d'un besoin de compensation.
+    2.  **Déduis les besoins** : Pour chaque difficulté identifiée, déduis le besoin correspondant. Par exemple, si l'élève a des "Difficultés en graphomotricité", un besoin pourrait être "Utiliser un ordinateur pour les tâches d'écriture longues". Si l'élève a des "Difficultés d'attention", un besoin pourrait être "Fractionner les tâches en étapes plus courtes".
+    3.  **Utilise les points forts comme leviers** : Ne suggère pas un besoin qui est déjà comblé par un point fort. Par exemple, si l'élève a comme point fort "Communique bien à l'oral", ne suggère pas de besoin lié à la communication orale.
+    4.  **Sois concret et actionnable** : Formule chaque besoin comme une action ou une ressource claire.
+    5.  **Remplis les catégories pertinentes** : Propose 2 à 3 suggestions pertinentes pour chaque catégorie de besoin applicable. Si aucune suggestion ne te semble pertinente pour une catégorie, laisse la vide. Ne force pas les suggestions.
+    6.  **Même si le profil est peu rempli, fais de ton mieux** pour proposer au moins quelques besoins de base logiques.
   `,
 });
 
