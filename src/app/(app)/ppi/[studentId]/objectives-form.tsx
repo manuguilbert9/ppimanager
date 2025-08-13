@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray, Controller, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -216,42 +216,42 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   const watchedValues = form.watch();
   const debouncedValues = useDebounce(watchedValues, 1500);
 
-  useEffect(() => {
-    async function saveForm(values: z.infer<typeof formSchema>) {
-      setIsSaving(true);
-      setIsSaved(false);
-      try {
-        const objectivesToSave = values.objectives.map(o => ({
-            ...o,
-            adaptations: o.adaptations || [],
-        }));
+  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
+    setIsSaving(true);
+    setIsSaved(false);
+    try {
+      const objectivesToSave = values.objectives.map(o => ({
+          ...o,
+          adaptations: o.adaptations || [],
+      }));
 
-        await updateStudent(student.id, { objectives: objectivesToSave });
-        
-        if (values.objectives) {
-            addLibraryItems(values.objectives.map(o => o.title), 'objectives');
-            const allAdaptations = objectivesToSave.flatMap(o => o.adaptations || []);
-            addLibraryItems(allAdaptations, 'adaptations');
-        }
-
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors de la sauvegarde.',
-        });
-      } finally {
-        setIsSaving(false);
+      await updateStudent(student.id, { objectives: objectivesToSave });
+      
+      if (values.objectives) {
+          addLibraryItems(values.objectives.map(o => o.title), 'objectives');
+          const allAdaptations = objectivesToSave.flatMap(o => o.adaptations || []);
+          addLibraryItems(allAdaptations, 'adaptations');
       }
-    }
 
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+      form.reset(values);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la sauvegarde.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [student.id, toast, form]);
+
+  useEffect(() => {
     if (isDirty) {
         saveForm(debouncedValues);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues, isDirty]);
+  }, [debouncedValues, isDirty, saveForm]);
 
 
 

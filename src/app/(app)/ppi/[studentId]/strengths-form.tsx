@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,38 +56,37 @@ export function StrengthsForm({
   const watchedValues = form.watch();
   const debouncedValues = useDebounce(watchedValues, 1500);
 
+  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
+    setIsSaving(true);
+    setIsSaved(false);
+    try {
+      const strengths: Strengths = values;
+      await updateStudent(student.id, { strengths });
+      
+      if (values.academicSkills) addLibraryItems(values.academicSkills, 'academicSkills');
+      if (values.cognitiveStrengths) addLibraryItems(values.cognitiveStrengths, 'cognitiveStrengths');
+      if (values.socialSkills) addLibraryItems(values.socialSkills, 'socialSkills');
+      if (values.exploitableInterests) addLibraryItems(values.exploitableInterests, 'exploitableInterests');
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+      form.reset(values);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la sauvegarde.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [student.id, toast, form]);
+
   useEffect(() => {
-    async function saveForm(values: z.infer<typeof formSchema>) {
-      setIsSaving(true);
-      setIsSaved(false);
-      try {
-        const strengths: Strengths = values;
-        await updateStudent(student.id, { strengths });
-        
-        if (values.academicSkills) addLibraryItems(values.academicSkills, 'academicSkills');
-        if (values.cognitiveStrengths) addLibraryItems(values.cognitiveStrengths, 'cognitiveStrengths');
-        if (values.socialSkills) addLibraryItems(values.socialSkills, 'socialSkills');
-        if (values.exploitableInterests) addLibraryItems(values.exploitableInterests, 'exploitableInterests');
-        
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors de la sauvegarde.',
-        });
-      } finally {
-        setIsSaving(false);
-      }
-    }
-
     if (form.formState.isDirty) {
-        saveForm(debouncedValues);
+      saveForm(debouncedValues);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues]);
+  }, [debouncedValues, form.formState.isDirty, saveForm]);
 
 
   const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";

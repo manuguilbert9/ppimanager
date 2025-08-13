@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -88,39 +88,39 @@ export function NeedsForm({
   const watchedValues = form.watch();
   const debouncedValues = useDebounce(watchedValues, 1500);
 
-  useEffect(() => {
-    async function saveForm(values: z.infer<typeof formSchema>) {
-      setIsSaving(true);
-      setIsSaved(false);
-      try {
-        const needs: Needs = values;
-        await updateStudent(student.id, { needs });
-        
-        if (values.pedagogicalAccommodations) addLibraryItems(values.pedagogicalAccommodations, 'pedagogicalAccommodations');
-        if (values.humanAssistance) addLibraryItems(values.humanAssistance, 'humanAssistance');
-        if (values.compensatoryTools) addLibraryItems(values.compensatoryTools, 'compensatoryTools');
-        if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
-        if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
-        
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors de la sauvegarde.',
-        });
-      } finally {
-        setIsSaving(false);
-      }
+  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
+    setIsSaving(true);
+    setIsSaved(false);
+    try {
+      const needs: Needs = values;
+      await updateStudent(student.id, { needs });
+      
+      if (values.pedagogicalAccommodations) addLibraryItems(values.pedagogicalAccommodations, 'pedagogicalAccommodations');
+      if (values.humanAssistance) addLibraryItems(values.humanAssistance, 'humanAssistance');
+      if (values.compensatoryTools) addLibraryItems(values.compensatoryTools, 'compensatoryTools');
+      if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
+      if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+      form.reset(values);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la sauvegarde.',
+      });
+    } finally {
+      setIsSaving(false);
     }
-    
+  }, [student.id, toast, form]);
+
+
+  useEffect(() => {
     if (form.formState.isDirty) {
       saveForm(debouncedValues);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues]);
+  }, [debouncedValues, form.formState.isDirty, saveForm]);
 
 
   const handleSuggestNeeds = async () => {

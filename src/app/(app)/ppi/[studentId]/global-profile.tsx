@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -79,40 +79,40 @@ export function GlobalProfileForm({
   const watchedValues = form.watch();
   const debouncedValues = useDebounce(watchedValues, 1500);
 
-  useEffect(() => {
-    async function saveForm(values: z.infer<typeof formSchema>) {
-      setIsSaving(true);
-      setIsSaved(false);
-      try {
-        const globalProfile: GlobalProfile = values;
-        await updateStudent(student.id, { globalProfile });
+  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
+    setIsSaving(true);
+    setIsSaved(false);
+    try {
+      const globalProfile: GlobalProfile = values;
+      await updateStudent(student.id, { globalProfile });
 
-        if (values.disabilityNatures) addLibraryItems(values.disabilityNatures, 'disabilityNatures');
-        if (values.associatedDisorders) addLibraryItems(values.associatedDisorders, 'associatedDisorders');
-        if (values.medicalNeeds) addLibraryItems(values.medicalNeeds, 'medicalNeeds');
-        if (values.equipment) addLibraryItems(values.equipment, 'equipment');
-        if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
-        
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors de la sauvegarde.',
-        });
-      } finally {
-        setIsSaving(false);
-      }
+      if (values.disabilityNatures) addLibraryItems(values.disabilityNatures, 'disabilityNatures');
+      if (values.associatedDisorders) addLibraryItems(values.associatedDisorders, 'associatedDisorders');
+      if (values.medicalNeeds) addLibraryItems(values.medicalNeeds, 'medicalNeeds');
+      if (values.equipment) addLibraryItems(values.equipment, 'equipment');
+      if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+      form.reset(values);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la sauvegarde.',
+      });
+    } finally {
+      setIsSaving(false);
     }
-    
-    // Do not save on initial render
+  }, [student.id, toast, form]);
+
+
+  useEffect(() => {
     if (form.formState.isDirty) {
       saveForm(debouncedValues);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues]);
+  }, [debouncedValues, form.formState.isDirty, saveForm]);
+
 
   return (
     <Card className="bg-gray-50/50">

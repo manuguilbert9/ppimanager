@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -60,39 +60,39 @@ export function DifficultiesForm({
   const watchedValues = form.watch();
   const debouncedValues = useDebounce(watchedValues, 1500);
 
-  useEffect(() => {
-    async function saveForm(values: z.infer<typeof formSchema>) {
-      setIsSaving(true);
-      setIsSaved(false);
-      try {
-        const difficulties: Difficulties = values;
-        await updateStudent(student.id, { difficulties });
-        
-        if (values.cognitiveDifficulties) addLibraryItems(values.cognitiveDifficulties, 'cognitiveDifficulties');
-        if (values.schoolDifficulties) addLibraryItems(values.schoolDifficulties, 'schoolDifficulties');
-        if (values.motorDifficulties) addLibraryItems(values.motorDifficulties, 'motorDifficulties');
-        if (values.socioEmotionalDifficulties) addLibraryItems(values.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
-        if (values.disabilityConstraints) addLibraryItems(values.disabilityConstraints, 'disabilityConstraints');
-        
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-        
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors de la sauvegarde.',
-        });
-      } finally {
-        setIsSaving(false);
-      }
+  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
+    setIsSaving(true);
+    setIsSaved(false);
+    try {
+      const difficulties: Difficulties = values;
+      await updateStudent(student.id, { difficulties });
+      
+      if (values.cognitiveDifficulties) addLibraryItems(values.cognitiveDifficulties, 'cognitiveDifficulties');
+      if (values.schoolDifficulties) addLibraryItems(values.schoolDifficulties, 'schoolDifficulties');
+      if (values.motorDifficulties) addLibraryItems(values.motorDifficulties, 'motorDifficulties');
+      if (values.socioEmotionalDifficulties) addLibraryItems(values.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
+      if (values.disabilityConstraints) addLibraryItems(values.disabilityConstraints, 'disabilityConstraints');
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+      form.reset(values);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la sauvegarde.',
+      });
+    } finally {
+      setIsSaving(false);
     }
+  }, [student.id, toast, form]);
 
+
+  useEffect(() => {
     if (form.formState.isDirty) {
         saveForm(debouncedValues);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues]);
+  }, [debouncedValues, form.formState.isDirty, saveForm]);
 
 
   const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
