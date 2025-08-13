@@ -50,33 +50,42 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     if (!student) return;
 
     const updatedStudentData: Partial<Student> = {
-      firstName: data.firstName || student.firstName,
-      lastName: data.lastName || student.lastName,
-      birthDate: data.birthDate || student.birthDate,
-      school: data.school || student.school,
-      level: data.level || student.level,
-      familyContacts: data.familyContacts?.map(c => ({
-          id: Math.random().toString(36).substring(7),
-          title: c.title ?? "",
-          name: c.name ?? "",
-          phone: c.phone,
-          email: c.email,
-          street: c.street,
-          postalCode: c.postalCode,
-          city: c.city,
-      })) || student.familyContacts,
-      globalProfile: {
-          ...student.globalProfile,
-          ...data.globalProfile,
-      },
-      strengths: {
-          ...student.strengths,
-          ...data.strengths,
-      },
-      difficulties: {
-          ...student.difficulties,
-          ...data.difficulties,
-      },
+        ...student, // Start with existing data
+        
+        // Overwrite simple fields if present in extracted data
+        firstName: data.firstName || student.firstName,
+        lastName: data.lastName || student.lastName,
+        birthDate: data.birthDate || student.birthDate,
+        school: data.school || student.school,
+        level: data.level || student.level,
+
+        // Replace contacts only if new ones were extracted
+        familyContacts: data.familyContacts && data.familyContacts.length > 0
+            ? data.familyContacts.map(c => ({
+                id: Math.random().toString(36).substring(7),
+                title: c.title ?? "",
+                name: c.name ?? "",
+                phone: c.phone,
+                email: c.email,
+                street: c.street,
+                postalCode: c.postalCode,
+                city: c.city,
+            }))
+            : student.familyContacts,
+
+        // Merge nested objects correctly
+        globalProfile: {
+            ...student.globalProfile,
+            ...data.globalProfile,
+        },
+        strengths: {
+            ...student.strengths,
+            ...data.strengths,
+        },
+        difficulties: {
+            ...student.difficulties,
+            ...data.difficulties,
+        },
     };
 
     await updateStudent(student.id, updatedStudentData);
