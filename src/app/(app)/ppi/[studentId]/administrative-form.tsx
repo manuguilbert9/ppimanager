@@ -49,7 +49,7 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    values: { // Use `values` to react to prop changes
       ...student,
       familyContacts: student.familyContacts || [],
     },
@@ -95,6 +95,14 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
       saveForm(debouncedValues as z.infer<typeof formSchema>);
     }
   }, [debouncedValues, form.formState.isDirty, saveForm]);
+
+  // Reset form values when student prop changes
+  useEffect(() => {
+    form.reset({
+      ...student,
+      familyContacts: student.familyContacts || [],
+    });
+  }, [student, form]);
 
 
   return (
@@ -263,5 +271,3 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
     </Card>
   );
 }
-
-  

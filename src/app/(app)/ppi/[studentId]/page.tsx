@@ -19,14 +19,16 @@ import { Loader2 } from "lucide-react";
 import type { Student, Classe, LibraryItem } from "@/types";
 import type { ExtractedData } from "@/ai/flows/extract-text-flow";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { cloneDeep } from 'lodash';
 
 export default function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const [student, setStudent] = useState<Student | null>(null);
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
   const [isImporting, setIsImporting] = useState(false);
-  const [pageKey, setPageKey] = useState(Date.now());
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,52 +46,62 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     };
 
     fetchData();
-  }, [params.studentId, pageKey]);
+  }, [params.studentId]);
 
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
 
-    const updatedStudentData: Partial<Student> = {
-        ...student, // Start with existing data
-        
-        // Overwrite simple fields if present in extracted data
-        firstName: data.firstName || student.firstName,
-        lastName: data.lastName || student.lastName,
-        birthDate: data.birthDate || student.birthDate,
-        school: data.school || student.school,
-        level: data.level || student.level,
+    // Use a deep clone to avoid mutation issues with the current state
+    const updatedStudentData = cloneDeep(student) as Partial<Student>;
 
-        // Replace contacts only if new ones were extracted
-        familyContacts: data.familyContacts && data.familyContacts.length > 0
-            ? data.familyContacts.map(c => ({
-                id: Math.random().toString(36).substring(7),
-                title: c.title ?? "",
-                name: c.name ?? "",
-                phone: c.phone,
-                email: c.email,
-                street: c.street,
-                postalCode: c.postalCode,
-                city: c.city,
-            }))
-            : student.familyContacts,
+    // Update simple fields
+    if (data.firstName) updatedStudentData.firstName = data.firstName;
+    if (data.lastName) updatedStudentData.lastName = data.lastName;
+    if (data.birthDate) updatedStudentData.birthDate = data.birthDate;
+    if (data.school) updatedStudentData.school = data.school;
+    if (data.level) updatedStudentData.level = data.level;
 
-        // Merge nested objects correctly
-        globalProfile: {
-            ...student.globalProfile,
-            ...data.globalProfile,
-        },
-        strengths: {
-            ...student.strengths,
-            ...data.strengths,
-        },
-        difficulties: {
-            ...student.difficulties,
-            ...data.difficulties,
-        },
-    };
+    // Replace contacts only if new ones were extracted
+    if (data.familyContacts && data.familyContacts.length > 0) {
+      updatedStudentData.familyContacts = data.familyContacts.map(c => ({
+        id: Math.random().toString(36).substring(7),
+        title: c.title ?? "",
+        name: c.name ?? "",
+        phone: c.phone,
+        email: c.email,
+        street: c.street,
+        postalCode: c.postalCode,
+        city: c.city,
+      }));
+    }
 
-    await updateStudent(student.id, updatedStudentData);
-    setPageKey(Date.now()); // Change key to force re-fetch and re-render of the whole page
+    // Merge nested objects correctly field by field
+    if (data.globalProfile) {
+        updatedStudentData.globalProfile = { ...student.globalProfile, ...data.globalProfile };
+    }
+    if (data.strengths) {
+        updatedStudentData.strengths = { ...student.strengths, ...data.strengths };
+    }
+    if (data.difficulties) {
+        updatedStudentData.difficulties = { ...student.difficulties, ...data.difficulties };
+    }
+
+    try {
+        await updateStudent(student.id, updatedStudentData);
+        // Directly update the state to force a re-render of children with new data
+        setStudent(prevStudent => ({ ...prevStudent, ...updatedStudentData } as Student));
+        toast({
+          title: 'Importation réussie',
+          description: 'Les informations ont été mises à jour dans le PPI.',
+        });
+    } catch(e) {
+        console.error("Failed to update student after import", e);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur de sauvegarde',
+          description: 'Les données ont été analysées mais n\'ont pas pu être sauvegardées.',
+        });
+    }
   };
   
   const getSuggestions = (category: string) => {
@@ -105,7 +117,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   }
 
   return (
-    <div key={pageKey}>
+    <div>
       <PageHeader
         title={`PPI de ${student.firstName} ${student.lastName}`}
         description="Profil global de l'élève et synthèse de son projet."
