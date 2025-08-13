@@ -106,7 +106,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
         title: 'Élève modifié',
         description: `${values.firstName} ${values.lastName} a été mis à jour avec succès.`,
       });
-      form.reset();
+      form.reset(values);
       setOpen(false);
       router.refresh();
     } catch (error) {
@@ -154,7 +154,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                 <FormField control={form.control} name="birthDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date de naissance</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormControl><Input type="date" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -218,7 +218,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                     <FormField control={form.control} name="mdphNotificationExpiration" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Date d'expiration MDPH</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input type="date" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -242,13 +242,13 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                           <FormLabel>Adresse</FormLabel>
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2">
                             <FormField control={form.control} name={`familyContacts.${index}.street`} render={({ field }) => (
-                              <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                              <FormItem><FormControl><Input placeholder="Rue" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name={`familyContacts.${index}.postalCode`} render={({ field }) => (
-                               <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                               <FormItem><FormControl><Input placeholder="Code Postal" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name={`familyContacts.${index}.city`} render={({ field }) => (
-                               <FormItem><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                               <FormItem><FormControl><Input placeholder="Ville" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                           </div>
                       </div>

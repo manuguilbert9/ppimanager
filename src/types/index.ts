@@ -73,6 +73,7 @@ export type Student = {
   familyContacts: FamilyContact[];
   classId: string;
   className: string; // To avoid joins on list pages
+  teacherName: string; // To avoid joins on list pages
   lastUpdate: string;
   ppiStatus: PpiStatus;
   avatarUrl: string;

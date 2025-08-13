@@ -22,6 +22,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         familyContacts: data.familyContacts || [],
         classId: data.classId,
         className: classe?.name ?? 'N/A',
+        teacherName: classe?.teacherName ?? 'N/A',
         lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
         ppiStatus: data.ppiStatus || 'draft',
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
@@ -48,7 +49,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
@@ -68,7 +69,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'la
     }
 }
 
-export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'lastUpdate' | 'avatarUrl'>>) {
+export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'avatarUrl'>>) {
     try {
         const studentRef = doc(db, 'students', id);
         await updateDoc(studentRef, {
