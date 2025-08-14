@@ -103,7 +103,6 @@ export function NeedsForm({
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -113,7 +112,7 @@ export function NeedsForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
 
   useEffect(() => {

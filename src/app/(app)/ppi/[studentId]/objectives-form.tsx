@@ -235,7 +235,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
 
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-      form.reset(values);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -245,7 +244,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast, form]);
+  }, [student.id, toast]);
 
   useEffect(() => {
     if (isDirty) {
