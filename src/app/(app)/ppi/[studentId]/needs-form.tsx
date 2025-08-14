@@ -1,34 +1,32 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { updateStudent } from '@/lib/students-repository';
-import { useToast } from '@/hooks/use-toast';
-import type { Student, Needs } from '@/types';
+import type { Needs } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
-import { Sparkles, Loader2, PlusCircle, WandSparkles, CheckCircle } from 'lucide-react';
+import { Sparkles, Loader2, PlusCircle, WandSparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
-import { useDebounce } from '@/hooks/use-debounce';
+import { useToast } from '@/hooks/use-toast';
 
-const formSchema = z.object({
-  pedagogicalAccommodations: z.array(z.string()).optional(),
-  humanAssistance: z.array(z.string()).optional(),
-  compensatoryTools: z.array(z.string()).optional(),
-  specialEducationalApproach: z.array(z.string()).optional(),
-  complementaryCare: z.array(z.string()).optional(),
+export const needsSchema = z.object({
+  needs: z.object({
+    pedagogicalAccommodations: z.array(z.string()).optional(),
+    humanAssistance: z.array(z.string()).optional(),
+    compensatoryTools: z.array(z.string()).optional(),
+    specialEducationalApproach: z.array(z.string()).optional(),
+    complementaryCare: z.array(z.string()).optional(),
+  }).optional(),
 });
 
 interface NeedsFormProps {
-  student: Student;
   pedagogicalAccommodationsSuggestions: string[];
   humanAssistanceSuggestions: string[];
   compensatoryToolsSuggestions: string[];
@@ -61,7 +59,6 @@ const SuggestionSection = ({ title, suggestions, onAdd }: { title: string; sugge
 };
 
 export function NeedsForm({
-  student,
   pedagogicalAccommodationsSuggestions,
   humanAssistanceSuggestions,
   compensatoryToolsSuggestions,
@@ -71,65 +68,16 @@ export function NeedsForm({
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      pedagogicalAccommodations: student.needs?.pedagogicalAccommodations || [],
-      humanAssistance: student.needs?.humanAssistance || [],
-      compensatoryTools: student.needs?.compensatoryTools || [],
-      specialEducationalApproach: student.needs?.specialEducationalApproach || [],
-      complementaryCare: student.needs?.complementaryCare || [],
-    },
-  });
-
-  const watchedValues = form.watch();
-  const debouncedValues = useDebounce(watchedValues, 1500);
-
-  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
-    setIsSaving(true);
-    setIsSaved(false);
-    try {
-      const needs: Needs = values;
-      await updateStudent(student.id, { needs });
-      
-      if (values.pedagogicalAccommodations) addLibraryItems(values.pedagogicalAccommodations, 'pedagogicalAccommodations');
-      if (values.humanAssistance) addLibraryItems(values.humanAssistance, 'humanAssistance');
-      if (values.compensatoryTools) addLibraryItems(values.compensatoryTools, 'compensatoryTools');
-      if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
-      if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
-      
-      form.reset(values); // Reset form with new values to mark it as "clean"
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [student.id, toast, form]);
-
-
-  useEffect(() => {
-    if (form.formState.isDirty) {
-      saveForm(debouncedValues);
-    }
-  }, [debouncedValues, form.formState.isDirty, saveForm]);
-
+  const form = useFormContext<z.infer<typeof needsSchema>>();
 
   const handleSuggestNeeds = async () => {
     setIsSuggesting(true);
     setSuggestions(null);
     try {
       const studentProfile: SuggestNeedsInput = {
-        strengths: student.strengths || {},
-        difficulties: student.difficulties || {},
+        strengths: form.getValues('strengths') || {},
+        difficulties: form.getValues('difficulties') || {},
       };
       const result = await suggestNeeds(studentProfile);
       setSuggestions(result);
@@ -144,11 +92,12 @@ export function NeedsForm({
       setIsSuggesting(false);
     }
   };
-
+  
   const addSuggestion = (suggestion: string, field: keyof Needs) => {
-    const currentValues = form.getValues(field) || [];
+    const fieldName = `needs.${field}` as const;
+    const currentValues = form.getValues(fieldName) || [];
     if (!currentValues.includes(suggestion)) {
-      form.setValue(field, [...currentValues, suggestion], { shouldDirty: true });
+      form.setValue(fieldName, [...currentValues, suggestion], { shouldDirty: true });
       addLibraryItems([suggestion], field); // Add to library as well
     }
     // Remove from suggestions list to avoid clutter
@@ -159,21 +108,21 @@ export function NeedsForm({
       });
     }
   };
+  
+  const handleValuesChange = (values: string[] | undefined, category: keyof Needs) => {
+      if (values) addLibraryItems(values, category);
+  }
 
   const badgeClassName = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
 
   return (
     <Card className="bg-sky-50/50">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <div>
           <CardTitle>Besoins éducatifs particuliers</CardTitle>
           <CardDescription>
               Liste des besoins spécifiques de l’élève pour compenser son handicap et progresser.
           </CardDescription>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
-          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
         </div>
       </CardHeader>
       <CardContent>
@@ -230,52 +179,50 @@ export function NeedsForm({
           </Alert>
         )}
 
-        <Form {...form}>
-          <form className="space-y-8">
-             <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
-                <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-medium text-sky-800">Identifier les besoins</AccordionTrigger>
-                    <AccordionContent className="space-y-4 pt-4">
-                        <FormField control={form.control} name="pedagogicalAccommodations" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Besoin d’aménagements pédagogiques</FormLabel>
-                                <FormControl><ComboboxInput {...field} suggestions={pedagogicalAccommodationsSuggestions} badgeClassName={badgeClassName} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="humanAssistance" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Besoin d’aide humaine</FormLabel>
-                                <FormControl><ComboboxInput {...field} suggestions={humanAssistanceSuggestions} badgeClassName={badgeClassName} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="compensatoryTools" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Besoin d’outils de compensation</FormLabel>
-                                <FormControl><ComboboxInput {...field} suggestions={compensatoryToolsSuggestions} badgeClassName={badgeClassName} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="specialEducationalApproach" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Besoin en approche éducative particulière</FormLabel>
-                                <FormControl><ComboboxInput {...field} suggestions={specialEducationalApproachSuggestions} badgeClassName={badgeClassName} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="complementaryCare" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Besoin de soins ou rééducations complémentaires</FormLabel>
-                                <FormControl><ComboboxInput {...field} suggestions={complementaryCareSuggestions} badgeClassName={badgeClassName} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                    </AccordionContent>
-                </AccordionItem>
-             </Accordion>
-          </form>
-        </Form>
+        <div className="space-y-8">
+            <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
+              <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-lg font-medium text-sky-800">Identifier les besoins</AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                      <FormField control={form.control} name="needs.pedagogicalAccommodations" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Besoin d’aménagements pédagogiques</FormLabel>
+                              <FormControl><ComboboxInput {...field} suggestions={pedagogicalAccommodationsSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'pedagogicalAccommodations')}} /></FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                      <FormField control={form.control} name="needs.humanAssistance" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Besoin d’aide humaine</FormLabel>
+                              <FormControl><ComboboxInput {...field} suggestions={humanAssistanceSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'humanAssistance')}} /></FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                      <FormField control={form.control} name="needs.compensatoryTools" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Besoin d’outils de compensation</FormLabel>
+                              <FormControl><ComboboxInput {...field} suggestions={compensatoryToolsSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'compensatoryTools')}} /></FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                      <FormField control={form.control} name="needs.specialEducationalApproach" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Besoin en approche éducative particulière</FormLabel>
+                              <FormControl><ComboboxInput {...field} suggestions={specialEducationalApproachSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'specialEducationalApproach')}} /></FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                      <FormField control={form.control} name="needs.complementaryCare" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Besoin de soins ou rééducations complémentaires</FormLabel>
+                              <FormControl><ComboboxInput {...field} suggestions={complementaryCareSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'complementaryCare')}} /></FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                  </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+        </div>
       </CardContent>
     </Card>
   );

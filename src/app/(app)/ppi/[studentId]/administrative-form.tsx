@@ -1,9 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, useFieldArray, useWatch, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Trash2, Loader2, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { updateStudent } from '@/lib/students-repository';
-import type { Student, Classe, FamilyContact } from '@/types';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import type { Classe } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { useDebounce } from '@/hooks/use-debounce';
 
 const familyContactSchema = z.object({
   id: z.string().optional(),
@@ -29,7 +24,7 @@ const familyContactSchema = z.object({
   email: z.string().email('Email invalide').optional(),
 });
 
-const formSchema = z.object({
+export const administrativeSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis.' }),
   lastName: z.string().min(1, { message: 'Le nom est requis.' }),
   birthDate: z.string().optional(),
@@ -42,26 +37,13 @@ const formSchema = z.object({
   classId: z.string({ required_error: 'Veuillez sélectionner une classe.' }),
 });
 
-export function AdministrativeForm({ student, classes }: { student: Student, classes: Classe[] }) {
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...student,
-      familyContacts: student.familyContacts || [],
-    },
-  });
+export function AdministrativeForm({ classes }: { classes: Classe[] }) {
+  const form = useFormContext<z.infer<typeof administrativeSchema>>();
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "familyContacts"
   });
-
-  const watchedValues = form.watch();
-  const debouncedValues = useDebounce(watchedValues, 1500);
 
   const watchedClassId = useWatch({
     control: form.control,
@@ -70,59 +52,18 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
 
   const selectedClass = classes.find(c => c.id === watchedClassId);
 
-  const saveForm = useCallback(async (values: z.infer<typeof formSchema>) => {
-    setIsSaving(true);
-    setIsSaved(false);
-    try {
-      await updateStudent(student.id, values);
-      form.reset(values); // Reset form with new values to mark it as "clean"
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
-      
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la sauvegarde.',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [student.id, toast, form]);
-
-  // Auto-save on form change
-  useEffect(() => {
-    if (form.formState.isDirty) {
-      saveForm(debouncedValues as z.infer<typeof formSchema>);
-    }
-  }, [debouncedValues, form.formState.isDirty, saveForm]);
-
-  // Reset form values when student prop changes (e.g., after import)
-  useEffect(() => {
-    form.reset({
-      ...student,
-      familyContacts: student.familyContacts || [],
-    });
-  }, [student, form]);
-
-
   return (
     <Card className="bg-blue-50/50">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <div>
           <CardTitle>Informations administratives</CardTitle>
           <CardDescription>
             Données d'identification, de scolarisation et contacts familiaux de l'élève.
           </CardDescription>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSaving && <><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</>}
-          {isSaved && <><CheckCircle className="h-4 w-4 text-green-500" /> Enregistré</>}
-        </div>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form className="space-y-6">
+        <div className="space-y-6">
             <Accordion type="multiple" className="w-full" defaultValue={['identity', 'schooling', 'family']}>
               <AccordionItem value="identity">
                 <AccordionTrigger className="text-lg font-medium text-blue-800">Identité de l’élève</AccordionTrigger>
@@ -266,8 +207,7 @@ export function AdministrativeForm({ student, classes }: { student: Student, cla
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </form>
-        </Form>
+        </div>
       </CardContent>
     </Card>
   );
