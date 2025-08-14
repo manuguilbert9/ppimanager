@@ -41,6 +41,7 @@ function createSectionTitle(title: string, color: string, textColor = "000000"):
                         bold: true,
                         size: 32, // 16pt
                         color: textColor,
+                        font: "Lato",
                     })],
                     alignment: AlignmentType.CENTER,
                 })],
@@ -68,6 +69,7 @@ function createSubHeadingRow(text: string): TableRow {
                         bold: true,
                         size: 28, // 14pt
                         color: "444444",
+                        font: "Lato",
                     })],
                 })],
                 columnSpan: 2,
@@ -216,6 +218,7 @@ function createCoverPage(student: Student) {
                                     text: 'Projet Pédagogique Individualisé (PPI)',
                                     bold: true,
                                     size: 48, // 24pt
+                                    font: "Lato",
                                 })],
                                 alignment: AlignmentType.CENTER,
                                 spacing: { after: 400 },
@@ -225,6 +228,7 @@ function createCoverPage(student: Student) {
                                     text: `${student.firstName} ${student.lastName}`,
                                     bold: true,
                                     size: 60, // 30pt
+                                    font: "Lato",
                                 })],
                                 alignment: AlignmentType.CENTER,
                                 spacing: { after: 200 },
@@ -282,6 +286,8 @@ function createCoverPage(student: Student) {
 
 
 export async function generateDocx(student: Student): Promise<Blob> {
+    const translatedSex = student.sex === 'male' ? 'Masculin' : student.sex === 'female' ? 'Féminin' : 'Autre';
+
     const doc = new Document({
         styles: {
             paragraphStyles: [
@@ -317,7 +323,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                     createDataRow('Nom', student.lastName),
                     createDataRow('Prénom', student.firstName),
                     createDataRow('Date de naissance', student.birthDate),
-                    createDataRow('Sexe', student.sex),
+                    createDataRow('Sexe', translatedSex),
                     createSpacerRow(),
                     createSubHeadingRow('Scolarisation'),
                     createDataRow('Établissement', student.school),
