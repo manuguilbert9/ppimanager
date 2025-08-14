@@ -21,13 +21,45 @@ const AppLogo = () => (
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
       className="text-primary"
     >
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      <path
+        d="M12 2L4 7V17L12 22L20 17V7L12 2Z"
+        stroke="#0891B2" 
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 7L12 12"
+        stroke="#0891B2"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 7L12 12"
+        stroke="#0891B2"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 22V12"
+        stroke="#0891B2"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.5 4L10 11H14L10.5 18"
+        fill="#FBBF24"
+        stroke="#FBBF24"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
     <span className="text-lg font-semibold tracking-tight">FlashPPI</span>
   </div>
