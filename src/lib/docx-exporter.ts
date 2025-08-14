@@ -1,5 +1,5 @@
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation, BorderStyle } from 'docx';
 import type { Student } from '@/types';
 
 const TABLE_WIDTH = 9000;
@@ -10,20 +10,24 @@ const FULL_WIDTH = {
 const TWO_COL_WIDTHS = [TABLE_WIDTH * 0.3, TABLE_WIDTH * 0.7];
 
 const NO_BORDER = {
-    top: { style: "none", size: 0, color: "FFFFFF" },
-    bottom: { style: "none", size: 0, color: "FFFFFF" },
-    left: { style: "none", size: 0, color: "FFFFFF" },
-    right: { style: "none", size: 0, color: "FFFFFF" },
+    top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
 };
 
-// New color palette
+const SECTION_BORDER = {
+    ...NO_BORDER,
+    bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto" }
+};
+
 const SECTION_COLORS = {
-    administrative: "c8dee9",
-    globalProfile: "E6E5C5",
-    strengths: "b4e2cc",
-    difficulties: "e4c9c9",
-    needs: "d0ebe8",
-    objectives: "abb3dd",
+    administrative: "eff6ff",
+    globalProfile: "f9fafb",
+    strengths: "ecfdf5",
+    difficulties: "fef2f2",
+    needs: "f0f9ff",
+    objectives: "fdf4ff",
 };
 
 
@@ -50,7 +54,7 @@ function createSectionTitle(title: string, color: string, textColor = "000000"):
                 margins: { top: 200, bottom: 200 },
             }),
         ],
-        tableHeader: false,
+        tableHeader: true,
     });
 }
 
@@ -68,13 +72,13 @@ function createSubHeadingRow(text: string): TableRow {
                 })],
                 columnSpan: 2,
                 margins: { top: 300, bottom: 100 },
-                borders: NO_BORDER,
+                borders: SECTION_BORDER,
             }),
         ],
     });
 }
 
-function createDataRow(label: string, value?: string): TableRow | null {
+function createDataRow(label: string, value?: string | null): TableRow | null {
     if (!value) return null;
     return new TableRow({
         children: [
@@ -199,6 +203,83 @@ function createSection(title: string, color: string, rows: (TableRow | null | (T
     return sectionChildren;
 }
 
+function createCoverPage(student: Student) {
+    return new Table({
+        width: FULL_WIDTH,
+        rows: [
+            new TableRow({
+                children: [
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [new TextRun({
+                                    text: 'Projet Pédagogique Individualisé (PPI)',
+                                    bold: true,
+                                    size: 48, // 24pt
+                                })],
+                                alignment: AlignmentType.CENTER,
+                                spacing: { after: 400 },
+                            }),
+                            new Paragraph({
+                                children: [new TextRun({
+                                    text: `${student.firstName} ${student.lastName}`,
+                                    bold: true,
+                                    size: 60, // 30pt
+                                })],
+                                alignment: AlignmentType.CENTER,
+                                spacing: { after: 200 },
+                            }),
+                             new Paragraph({
+                                text: `Année scolaire: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+                                alignment: AlignmentType.CENTER,
+                                style: "default",
+                                spacing: { after: 400 },
+                            }),
+                        ],
+                        borders: NO_BORDER,
+                        verticalAlign: VerticalAlign.CENTER,
+                    }),
+                    new TableCell({
+                        children: [
+                            new Paragraph({ text: "Emplacement photo", alignment: AlignmentType.CENTER, style: "default" })
+                        ],
+                        width: { size: 2500, type: WidthType.DXA },
+                        height: { size: 2500, type: WidthType.DXA },
+                        verticalAlign: VerticalAlign.CENTER,
+                        borders: {
+                            top: { style: BorderStyle.SINGLE, size: 4, color: "CCCCCC" },
+                            bottom: { style: BorderStyle.SINGLE, size: 4, color: "CCCCCC" },
+                            left: { style: BorderStyle.SINGLE, size: 4, color: "CCCCCC" },
+                            right: { style: BorderStyle.SINGLE, size: 4, color: "CCCCCC" },
+                        },
+                    })
+                ],
+            }),
+             new TableRow({
+                children: [
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                text: `Établissement: ${student.school || 'Non spécifié'}`,
+                                alignment: AlignmentType.CENTER,
+                                style: "default",
+                                spacing: { before: 800 }
+                            }),
+                            new Paragraph({
+                                text: `Enseignant: ${student.teacherName || 'Non spécifié'}`,
+                                alignment: AlignmentType.CENTER,
+                                style: "default",
+                            }),
+                        ],
+                        columnSpan: 2,
+                        borders: NO_BORDER,
+                    }),
+                ]
+             })
+        ],
+    });
+}
+
 
 export async function generateDocx(student: Student): Promise<Blob> {
     const doc = new Document({
@@ -228,38 +309,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
             },
             children: [
                 // Part 1: Page de Garde
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: 'Projet Pédagogique Individualisé (PPI)',
-                            bold: true,
-                            size: 48, // 24pt
-                        }),
-                    ],
-                    alignment: AlignmentType.CENTER,
-                    spacing: { after: 400 },
-                }),
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: `${student.firstName} ${student.lastName}`,
-                            bold: true,
-                            size: 60, // 30pt
-                        }),
-                    ],
-                    alignment: AlignmentType.CENTER,
-                    spacing: { after: 800 },
-                }),
-                new Paragraph({
-                    text: `Année scolaire: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
-                    alignment: AlignmentType.CENTER,
-                    style: "default",
-                }),
-                new Paragraph({
-                    text: `Établissement: ${student.school || 'Non spécifié'}`,
-                    alignment: AlignmentType.CENTER,
-                    style: "default",
-                }),
+                createCoverPage(student),
 
                 // Part 2: Informations Administratives
                 ...createSection('Informations Administratives', SECTION_COLORS.administrative, [
