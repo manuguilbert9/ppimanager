@@ -53,7 +53,7 @@ const AppLogo = () => (
         strokeLinejoin="round"
       />
       <path
-        d="M13.5 4L10 11H14L10.5 18"
+        d="M15 2L8 13H16L9 22"
         fill="#FBBF24"
         stroke="#FBBF24"
         strokeWidth="1.5"
