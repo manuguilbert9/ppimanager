@@ -52,7 +52,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     if (!student) return;
 
     // Use a deep clone to avoid mutation issues with the current state
-    const updatedStudentData = cloneDeep(student) as Partial<Student>;
+    const updatedStudentData = cloneDeep(student);
 
     // Update simple fields
     if (data.firstName) updatedStudentData.firstName = data.firstName;
@@ -89,7 +89,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     try {
         await updateStudent(student.id, updatedStudentData);
         // Directly update the state to force a re-render of children with new data
-        setStudent(prevStudent => ({ ...prevStudent, ...updatedStudentData } as Student));
+        setStudent(updatedStudentData);
         toast({
           title: 'Importation réussie',
           description: 'Les informations ont été mises à jour dans le PPI.',
