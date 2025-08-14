@@ -309,6 +309,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
         },
         sections: [{
             properties: {
+                 titlePage: true,
                  page: {
                     margin: { top: 720, right: 720, bottom: 720, left: 720 }, // 0.5 inch margins
                  },
