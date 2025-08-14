@@ -51,17 +51,14 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
 
-    // Use a deep clone to avoid mutation issues with the current state
     const updatedStudentData = cloneDeep(student);
 
-    // Update simple fields
     if (data.firstName) updatedStudentData.firstName = data.firstName;
     if (data.lastName) updatedStudentData.lastName = data.lastName;
     if (data.birthDate) updatedStudentData.birthDate = data.birthDate;
     if (data.school) updatedStudentData.school = data.school;
     if (data.level) updatedStudentData.level = data.level;
 
-    // Replace contacts only if new ones were extracted
     if (data.familyContacts && data.familyContacts.length > 0) {
       updatedStudentData.familyContacts = data.familyContacts.map(c => ({
         id: Math.random().toString(36).substring(7),
@@ -75,20 +72,18 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
       }));
     }
 
-    // Merge nested objects correctly field by field
     if (data.globalProfile) {
-        updatedStudentData.globalProfile = { ...student.globalProfile, ...data.globalProfile };
+        updatedStudentData.globalProfile = { ...updatedStudentData.globalProfile, ...data.globalProfile };
     }
     if (data.strengths) {
-        updatedStudentData.strengths = { ...student.strengths, ...data.strengths };
+        updatedStudentData.strengths = { ...updatedStudentData.strengths, ...data.strengths };
     }
     if (data.difficulties) {
-        updatedStudentData.difficulties = { ...student.difficulties, ...data.difficulties };
+        updatedStudentData.difficulties = { ...updatedStudentData.difficulties, ...data.difficulties };
     }
 
     try {
         await updateStudent(student.id, updatedStudentData);
-        // Directly update the state to force a re-render of children with new data
         setStudent(updatedStudentData);
         toast({
           title: 'Importation réussie',
