@@ -1,6 +1,4 @@
 
-'use server';
-
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation } from 'docx';
 import type { Student } from '@/types';
 
@@ -356,5 +354,3 @@ export async function generateDocx(student: Student): Promise<Blob> {
     const blob = await Packer.toBlob(doc);
     return blob;
 }
-
-    
