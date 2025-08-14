@@ -92,6 +92,7 @@ export function GlobalProfileForm({
       if (values.equipment) addLibraryItems(values.equipment, 'equipment');
       if (values.hobbies) addLibraryItems(values.hobbies, 'hobbies');
       
+      form.reset(values); // Reset form with new values to mark it as "clean"
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
       
@@ -104,7 +105,7 @@ export function GlobalProfileForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast]);
+  }, [student.id, toast, form]);
 
 
   useEffect(() => {

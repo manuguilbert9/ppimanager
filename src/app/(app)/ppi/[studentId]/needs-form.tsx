@@ -101,6 +101,7 @@ export function NeedsForm({
       if (values.specialEducationalApproach) addLibraryItems(values.specialEducationalApproach, 'specialEducationalApproach');
       if (values.complementaryCare) addLibraryItems(values.complementaryCare, 'complementaryCare');
       
+      form.reset(values); // Reset form with new values to mark it as "clean"
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (error) {
@@ -112,7 +113,7 @@ export function NeedsForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast]);
+  }, [student.id, toast, form]);
 
 
   useEffect(() => {

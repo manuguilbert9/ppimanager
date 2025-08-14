@@ -68,6 +68,7 @@ export function StrengthsForm({
       if (values.socialSkills) addLibraryItems(values.socialSkills, 'socialSkills');
       if (values.exploitableInterests) addLibraryItems(values.exploitableInterests, 'exploitableInterests');
       
+      form.reset(values); // Reset form with new values to mark it as "clean"
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
       
@@ -80,7 +81,7 @@ export function StrengthsForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast]);
+  }, [student.id, toast, form]);
 
   useEffect(() => {
     if (form.formState.isDirty) {

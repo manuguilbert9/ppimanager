@@ -73,6 +73,7 @@ export function DifficultiesForm({
       if (values.socioEmotionalDifficulties) addLibraryItems(values.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
       if (values.disabilityConstraints) addLibraryItems(values.disabilityConstraints, 'disabilityConstraints');
       
+      form.reset(values); // Reset form with new values to mark it as "clean"
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
       
@@ -85,7 +86,7 @@ export function DifficultiesForm({
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast]);
+  }, [student.id, toast, form]);
 
 
   useEffect(() => {

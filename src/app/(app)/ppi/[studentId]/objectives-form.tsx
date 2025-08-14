@@ -233,6 +233,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
           addLibraryItems(allAdaptations, 'adaptations');
       }
 
+      form.reset(values); // Reset form with new values to mark it as "clean"
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (error) {
@@ -244,7 +245,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     } finally {
       setIsSaving(false);
     }
-  }, [student.id, toast]);
+  }, [student.id, toast, form]);
 
   useEffect(() => {
     if (isDirty) {
