@@ -34,7 +34,6 @@ import {
 } from '@/components/ui/select';
 import { addStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import type { Classe } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -57,14 +56,18 @@ const formSchema = z.object({
   level: z.string().optional(),
   mdphNotificationTitle: z.string().optional(),
   mdphNotificationExpiration: z.string().optional(),
-  familyContacts: z.array(familyContactSchema),
+  familyContacts: z.array(familyContactSchema).optional(),
   classId: z.string({ required_error: 'Veuillez sélectionner une classe.' }),
 });
 
-export function AddStudentForm({ classes }: { classes: Classe[] }) {
+interface AddStudentFormProps {
+  classes: Classe[];
+  onStudentAdded: () => void;
+}
+
+export function AddStudentForm({ classes, onStudentAdded }: AddStudentFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -97,7 +100,7 @@ export function AddStudentForm({ classes }: { classes: Classe[] }) {
       });
       form.reset();
       setOpen(false);
-      router.refresh();
+      onStudentAdded();
     } catch (error) {
       toast({
         variant: 'destructive',

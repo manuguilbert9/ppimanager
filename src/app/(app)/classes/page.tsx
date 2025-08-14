@@ -1,6 +1,6 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -22,24 +22,10 @@ import type { Classe } from '@/types';
 import { AddClasseForm } from './add-classe-form';
 import { ClasseActions } from './classe-actions';
 import { Loader2 } from 'lucide-react';
+import { useDataFetching } from '@/hooks/use-data-fetching';
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<Classe[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const classesData = await getClasses();
-        setClasses(classesData);
-      } catch (error) {
-        console.error("Failed to fetch classes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: classes, loading, refresh } = useDataFetching(getClasses);
 
   return (
     <>
@@ -47,7 +33,7 @@ export default function ClassesPage() {
         title="Gestion des classes"
         description="Gérez les classes de votre établissement."
       >
-        <AddClasseForm />
+        <AddClasseForm onClasseAdded={refresh} />
       </PageHeader>
 
       <Card>

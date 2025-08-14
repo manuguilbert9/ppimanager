@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -25,27 +26,13 @@ import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
 import { Loader2 } from 'lucide-react';
+import { useDataFetching } from '@/hooks/use-data-fetching';
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Classe[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const studentsData = await getStudents();
-        const classesData = await getClasses();
-        setStudents(studentsData);
-        setClasses(classesData);
-      } catch (error) {
-        console.error("Failed to fetch students or classes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: students, loading: loadingStudents, refresh: refreshStudents } = useDataFetching(getStudents);
+  const { data: classes, loading: loadingClasses } = useDataFetching(getClasses);
+  
+  const loading = loadingStudents || loadingClasses;
 
   const statusVariant = {
     validated: 'default',
@@ -88,7 +75,7 @@ export default function StudentsPage() {
         title="Gestion des élèves"
         description="Gérez les profils des élèves et leurs PPI associés."
       >
-        <AddStudentForm classes={classes} />
+        <AddStudentForm classes={classes} onStudentAdded={refreshStudents} />
       </PageHeader>
 
       <Card>

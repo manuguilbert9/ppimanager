@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -26,7 +27,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { addClasse } from '@/lib/classes-repository';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -37,10 +37,13 @@ const formSchema = z.object({
   }),
 });
 
-export function AddClasseForm() {
+interface AddClasseFormProps {
+  onClasseAdded: () => void;
+}
+
+export function AddClasseForm({ onClasseAdded }: AddClasseFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,7 +62,7 @@ export function AddClasseForm() {
       });
       form.reset();
       setOpen(false);
-      router.refresh();
+      onClasseAdded(); // Refresh data on parent
     } catch (error) {
       toast({
         variant: 'destructive',
