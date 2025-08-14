@@ -1,5 +1,5 @@
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak, Table, TableRow, TableCell, VerticalAlign, WidthType, ShadingType, ITableCellMarginOptions, IShadingAttributes, PageOrientation, BorderStyle, Footer, PageNumber } from 'docx';
 import type { Student } from '@/types';
 
 const TABLE_WIDTH = 9000;
@@ -312,10 +312,32 @@ export async function generateDocx(student: Student): Promise<Blob> {
                  page: {
                     margin: { top: 720, right: 720, bottom: 720, left: 720 }, // 0.5 inch margins
                  },
+                 pageNumbering: {
+                    start: 1,
+                    format: 'decimal',
+                 },
+            },
+            footers: {
+                default: new Footer({
+                    children: [
+                        new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            children: [
+                                new TextRun({
+                                    children: [PageNumber.CURRENT],
+                                }),
+                            ],
+                        }),
+                    ],
+                }),
+                first: new Footer({
+                    children: [],
+                }),
             },
             children: [
                 // Part 1: Page de Garde
                 createCoverPage(student),
+                new Paragraph({ children: [new PageBreak()]}), // Start sections on new page
 
                 // Part 2: Informations Administratives
                 ...createSection('Informations Administratives', SECTION_COLORS.administrative, [
@@ -342,7 +364,7 @@ export async function generateDocx(student: Student): Promise<Blob> {
                         createDataRow("    Email", contact.email),
                         createSpacerRow(),
                     ]),
-                ]),
+                ], false),
 
                 // Part 3: Profil Global
                 ...createSection('Profil Global de l’élève', SECTION_COLORS.globalProfile, [
