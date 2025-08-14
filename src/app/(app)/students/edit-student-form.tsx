@@ -154,7 +154,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                 <FormField control={form.control} name="birthDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date de naissance</FormLabel>
-                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormControl><Input type="text" placeholder="JJ/MM/AAAA" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
