@@ -17,7 +17,7 @@ import { getClasses } from "@/lib/classes-repository";
 import { TextImporter } from "./text-importer";
 import { Loader2 } from "lucide-react";
 import type { Student, Classe, LibraryItem } from "@/types";
-import type { ExtractedData } from "@/ai/flows/extract-text-flow";
+import type { ExtractedData } from "@/types/schemas";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cloneDeep } from 'lodash';
@@ -53,12 +53,14 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
     const updatedStudentData = cloneDeep(student);
 
+    // Merge direct properties
     if (data.firstName) updatedStudentData.firstName = data.firstName;
     if (data.lastName) updatedStudentData.lastName = data.lastName;
     if (data.birthDate) updatedStudentData.birthDate = data.birthDate;
     if (data.school) updatedStudentData.school = data.school;
     if (data.level) updatedStudentData.level = data.level;
 
+    // Replace family contacts if provided
     if (data.familyContacts && data.familyContacts.length > 0) {
       updatedStudentData.familyContacts = data.familyContacts.map(c => ({
         id: Math.random().toString(36).substring(7),
@@ -72,6 +74,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
       }));
     }
 
+    // Merge nested objects
     if (data.globalProfile) {
         updatedStudentData.globalProfile = { ...updatedStudentData.globalProfile, ...data.globalProfile };
     }
@@ -118,19 +121,20 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         description="Profil global de l'élève et synthèse de son projet."
       >
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0" onClick={() => setIsImporting(true)}>
-             <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={student.avatarUrl}
-                alt={`${student.firstName} ${student.lastName}`}
-                data-ai-hint="person portrait"
-              />
-              <AvatarFallback>
-                {student.firstName?.substring(0, 1)}
-                {student.lastName?.substring(0, 1)}
-              </AvatarFallback>
-            </Avatar>
+          <Button variant="outline" onClick={() => setIsImporting(true)}>
+             Importer des données
           </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarImage
+              src={student.avatarUrl}
+              alt={`${student.firstName} ${student.lastName}`}
+              data-ai-hint="person portrait"
+            />
+            <AvatarFallback>
+              {student.firstName?.substring(0, 1)}
+              {student.lastName?.substring(0, 1)}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </PageHeader>
       

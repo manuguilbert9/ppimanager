@@ -2,4 +2,3 @@
 import './flows/suggest-objectives-flow';
 import './flows/suggest-adaptations-flow';
 import './flows/suggest-needs-flow';
-import './flows/extract-text-flow';
