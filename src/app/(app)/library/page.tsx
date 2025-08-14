@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,9 +11,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getLibraryItems } from '@/lib/library-repository';
-import { LibraryItem } from '@/types';
-import { PlusCircle } from 'lucide-react';
+import { getAllLibraryItems } from '@/lib/library-repository';
+import type { LibraryItem } from '@/types';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
@@ -29,38 +32,67 @@ const SectionTitle = ({ title }: { title: string }) => (
 );
 
 
-export default async function LibraryPage() {
+export default function LibraryPage() {
+  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const items = await getAllLibraryItems();
+        setLibraryItems(items);
+      } catch (error) {
+        console.error("Failed to fetch library items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const getItemsByCategory = (category: LibraryItem['category']) => {
+    return libraryItems.filter(item => item.category === category);
+  }
+
+  if (loading) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
+
   // PPI Structure
-  const objectives = await getLibraryItems('objectives');
-  const adaptations = await getLibraryItems('adaptations');
-  const indicators = await getLibraryItems('indicators');
+  const objectives = getItemsByCategory('objectives');
+  const adaptations = getItemsByCategory('adaptations');
+  const indicators = getItemsByCategory('indicators');
 
   // Needs
-  const pedagogicalAccommodations = await getLibraryItems('pedagogicalAccommodations');
-  const humanAssistance = await getLibraryItems('humanAssistance');
-  const compensatoryTools = await getLibraryItems('compensatoryTools');
-  const specialEducationalApproach = await getLibraryItems('specialEducationalApproach');
-  const complementaryCare = await getLibraryItems('complementaryCare');
+  const pedagogicalAccommodations = getItemsByCategory('pedagogicalAccommodations');
+  const humanAssistance = getItemsByCategory('humanAssistance');
+  const compensatoryTools = getItemsByCategory('compensatoryTools');
+  const specialEducationalApproach = getItemsByCategory('specialEducationalApproach');
+  const complementaryCare = getItemsByCategory('complementaryCare');
 
   // Strengths
-  const academicSkills = await getLibraryItems('academicSkills');
-  const cognitiveStrengths = await getLibraryItems('cognitiveStrengths');
-  const socialSkills = await getLibraryItems('socialSkills');
-  const exploitableInterests = await getLibraryItems('exploitableInterests');
+  const academicSkills = getItemsByCategory('academicSkills');
+  const cognitiveStrengths = getItemsByCategory('cognitiveStrengths');
+  const socialSkills = getItemsByCategory('socialSkills');
+  const exploitableInterests = getItemsByCategory('exploitableInterests');
 
   // Difficulties
-  const cognitiveDifficulties = await getLibraryItems('cognitiveDifficulties');
-  const schoolDifficulties = await getLibraryItems('schoolDifficulties');
-  const motorDifficulties = await getLibraryItems('motorDifficulties');
-  const socioEmotionalDifficulties = await getLibraryItems('socioEmotionalDifficulties');
-  const disabilityConstraints = await getLibraryItems('disabilityConstraints');
+  const cognitiveDifficulties = getItemsByCategory('cognitiveDifficulties');
+  const schoolDifficulties = getItemsByCategory('schoolDifficulties');
+  const motorDifficulties = getItemsByCategory('motorDifficulties');
+  const socioEmotionalDifficulties = getItemsByCategory('socioEmotionalDifficulties');
+  const disabilityConstraints = getItemsByCategory('disabilityConstraints');
 
   // Global Profile
-  const disabilityNatures = await getLibraryItems('disabilityNatures');
-  const associatedDisorders = await getLibraryItems('associatedDisorders');
-  const medicalNeeds = await getLibraryItems('medicalNeeds');
-  const equipment = await getLibraryItems('equipment');
-  const hobbies = await getLibraryItems('hobbies');
+  const disabilityNatures = getItemsByCategory('disabilityNatures');
+  const associatedDisorders = getItemsByCategory('associatedDisorders');
+  const medicalNeeds = getItemsByCategory('medicalNeeds');
+  const equipment = getItemsByCategory('equipment');
+  const hobbies = getItemsByCategory('hobbies');
 
 
   return (

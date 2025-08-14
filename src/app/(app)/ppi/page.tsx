@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -20,6 +23,7 @@ import { getPpis } from '@/lib/ppi-repository';
 import type { Ppi } from '@/types';
 import { PpiStatusChanger } from './ppi-status-changer';
 import { ExportPpiButton } from './export-ppi-button';
+import { Loader2 } from 'lucide-react';
 
 const PpiSection = ({
   title,
@@ -75,8 +79,32 @@ const PpiSection = ({
   );
 };
 
-export default async function PpiPage() {
-  const ppis = await getPpis();
+export default function PpiPage() {
+  const [ppis, setPpis] = useState<Ppi[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const ppisData = await getPpis();
+        setPpis(ppisData);
+      } catch (error) {
+        console.error("Failed to fetch PPIs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+  
+
+  if (loading) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   const draftPpis = ppis.filter((p) => p.status === 'draft');
   const validatedPpis = ppis.filter((p) => p.status === 'validated');

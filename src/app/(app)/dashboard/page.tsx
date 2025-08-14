@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -15,18 +18,38 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, FileText, Library, Users } from 'lucide-react';
+import { ArrowRight, FileText, Library, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
-import type { Ppi } from '@/types';
+import type { Student, Ppi } from '@/types';
 import { getLibraryItemsCount } from '@/lib/library-repository';
 
-export default async function DashboardPage() {
-  const students = await getStudents();
-  const ppis = await getPpis();
-  const libraryItemsCount = await getLibraryItemsCount();
+export default function DashboardPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [ppis, setPpis] = useState<Ppi[]>([]);
+  const [libraryItemsCount, setLibraryItemsCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const studentsData = await getStudents();
+        const ppisData = await getPpis();
+        const libraryCountData = await getLibraryItemsCount();
+        setStudents(studentsData);
+        setPpis(ppisData);
+        setLibraryItemsCount(libraryCountData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const statusVariant = {
     validated: 'default',
@@ -38,6 +61,14 @@ export default async function DashboardPage() {
     validated: 'Validé',
     draft: 'Brouillon',
     archived: 'Archivé',
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (

@@ -1,4 +1,6 @@
+'use client';
 
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -18,14 +20,32 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getStudents } from '@/lib/students-repository';
-import type { Student } from '@/types';
+import type { Student, Classe } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
+import { Loader2 } from 'lucide-react';
 
-export default async function StudentsPage() {
-  const students = await getStudents();
-  const classes = await getClasses();
+export default function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Classe[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const studentsData = await getStudents();
+        const classesData = await getClasses();
+        setStudents(studentsData);
+        setClasses(classesData);
+      } catch (error) {
+        console.error("Failed to fetch students or classes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const statusVariant = {
     validated: 'default',
@@ -42,7 +62,6 @@ export default async function StudentsPage() {
   const getAge = (birthDate?: string) => {
     if (!birthDate) return 'N/A';
     
-    // Handle "JJ/MM/AAAA" format by converting it to "AAAA-MM-JJ"
     const parts = birthDate.split('/');
     let formattedDate = birthDate;
     if (parts.length === 3) {
@@ -80,55 +99,61 @@ export default async function StudentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Classe</TableHead>
-                <TableHead>Âge</TableHead>
-                <TableHead>Statut PPI</TableHead>
-                <TableHead>Dernière mise à jour du PPI</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student: Student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src={student.avatarUrl}
-                          alt={`${student.firstName} ${student.lastName}`}
-                          data-ai-hint="person portrait"
-                        />
-                        <AvatarFallback>
-                          {student.firstName?.substring(0, 1)}
-                          {student.lastName?.substring(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{student.firstName} {student.lastName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{student.className}</TableCell>
-                  <TableCell>{getAge(student.birthDate)}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[student.ppiStatus]}>
-                      {statusText[student.ppiStatus]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{student.lastUpdate}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end">
-                      <StudentActions student={student} classes={classes} />
-                    </div>
-                  </TableCell>
+          {loading ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Classe</TableHead>
+                  <TableHead>Âge</TableHead>
+                  <TableHead>Statut PPI</TableHead>
+                  <TableHead>Dernière mise à jour du PPI</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {students.map((student: Student) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            src={student.avatarUrl}
+                            alt={`${student.firstName} ${student.lastName}`}
+                            data-ai-hint="person portrait"
+                          />
+                          <AvatarFallback>
+                            {student.firstName?.substring(0, 1)}
+                            {student.lastName?.substring(0, 1)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{student.firstName} {student.lastName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{student.className}</TableCell>
+                    <TableCell>{getAge(student.birthDate)}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant[student.ppiStatus]}>
+                        {statusText[student.ppiStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{student.lastUpdate}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <StudentActions student={student} classes={classes} />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </>
