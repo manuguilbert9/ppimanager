@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -32,7 +33,7 @@ const statusConfig = {
   },
 } as const;
 
-export function PpiStatusChanger({ ppi }: { ppi: Ppi }) {
+export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusChanged: () => void; }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
@@ -44,6 +45,7 @@ export function PpiStatusChanger({ ppi }: { ppi: Ppi }) {
         title: 'Statut mis à jour',
         description: `Le statut du PPI de ${ppi.studentName} est maintenant "${statusConfig[newStatus].text}".`,
       });
+      onStatusChanged();
     } catch (error) {
       toast({
         variant: 'destructive',

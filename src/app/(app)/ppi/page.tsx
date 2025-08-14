@@ -1,6 +1,6 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -24,15 +24,18 @@ import type { Ppi } from '@/types';
 import { PpiStatusChanger } from './ppi-status-changer';
 import { ExportPpiButton } from './export-ppi-button';
 import { Loader2 } from 'lucide-react';
+import { useDataFetching } from '@/hooks/use-data-fetching';
 
 const PpiSection = ({
   title,
   description,
   ppis,
+  onStatusChange,
 }: {
   title: string;
   description: string;
   ppis: Ppi[];
+  onStatusChange: () => void;
 }) => {
   if (ppis.length === 0) {
     return null;
@@ -59,7 +62,7 @@ const PpiSection = ({
               <TableRow key={ppi.id}>
                 <TableCell className="font-medium">{ppi.studentName}</TableCell>
                 <TableCell>
-                  <PpiStatusChanger ppi={ppi} />
+                  <PpiStatusChanger ppi={ppi} onStatusChanged={onStatusChange} />
                 </TableCell>
                 <TableCell>{ppi.lastUpdate}</TableCell>
                 <TableCell className="text-right">
@@ -80,23 +83,7 @@ const PpiSection = ({
 };
 
 export default function PpiPage() {
-  const [ppis, setPpis] = useState<Ppi[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const ppisData = await getPpis();
-        setPpis(ppisData);
-      } catch (error) {
-        console.error("Failed to fetch PPIs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-  
+  const { data: ppis, loading, refresh } = useDataFetching(getPpis);
 
   if (loading) {
     return (
@@ -121,16 +108,19 @@ export default function PpiPage() {
           title="Brouillons"
           description="Les PPI en cours de rédaction ou de modification."
           ppis={draftPpis}
+          onStatusChange={refresh}
         />
         <PpiSection
           title="Validés"
           description="Les PPI validés et actuellement en application."
           ppis={validatedPpis}
+          onStatusChange={refresh}
         />
         <PpiSection
           title="Archivés"
           description="Les PPI des années précédentes ou des élèves sortis."
           ppis={archivedPpis}
+          onStatusChange={refresh}
         />
       </div>
     </>
