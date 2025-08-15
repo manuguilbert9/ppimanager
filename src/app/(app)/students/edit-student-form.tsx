@@ -48,7 +48,7 @@ const familyContactSchema = z.object({
   postalCode: z.string().optional(),
   city: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email('Email invalide').optional(),
+  email: z.string().email('Email invalide').optional().or(z.literal('')),
 });
 
 
