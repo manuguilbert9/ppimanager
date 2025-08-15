@@ -30,16 +30,18 @@ export default function PilotagePage() {
 
   const allActiveObjectives = useMemo<ObjectiveWithStudent[]>(() => {
     if (!students) return [];
-    return students.flatMap((student) =>
-      (student.objectives || [])
-        .filter((objective) => objective.title && !objective.validationDate)
-        .map((objective) => ({
-          objectiveTitle: objective.title,
-          studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          deadline: objective.deadline,
-        }))
-    );
+    return students
+      .filter((student) => student.ppiStatus !== 'archived')
+      .flatMap((student) =>
+        (student.objectives || [])
+          .filter((objective) => objective.title && !objective.validationDate)
+          .map((objective) => ({
+            objectiveTitle: objective.title,
+            studentId: student.id,
+            studentName: `${student.firstName} ${student.lastName}`,
+            deadline: objective.deadline,
+          }))
+      );
   }, [students]);
 
   const handleAnalyze = async () => {
