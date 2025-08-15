@@ -2,7 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, Sparkles, ExternalLink } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -65,6 +66,15 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
             <DialogDescription>
               Collez le texte au format JSON ci-dessous. Il sera utilisé pour pré-remplir automatiquement les champs du PPI.
             </DialogDescription>
+             <div className="pt-4">
+               <Button asChild variant="outline">
+                    {/* MODIFICATION : Collez votre lien ici */}
+                    <Link href="#" target="_blank">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        GevaSco vers FlashPPI
+                    </Link>
+                </Button>
+            </div>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
