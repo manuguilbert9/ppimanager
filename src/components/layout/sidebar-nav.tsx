@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -5,7 +6,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { FileText, LayoutDashboard, Library, Settings, Users, School } from 'lucide-react';
+import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -23,6 +24,14 @@ export function SidebarNav() {
           <Link href="/dashboard">
             <LayoutDashboard />
             Tableau de bord
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/pilotage')} tooltip="Pilotage">
+          <Link href="/pilotage">
+            <ClipboardList />
+            Pilotage
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
