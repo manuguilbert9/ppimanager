@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -14,8 +15,37 @@ import {
 import type { Student, Classe } from '@/types';
 import { DeleteStudentDialog } from './delete-student-dialog';
 import { EditStudentForm } from './edit-student-form';
+import { duplicatePpi } from '@/lib/students-repository';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export function StudentActions({ student, classes }: { student: Student, classes: Classe[] }) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
+  const handleDuplicate = async () => {
+    setIsDuplicating(true);
+    try {
+      await duplicatePpi(student.id);
+      toast({
+        title: 'Nouveau PPI créé',
+        description: `Un nouveau brouillon de PPI a été créé pour ${student.firstName} ${student.lastName}.`,
+      });
+      router.refresh(); // Refresh the page to show the new student/PPI
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la duplication du PPI.',
+      });
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,6 +59,18 @@ export function StudentActions({ student, classes }: { student: Student, classes
         <DropdownMenuItem asChild>
           <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
         </DropdownMenuItem>
+        {student.ppiStatus === 'archived' && (
+          <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
+            {isDuplicating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Création en cours...
+              </>
+            ) : (
+              "Créer un nouveau PPI"
+            )}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <EditStudentForm student={student} classes={classes} />
         <DeleteStudentDialog studentId={student.id} />

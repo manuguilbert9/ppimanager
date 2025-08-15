@@ -117,16 +117,18 @@ export async function duplicatePpi(studentId: string) {
     try {
         const batch = writeBatch(db);
         
+        // Archive old student record if it's not already
+        const oldStudentRef = doc(db, 'students', studentId);
+        batch.update(oldStudentRef, { ppiStatus: 'archived' });
+
         // Create new student record for the new PPI
         const newStudentRef = doc(collection(db, 'students'));
+        const { id, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
         batch.set(newStudentRef, {
-            ...newStudentData,
+            ...dataToSet,
             lastUpdate: serverTimestamp(),
         });
         
-        // We no longer delete the old student record, just ensure it's archived.
-        // The calling component handles the UI state change, and this function doesn't need to force an archive status.
-
         await batch.commit();
 
         revalidatePath('/ppi');
