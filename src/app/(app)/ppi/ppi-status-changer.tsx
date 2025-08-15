@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { updatePpiStatus } from '@/lib/ppi-repository';
+import { duplicatePpi } from '@/lib/students-repository';
 import type { Ppi, PpiStatus } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Loader2 } from 'lucide-react';
 
@@ -57,6 +59,26 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
     }
   };
 
+  const handleDuplicate = async () => {
+    setIsUpdating(true);
+    try {
+      await duplicatePpi(ppi.studentId);
+      toast({
+        title: 'Nouveau PPI créé',
+        description: `Un nouveau brouillon de PPI a été créé pour ${ppi.studentName}.`,
+      });
+      onStatusChanged();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la duplication du PPI.',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const currentStatus = ppi.status;
   const config = statusConfig[currentStatus];
 
@@ -85,6 +107,17 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
             Passer à "{statusValue.text}"
           </DropdownMenuItem>
         ))}
+        {currentStatus === 'archived' && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              disabled={isUpdating}
+              onSelect={handleDuplicate}
+            >
+              Créer un nouveau PPI
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

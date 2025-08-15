@@ -1,6 +1,7 @@
+
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Student } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -91,5 +92,47 @@ export async function deleteStudent(id: string) {
     } catch (error) {
         console.error("Error deleting document: ", error);
         throw new Error('Failed to delete student');
+    }
+}
+
+export async function duplicatePpi(studentId: string) {
+    const student = await getStudent(studentId);
+    if (!student) {
+        throw new Error("Student not found");
+    }
+
+    const newStudentData = { ...student };
+    delete newStudentData.id; // remove id for new doc
+    
+    // Reset objectives validation date
+    newStudentData.objectives = (newStudentData.objectives || []).map(obj => ({
+        ...obj,
+        validationDate: '',
+    }));
+    
+    // Set new PPI to draft
+    newStudentData.ppiStatus = 'draft';
+    newStudentData.lastUpdate = new Date().toLocaleDateString('fr-FR');
+
+    try {
+        const batch = writeBatch(db);
+        
+        // Create new student record for the new PPI
+        const newStudentRef = doc(collection(db, 'students'));
+        batch.set(newStudentRef, {
+            ...newStudentData,
+            lastUpdate: serverTimestamp(),
+        });
+        
+        // We no longer delete the old student record, just ensure it's archived.
+        // The calling component handles the UI state change, and this function doesn't need to force an archive status.
+
+        await batch.commit();
+
+        revalidatePath('/ppi');
+        revalidatePath('/students');
+    } catch (error) {
+        console.error("Error duplicating PPI: ", error);
+        throw new Error('Failed to duplicate PPI');
     }
 }
