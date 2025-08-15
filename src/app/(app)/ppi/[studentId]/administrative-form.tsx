@@ -122,7 +122,7 @@ export function AdministrativeForm({ classes }: { classes: Classe[] }) {
                       <FormField control={form.control} name="classId" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Classe</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>{classes.map((classe) => (<SelectItem key={classe.id} value={classe.id}>{classe.name}</SelectItem>))}</SelectContent>
                           </Select>

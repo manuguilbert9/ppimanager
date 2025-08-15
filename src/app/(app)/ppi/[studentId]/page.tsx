@@ -66,7 +66,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   }, [params.studentId]);
 
   useEffect(() => {
-    if (student) {
+    if (student && classes.length > 0) {
       const defaultValues = {
         // Administrative
         firstName: student.firstName,
@@ -95,7 +95,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
       };
       methods.reset(defaultValues);
     }
-  }, [student, methods]);
+  }, [student, classes, methods]);
 
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
