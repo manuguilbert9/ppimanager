@@ -9,13 +9,15 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList, Group as GroupIcon } from 'lucide-react';
+import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList, Group as GroupIcon, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AiChatBot } from '@/app/(app)/chat/ai-chat-bot';
 
 export function SidebarNav() {
   const pathname = usePathname();
   const [isPilotageOpen, setIsPilotageOpen] = useState(pathname.startsWith('/pilotage') || pathname.startsWith('/groups'));
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const isActive = (path: string, exact: boolean = false) => {
     if (exact) {
@@ -25,7 +27,8 @@ export function SidebarNav() {
   };
 
   return (
-    <SidebarMenu>
+    <>
+    <SidebarMenu className="flex-1">
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/dashboard', true)} tooltip="Tableau de bord">
           <Link href="/dashboard">
@@ -99,5 +102,16 @@ export function SidebarNav() {
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
+
+    <SidebarMenu>
+        <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => setIsChatOpen(true)} tooltip="Assistant IA">
+                <Bot />
+                Assistant IA
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    </SidebarMenu>
+    <AiChatBot open={isChatOpen} onOpenChange={setIsChatOpen} />
+    </>
   );
 }
