@@ -44,22 +44,25 @@ export async function getStudents(): Promise<Student[]> {
     const allStudents = await Promise.all(querySnapshot.docs.map(studentFromDoc));
 
     // Group students by a unique key (firstName + lastName + birthDate)
-    const groupedStudents = groupBy(allStudents, s => `${s.firstName}-${s.lastName}-${s.birthDate}`);
+    const groupedStudents = groupBy(allStudents, s => `${s.firstName}-${s.lastName}-${s.birthDate || ''}`);
 
     const uniqueStudents: Student[] = [];
 
     for (const key in groupedStudents) {
         const studentGroup = groupedStudents[key];
-        
-        // Find if there's an active (not archived) student in the group
-        let studentToShow = studentGroup.find(s => s.ppiStatus !== 'archived');
+        if (studentGroup && studentGroup.length > 0) {
+            // Find if there's an active (not archived) student in the group
+            let studentToShow = studentGroup.find(s => s.ppiStatus !== 'archived');
 
-        // If no active student, it means all are archived. In that case, show the most recent one.
-        if (!studentToShow) {
-            studentToShow = orderBy(studentGroup, ['lastUpdateDate'], ['desc'])[0];
+            // If no active student, it means all are archived. In that case, show the most recent one.
+            if (!studentToShow) {
+                studentToShow = orderBy(studentGroup, ['lastUpdateDate'], ['desc'])[0];
+            }
+            
+            if (studentToShow) {
+                uniqueStudents.push(studentToShow);
+            }
         }
-        
-        uniqueStudents.push(studentToShow);
     }
     
     // Sort final list alphabetically by last name
@@ -128,7 +131,7 @@ export async function duplicatePpi(studentId: string) {
     }
 
     const newStudentData = { ...student };
-    delete newStudentData.id; // remove id for new doc
+    delete (newStudentData as Partial<Student>).id; // remove id for new doc
     
     // Reset objectives validation date
     newStudentData.objectives = (newStudentData.objectives || []).map(obj => ({
