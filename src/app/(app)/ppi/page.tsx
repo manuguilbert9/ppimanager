@@ -70,7 +70,7 @@ const PpiSection = ({
                         <Button variant="outline" size="sm" asChild>
                             <Link href={`/ppi/${ppi.studentId}`}>Voir le PPI</Link>
                         </Button>
-                        {ppi.status === 'validated' && <ExportPpiButton studentId={ppi.studentId} />}
+                        {(ppi.status === 'validated' || ppi.status === 'archived') && <ExportPpiButton studentId={ppi.studentId} />}
                     </div>
                 </TableCell>
               </TableRow>
