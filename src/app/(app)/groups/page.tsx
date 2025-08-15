@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { getGroups, deleteGroup } from '@/lib/groups-repository';
 import type { Group } from '@/types';
 import { useDataFetching } from '@/hooks/use-data-fetching';
-import { Loader2, Trash2, FileDown } from 'lucide-react';
+import { Loader2, Trash2, FileDown, User, Calendar } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -24,6 +24,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { generateGroupDocx } from '@/lib/group-docx-exporter';
 
@@ -113,7 +118,38 @@ export default function GroupsPage() {
                   const isExporting = exportingId === group.id;
                   return (
                     <TableRow key={group.id}>
-                      <TableCell className="font-medium">{group.groupTitle}</TableCell>
+                      <TableCell className="font-medium">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <span className="cursor-pointer hover:underline">{group.groupTitle}</span>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                                <div className="grid gap-4">
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium leading-none">{group.groupTitle}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            {group.rationale}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h5 className="font-medium leading-none text-sm">Élèves</h5>
+                                        <ul className="space-y-2">
+                                            {group.students.map(student => (
+                                                <li key={student.id} className="text-sm">
+                                                    <div className="font-semibold flex items-center gap-1.5">
+                                                        <User className="h-3 w-3" /> {student.name}
+                                                    </div>
+                                                    <p className="pl-5 text-muted-foreground text-xs italic">
+                                                        {student.objectiveTitle}
+                                                    </p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                      </TableCell>
                       <TableCell>{group.students.length}</TableCell>
                       <TableCell>{group.createdAt}</TableCell>
                       <TableCell className="text-right">
