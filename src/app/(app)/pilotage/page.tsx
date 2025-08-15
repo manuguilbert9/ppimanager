@@ -16,7 +16,7 @@ import type { Student, Objective } from '@/types';
 import { Loader2, User, Calendar, WandSparkles, Save } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
 import Link from 'next/link';
-import { groupObjectives, type StudentObjectiveGroup, type ObjectiveWithStudent } from '@/ai/flows/group-objectives-flow';
+import { groupObjectives, type StudentObjectiveGroup, type StudentObjectiveProfile } from '@/ai/flows/group-objectives-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { addGroup } from '@/lib/groups-repository';
@@ -30,7 +30,7 @@ export default function PilotagePage() {
   const [analysisDone, setAnalysisDone] = useState(false);
   const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
 
-  const allActiveObjectives = useMemo<ObjectiveWithStudent[]>(() => {
+  const allActiveObjectives = useMemo<StudentObjectiveProfile[]>(() => {
     if (!students) return [];
     return students
       .filter((student) => student.ppiStatus !== 'archived')
@@ -42,6 +42,8 @@ export default function PilotagePage() {
             studentId: student.id,
             studentName: `${student.firstName} ${student.lastName}`,
             deadline: objective.deadline,
+            level: student.level,
+            strengths: student.strengths,
           }))
       );
   }, [students]);
