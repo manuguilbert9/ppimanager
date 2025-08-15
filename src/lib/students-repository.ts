@@ -6,10 +6,13 @@ import { db } from './firebase';
 import type { Student } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { getClasse } from './classes-repository';
+import { groupBy, orderBy } from 'lodash';
 
 async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
     const data = doc.data();
     const classe = data.classId ? await getClasse(data.classId) : null;
+    const lastUpdateDate = data.lastUpdate?.toDate ? data.lastUpdate.toDate() : new Date();
+    
     return {
         id: doc.id,
         firstName: data.firstName,
@@ -24,7 +27,8 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         classId: data.classId,
         className: classe?.name ?? 'N/A',
         teacherName: classe?.teacherName ?? 'N/A',
-        lastUpdate: data.lastUpdate?.toDate ? data.lastUpdate.toDate().toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
+        lastUpdate: lastUpdateDate.toLocaleDateString('fr-FR'),
+        lastUpdateDate: lastUpdateDate, // Keep date object for sorting
         ppiStatus: data.ppiStatus || 'draft',
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
         globalProfile: data.globalProfile || {},
@@ -37,7 +41,29 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
 
 export async function getStudents(): Promise<Student[]> {
     const querySnapshot = await getDocs(collection(db, 'students'));
-    return Promise.all(querySnapshot.docs.map(studentFromDoc));
+    const allStudents = await Promise.all(querySnapshot.docs.map(studentFromDoc));
+
+    // Group students by a unique key (firstName + lastName + birthDate)
+    const groupedStudents = groupBy(allStudents, s => `${s.firstName}-${s.lastName}-${s.birthDate}`);
+
+    const uniqueStudents: Student[] = [];
+
+    for (const key in groupedStudents) {
+        const studentGroup = groupedStudents[key];
+        
+        // Find if there's an active (not archived) student in the group
+        let studentToShow = studentGroup.find(s => s.ppiStatus !== 'archived');
+
+        // If no active student, it means all are archived. In that case, show the most recent one.
+        if (!studentToShow) {
+            studentToShow = orderBy(studentGroup, ['lastUpdateDate'], ['desc'])[0];
+        }
+        
+        uniqueStudents.push(studentToShow);
+    }
+    
+    // Sort final list alphabetically by last name
+    return orderBy(uniqueStudents, ['lastName', 'firstName'], ['asc']);
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
@@ -123,7 +149,7 @@ export async function duplicatePpi(studentId: string) {
 
         // Create new student record for the new PPI
         const newStudentRef = doc(collection(db, 'students'));
-        const { id, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
+        const { id, lastUpdateDate, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
         batch.set(newStudentRef, {
             ...dataToSet,
             lastUpdate: serverTimestamp(),
