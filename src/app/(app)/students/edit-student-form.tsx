@@ -218,7 +218,7 @@ export function EditStudentForm({ student, classes }: { student: Student, classe
                     <FormField control={form.control} name="mdphNotificationExpiration" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Date d'expiration MDPH</FormLabel>
-                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormControl><Input type="text" placeholder="JJ/MM/AAAA" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
