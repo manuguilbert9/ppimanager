@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -24,6 +25,7 @@ const StudentObjectiveProfileSchema = z.object({
     socialSkills: z.array(z.string()).optional(),
     exploitableInterests: z.array(z.string()).optional(),
   }).optional().describe("Les compétences et points forts déjà acquis par l'élève."),
+  adaptations: z.array(z.string()).optional().describe("Les moyens et adaptations prévus pour cet objectif."),
 });
 export type StudentObjectiveProfile = z.infer<typeof StudentObjectiveProfileSchema>;
 
@@ -34,7 +36,7 @@ export type GroupObjectivesInput = z.infer<typeof GroupObjectivesInputSchema>;
 
 const StudentObjectiveGroupSchema = z.object({
   groupTitle: z.string().describe("Un titre clair et concis pour le groupe de compétences (ex: 'Calcul mental', 'Lecture fluide')."),
-  rationale: z.string().describe("Une brève justification expliquant pourquoi ces objectifs ont été regroupés, en tenant compte des objectifs, niveaux et acquis."),
+  rationale: z.string().describe("Une brève justification expliquant pourquoi ces élèves ont été regroupés, en tenant compte des objectifs, niveaux et acquis."),
   students: z.array(z.object({
     id: z.string().describe("L'ID de l'élève."),
     name: z.string().describe("Le nom de l'élève."),
@@ -59,7 +61,7 @@ const prompt = ai.definePrompt({
   output: { schema: GroupObjectivesOutputSchema },
   prompt: `
     Tu es un expert en ingénierie pédagogique et en différenciation.
-    Ton rôle est d'analyser une liste d'élèves avec leurs objectifs d'apprentissage, leur niveau scolaire et leurs compétences déjà acquises, pour les regrouper de manière pertinente.
+    Ton rôle est d'analyser une liste d'élèves avec leurs objectifs d'apprentissage, leur niveau scolaire, leurs compétences déjà acquises et les adaptations prévues, pour les regrouper de manière pertinente.
 
     Voici la liste des élèves et leurs profils :
     {{#each objectives}}
@@ -68,18 +70,19 @@ const prompt = ai.definePrompt({
       - Objectif: "{{{objectiveTitle}}}"
       {{#if deadline}}- Échéance: {{{deadline}}}{{/if}}
       - Compétences acquises: {{#if strengths.academicSkills}}{{{strengths.academicSkills}}}{{else}}Non spécifiées{{/if}}
+      - Moyens et adaptations prévus: {{#if adaptations}}{{{adaptations}}}{{else}}Non spécifiés{{/if}}
     {{/each}}
 
     INSTRUCTIONS :
     1.  Analyse sémantiquement chaque objectif. Ne te contente pas des mots exacts, mais cherche le sens et la compétence visée.
-    2.  Prends en compte le NIVEAU et les COMPÉTENCES ACQUISES de chaque élève pour affiner les regroupements. L'objectif est de créer des groupes de besoin homogènes. Par exemple, deux élèves peuvent avoir l'objectif "écrire son prénom", mais l'un est en PS et l'autre en GS ; ils ne devraient probablement pas être dans le même groupe d'atelier.
-    3.  Crée des groupes d'élèves qui travaillent sur des objectifs similaires ou complémentaires ET qui ont un niveau de départ proche.
+    2.  Prends en compte le NIVEAU, les COMPÉTENCES ACQUISES et les ADAPTATIONS de chaque élève pour affiner les regroupements. L'objectif est de créer des groupes de besoin homogènes.
+    3.  Crée des groupes d'élèves qui travaillent sur des objectifs similaires ou complémentaires ET qui ont un niveau de départ proche ou des besoins en adaptation similaires.
     4.  Pour chaque groupe, définis un "Titre de groupe" clair et synthétique qui représente la compétence commune (ex: "Calcul mental additif", "Reconnaissance syllabique", "Initiation à la conversation").
-    5.  Pour chaque groupe, fournis une "Justification" expliquant en une phrase pourquoi ces élèves sont regroupés, en mentionnant la compétence et la cohérence de leur niveau.
+    5.  Pour chaque groupe, fournis une "Justification" expliquant en une phrase pourquoi ces élèves sont regroupés, en mentionnant la compétence et la cohérence de leur niveau ou de leurs besoins.
     6.  Assure-toi que chaque élève de la liste d'entrée soit assigné à un et un seul groupe. Un élève ne peut pas être dans plusieurs groupes.
     7.  Si un objectif est trop unique ou si le profil d'un élève est trop différent pour être regroupé, crée un groupe d'un seul élève.
 
-    Ne te contente pas de regrouper les objectifs qui ont exactement le même intitulé. Par exemple, "Compter jusqu'à 20" et "Dénombrer une collection de 15 objets" peuvent être regroupés sous "Compétences en numération jusqu'à 20" SI les élèves ont des niveaux de compétences proches.
+    Ne te contente pas de regrouper les objectifs qui ont exactement le même intitulé. Par exemple, "Compter jusqu'à 20" et "Dénombrer une collection de 15 objets" peuvent être regroupés sous "Compétences en numération jusqu'à 20" SI les élèves ont des niveaux de compétences proches. De même, deux élèves avec des objectifs différents mais nécessitant tous deux une "guidance verbale" pourraient être regroupés pour un atelier spécifique.
   `,
 });
 

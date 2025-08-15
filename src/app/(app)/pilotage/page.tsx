@@ -44,6 +44,7 @@ export default function PilotagePage() {
             deadline: objective.deadline,
             level: student.level,
             strengths: student.strengths,
+            adaptations: objective.adaptations,
           }))
       );
   }, [students]);
