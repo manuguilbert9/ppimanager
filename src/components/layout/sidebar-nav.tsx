@@ -1,26 +1,33 @@
 
 'use client';
 
+import { useState } from 'react';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList } from 'lucide-react';
+import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList, Group as GroupIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const [isPilotageOpen, setIsPilotageOpen] = useState(pathname.startsWith('/pilotage') || pathname.startsWith('/groups'));
 
-  const isActive = (path: string) => {
-    return pathname === path || (path !== '/dashboard' && pathname.startsWith(path));
+  const isActive = (path: string, exact: boolean = false) => {
+    if (exact) {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
   };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/dashboard')} tooltip="Tableau de bord">
+        <SidebarMenuButton asChild isActive={isActive('/dashboard', true)} tooltip="Tableau de bord">
           <Link href="/dashboard">
             <LayoutDashboard />
             Tableau de bord
@@ -28,12 +35,28 @@ export function SidebarNav() {
         </SidebarMenuButton>
       </SidebarMenuItem>
        <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/pilotage')} tooltip="Pilotage">
-          <Link href="/pilotage">
+        <SidebarMenuButton 
+            isActive={isActive('/pilotage') || isActive('/groups')} 
+            tooltip="Pilotage"
+            onClick={() => setIsPilotageOpen(prev => !prev)}
+        >
             <ClipboardList />
             Pilotage
-          </Link>
         </SidebarMenuButton>
+        {isPilotageOpen && (
+             <SidebarMenuSub>
+                <li>
+                    <SidebarMenuSubButton asChild isActive={isActive('/pilotage', true)}>
+                        <Link href="/pilotage">Suggestions IA</Link>
+                    </SidebarMenuSubButton>
+                </li>
+                <li>
+                     <SidebarMenuSubButton asChild isActive={isActive('/groups')}>
+                        <Link href="/groups">Groupes de travail</Link>
+                    </SidebarMenuSubButton>
+                </li>
+             </SidebarMenuSub>
+        )}
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/students')} tooltip="Élèves">

@@ -13,12 +13,13 @@ import {
 } from '@/components/ui/card';
 import { getStudents } from '@/lib/students-repository';
 import type { Student, Objective } from '@/types';
-import { Loader2, User, Calendar, WandSparkles } from 'lucide-react';
+import { Loader2, User, Calendar, WandSparkles, Save } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
 import Link from 'next/link';
 import { groupObjectives, type StudentObjectiveGroup, type ObjectiveWithStudent } from '@/ai/flows/group-objectives-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { addGroup } from '@/lib/groups-repository';
 
 export default function PilotagePage() {
   const { data: students, loading: loadingStudents } = useDataFetching(getStudents);
@@ -27,6 +28,7 @@ export default function PilotagePage() {
   const [objectiveGroups, setObjectiveGroups] = useState<StudentObjectiveGroup[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisDone, setAnalysisDone] = useState(false);
+  const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
 
   const allActiveObjectives = useMemo<ObjectiveWithStudent[]>(() => {
     if (!students) return [];
@@ -62,6 +64,25 @@ export default function PilotagePage() {
       setIsAnalyzing(false);
     }
   };
+  
+  const handleSaveGroup = async (group: StudentObjectiveGroup, index: number) => {
+    setSavingStates(prev => ({ ...prev, [index]: true }));
+    try {
+        await addGroup(group);
+        toast({
+            title: "Groupe enregistré",
+            description: `Le groupe "${group.groupTitle}" a été sauvegardé avec succès.`,
+        });
+    } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: "Erreur lors de la sauvegarde",
+            description: "Une erreur est survenue. Veuillez réessayer.",
+        });
+    } finally {
+        setSavingStates(prev => ({ ...prev, [index]: false }));
+    }
+  }
   
   const loading = loadingStudents || isAnalyzing;
 
@@ -108,39 +129,48 @@ export default function PilotagePage() {
 
       {!loading && objectiveGroups.length > 0 && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {objectiveGroups.map((group) => (
-            <Card key={group.groupTitle}>
-              <CardHeader>
-                <CardTitle className="text-lg">{group.groupTitle}</CardTitle>
-                <CardDescription>
-                  <span className="font-semibold">Justification :</span> {group.rationale}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {group.students.map((student) => (
-                    <li key={student.id} className="flex flex-col p-3 bg-background rounded-md border">
-                        <div className="flex items-center gap-2 font-medium">
-                            <User className="h-4 w-4 text-primary" />
-                            <Link href={`/ppi/${student.id}`} className="hover:underline">
-                                {student.name}
-                            </Link>
-                        </div>
-                         <p className="text-sm text-muted-foreground mt-2 pl-1">
-                            <span className="font-semibold">Objectif :</span> {student.objectiveTitle}
-                         </p>
-                        {student.deadline && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 pl-1">
-                                <Calendar className="h-4 w-4" />
-                                <span>Échéance: {student.deadline}</span>
+          {objectiveGroups.map((group, index) => {
+            const isSaving = savingStates[index];
+            return (
+                <Card key={group.groupTitle} className="flex flex-col">
+                <CardHeader>
+                    <CardTitle className="text-lg">{group.groupTitle}</CardTitle>
+                    <CardDescription>
+                    <span className="font-semibold">Justification :</span> {group.rationale}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <ul className="space-y-3">
+                    {group.students.map((student) => (
+                        <li key={student.id} className="flex flex-col p-3 bg-background rounded-md border">
+                            <div className="flex items-center gap-2 font-medium">
+                                <User className="h-4 w-4 text-primary" />
+                                <Link href={`/ppi/${student.id}`} className="hover:underline">
+                                    {student.name}
+                                </Link>
                             </div>
-                        )}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
+                            <p className="text-sm text-muted-foreground mt-2 pl-1">
+                                <span className="font-semibold">Objectif :</span> {student.objectiveTitle}
+                            </p>
+                            {student.deadline && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 pl-1">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Échéance: {student.deadline}</span>
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                    </ul>
+                </CardContent>
+                <div className="p-4 pt-0">
+                    <Button onClick={() => handleSaveGroup(group, index)} disabled={isSaving} className="w-full">
+                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                         {isSaving ? 'Sauvegarde...' : 'Enregistrer le groupe'}
+                    </Button>
+                </div>
+                </Card>
+            )
+          })}
         </div>
       )}
     </>

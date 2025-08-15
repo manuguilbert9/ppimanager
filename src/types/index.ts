@@ -1,4 +1,7 @@
 
+
+import type { StudentObjectiveGroup } from "@/ai/flows/group-objectives-flow";
+
 export type FamilyContact = {
   id?: string;
   title: string;
@@ -131,3 +134,8 @@ export type Classe = {
     name: string;
     teacherName: string;
 };
+
+export interface Group extends StudentObjectiveGroup {
+    id: string;
+    createdAt: string;
+}
