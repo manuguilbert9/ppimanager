@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { getGroups, deleteGroup } from '@/lib/groups-repository';
 import type { Group } from '@/types';
 import { useDataFetching } from '@/hooks/use-data-fetching';
-import { Loader2, Trash2, FileDown, User, Calendar } from 'lucide-react';
+import { Loader2, Trash2, FileDown, User, Calendar, PlusCircle, Edit } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { generateGroupDocx } from '@/lib/group-docx-exporter';
+import { GroupForm } from './group-form';
 
 export default function GroupsPage() {
   const { data: groups, loading, refresh } = useDataFetching(getGroups);
@@ -85,7 +86,14 @@ export default function GroupsPage() {
       <PageHeader
         title="Groupes de travail sauvegardés"
         description="Gérez et exportez les groupes de travail créés à partir des suggestions de l'IA."
-      />
+      >
+        <GroupForm onSuccess={refresh}>
+            <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajouter un groupe
+            </Button>
+        </GroupForm>
+      </PageHeader>
 
       {loading ? (
         <div className="flex h-full w-full items-center justify-center py-10">
@@ -154,6 +162,11 @@ export default function GroupsPage() {
                       <TableCell>{group.createdAt}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                             <GroupForm group={group} onSuccess={refresh}>
+                                <Button variant="outline" size="sm">
+                                    <Edit className="mr-2 h-4 w-4" /> Modifier
+                                </Button>
+                            </GroupForm>
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -165,11 +178,12 @@ export default function GroupsPage() {
                             </Button>
                             <Button
                                 variant="destructive"
-                                size="icon"
+                                size="sm"
                                 onClick={() => handleDelete(group.id)}
                                 disabled={isDeleting}
                             >
-                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                Supprimer
                             </Button>
                         </div>
                       </TableCell>

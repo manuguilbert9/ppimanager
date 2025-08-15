@@ -135,7 +135,17 @@ export type Classe = {
     teacherName: string;
 };
 
-export interface Group extends StudentObjectiveGroup {
+export type GroupStudent = {
     id: string;
+    name: string;
+    objectiveTitle: string;
+    deadline?: string;
+};
+
+export type Group = {
+    id: string;
+    groupTitle: string;
+    rationale: string;
+    students: GroupStudent[];
     createdAt: string;
-}
+};

@@ -1,7 +1,7 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, deleteDoc, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, deleteDoc, orderBy, query, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Group } from '@/types';
 import type { StudentObjectiveGroup } from '@/ai/flows/group-objectives-flow';
@@ -26,7 +26,7 @@ export async function getGroups(): Promise<Group[]> {
     return querySnapshot.docs.map(groupFromDoc);
 }
 
-export async function addGroup(group: StudentObjectiveGroup) {
+export async function addGroup(group: Omit<Group, 'id' | 'createdAt'>) {
     try {
         await addDoc(collection(db, 'groups'), {
             ...group,
@@ -36,6 +36,17 @@ export async function addGroup(group: StudentObjectiveGroup) {
     } catch (error) {
         console.error("Error adding group: ", error);
         throw new Error('Failed to add group');
+    }
+}
+
+export async function updateGroup(id: string, group: Omit<Group, 'id' | 'createdAt'>) {
+    try {
+        const groupRef = doc(db, 'groups', id);
+        await updateDoc(groupRef, group);
+        revalidatePath('/groups');
+    } catch (error) {
+        console.error("Error updating group: ", error);
+        throw new Error('Failed to update group');
     }
 }
 
