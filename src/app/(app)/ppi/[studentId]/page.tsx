@@ -49,53 +49,58 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
   useEffect(() => {
     const fetchData = async () => {
-      const studentData = await getStudent(params.studentId);
-      if (!studentData) {
+      try {
+        const studentData = await getStudent(params.studentId);
+        if (!studentData) {
+          notFound();
+        }
+        setStudent(studentData);
+        
+        const libraryData = await getAllLibraryItems();
+        setLibraryItems(libraryData);
+        
+        const classesData = await getClasses();
+        setClasses(classesData);
+
+        // Reset form here after all data is fetched
+        if (studentData && classesData.length > 0) {
+            const defaultValues = {
+                // Administrative
+                firstName: studentData.firstName,
+                lastName: studentData.lastName,
+                birthDate: studentData.birthDate || '',
+                sex: studentData.sex,
+                school: studentData.school || '',
+                level: studentData.level || '',
+                mdphNotificationTitle: studentData.mdphNotificationTitle || '',
+                mdphNotificationExpiration: studentData.mdphNotificationExpiration || '',
+                familyContacts: studentData.familyContacts || [],
+                classId: studentData.classId,
+                // Global Profile
+                globalProfile: studentData.globalProfile || {},
+                // Strengths
+                strengths: studentData.strengths || {},
+                // Difficulties
+                difficulties: studentData.difficulties || {},
+                // Needs
+                needs: studentData.needs || {},
+                // Objectives
+                objectives: (studentData.objectives || []).map(o => ({
+                    ...o,
+                    id: o.id || Math.random().toString(36).substring(7),
+                })),
+            };
+            methods.reset(defaultValues);
+        }
+      } catch (error) {
+        console.error("Failed to fetch page data:", error);
         notFound();
       }
-      setStudent(studentData);
-      
-      const libraryData = await getAllLibraryItems();
-      setLibraryItems(libraryData);
-      
-      const classesData = await getClasses();
-      setClasses(classesData);
     };
 
     fetchData();
-  }, [params.studentId]);
+  }, [params.studentId, methods]);
 
-  useEffect(() => {
-    if (student && classes.length > 0) {
-      const defaultValues = {
-        // Administrative
-        firstName: student.firstName,
-        lastName: student.lastName,
-        birthDate: student.birthDate || '',
-        sex: student.sex,
-        school: student.school || '',
-        level: student.level || '',
-        mdphNotificationTitle: student.mdphNotificationTitle || '',
-        mdphNotificationExpiration: student.mdphNotificationExpiration || '',
-        familyContacts: student.familyContacts || [],
-        classId: student.classId,
-        // Global Profile
-        globalProfile: student.globalProfile || {},
-        // Strengths
-        strengths: student.strengths || {},
-        // Difficulties
-        difficulties: student.difficulties || {},
-        // Needs
-        needs: student.needs || {},
-        // Objectives
-        objectives: (student.objectives || []).map(o => ({
-            ...o,
-            id: o.id || Math.random().toString(36).substring(7),
-        })),
-      };
-      methods.reset(defaultValues);
-    }
-  }, [student, classes, methods]);
 
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
@@ -171,7 +176,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     }
   };
 
-  if (!student) {
+  if (!student || classes.length === 0) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
