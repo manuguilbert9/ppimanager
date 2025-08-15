@@ -73,7 +73,7 @@ export function StudentActions({ student, classes }: { student: Student, classes
         )}
         <DropdownMenuSeparator />
         <EditStudentForm student={student} classes={classes} />
-        <DeleteStudentDialog studentId={student.id} />
+        <DeleteStudentDialog studentId={student.id} studentFirstName={student.firstName} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
