@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -27,12 +27,92 @@ import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
 import { Loader2 } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
+import { orderBy } from 'lodash';
+import { SortableHeader, SortDirection } from './sortable-header';
+
+type SortKey = 'name' | 'className' | 'age' | 'ppiStatus' | 'mdphNotificationExpiration' | 'lastUpdate';
+
+const getAge = (birthDate?: string): number | null => {
+    if (!birthDate) return null;
+    
+    const parts = birthDate.split('/');
+    let formattedDate = birthDate;
+    if (parts.length === 3) {
+      formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    const birth = new Date(formattedDate);
+    if (isNaN(birth.getTime())) {
+        return null;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return isNaN(age) ? null : age;
+};
+
+const parseDate = (dateStr?: string): Date | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts.map(p => parseInt(p, 10));
+    // Note: month is 0-indexed in JS Date
+    const date = new Date(year, month - 1, day);
+    return isNaN(date.getTime()) ? null : date;
+};
 
 export default function StudentsPage() {
   const { data: students, loading: loadingStudents, refresh: refreshStudents } = useDataFetching(getStudents);
   const { data: classes, loading: loadingClasses } = useDataFetching(getClasses);
-  
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
+
   const loading = loadingStudents || loadingClasses;
+
+  const handleSort = (key: SortKey) => {
+    let direction: SortDirection = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedStudents = useMemo(() => {
+    if (loading || students.length === 0) return [];
+
+    let data = [...students];
+
+    const sortKeys: (string | ((student: Student) => any))[] = [];
+    const sortOrders: ('asc' | 'desc')[] = [sortConfig.direction];
+
+    switch (sortConfig.key) {
+        case 'name':
+            sortKeys.push('lastName', 'firstName');
+            sortOrders.push('asc', 'asc');
+            break;
+        case 'className':
+            sortKeys.push('className', 'lastName', 'firstName');
+            sortOrders.push(sortConfig.direction, 'asc', 'asc');
+            break;
+        case 'age':
+            sortKeys.push(student => getAge(student.birthDate));
+            break;
+        case 'mdphNotificationExpiration':
+            sortKeys.push(student => parseDate(student.mdphNotificationExpiration)?.getTime() || 0);
+            break;
+        case 'lastUpdate':
+            sortKeys.push(student => parseDate(student.lastUpdate)?.getTime() || 0);
+            break;
+        default:
+            sortKeys.push(sortConfig.key);
+            break;
+    }
+
+    return orderBy(data, sortKeys, sortOrders);
+  }, [students, sortConfig, loading]);
 
   const statusVariant = {
     validated: 'default',
@@ -45,29 +125,6 @@ export default function StudentsPage() {
     draft: 'Brouillon',
     archived: 'Archivé',
   };
-
-  const getAge = (birthDate?: string) => {
-    if (!birthDate) return 'N/A';
-    
-    const parts = birthDate.split('/');
-    let formattedDate = birthDate;
-    if (parts.length === 3) {
-      formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-
-    const birth = new Date(formattedDate);
-    if (isNaN(birth.getTime())) {
-        return 'N/A';
-    }
-
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return isNaN(age) ? 'N/A' : age;
-  }
 
   return (
     <>
@@ -94,19 +151,61 @@ export default function StudentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Classe</TableHead>
-                  <TableHead>Âge</TableHead>
-                  <TableHead>Statut PPI</TableHead>
-                  <TableHead>Fin notif. MDPH</TableHead>
-                  <TableHead>Dernière mise à jour du PPI</TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Nom"
+                        sortKey="name"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Classe"
+                        sortKey="className"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Âge"
+                        sortKey="age"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Statut PPI"
+                        sortKey="ppiStatus"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Fin notif. MDPH"
+                        sortKey="mdphNotificationExpiration"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                        label="Dernière mise à jour"
+                        sortKey="lastUpdate"
+                        currentSort={sortConfig}
+                        onSort={handleSort}
+                    />
+                  </TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student: Student) => (
+                {sortedStudents.map((student: Student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
@@ -125,7 +224,7 @@ export default function StudentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>{student.className}</TableCell>
-                    <TableCell>{getAge(student.birthDate)}</TableCell>
+                    <TableCell>{getAge(student.birthDate) ?? 'N/A'}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[student.ppiStatus]}>
                         {statusText[student.ppiStatus]}
