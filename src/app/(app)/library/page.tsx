@@ -1,8 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllLibraryItems } from '@/lib/library-repository';
 import type { LibraryItem } from '@/types';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const LibraryContent = ({ items }: { items: LibraryItem[] }) => (
@@ -100,12 +100,7 @@ export default function LibraryPage() {
       <PageHeader
         title="Gestion de la bibliothèque"
         description="Centralisez les éléments réutilisables pour une insertion rapide dans les PPI."
-      >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter à la bibliothèque
-        </Button>
-      </PageHeader>
+      />
       <Tabs defaultValue="pedagogicalAccommodations" orientation="vertical">
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
             <TabsList className="flex-col h-auto items-stretch p-2 gap-1">
