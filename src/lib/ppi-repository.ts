@@ -4,7 +4,7 @@
 import { collection, getDocs, QueryDocumentSnapshot, DocumentData, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Ppi, Student, PpiStatus } from '@/types';
-import { getStudents } from './students-repository';
+import { getAllStudentDocs } from './students-repository';
 import { revalidatePath } from 'next/cache';
 
 function ppiFromStudent(student: Student): Ppi {
@@ -18,12 +18,12 @@ function ppiFromStudent(student: Student): Ppi {
 }
 
 export async function getPpis(): Promise<Ppi[]> {
-    const students = await getStudents();
+    const students = await getAllStudentDocs();
     return students.map(ppiFromStudent);
 }
 
 export async function getPpi(id: string): Promise<Ppi | null> {
-    const students = await getStudents();
+    const students = await getAllStudentDocs();
     const student = students.find(s => s.id === id);
     if (!student) {
         // Fallback to trying to read from a ppi doc for compatibility

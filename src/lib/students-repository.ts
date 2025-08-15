@@ -39,9 +39,19 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
     };
 }
 
-export async function getStudents(): Promise<Student[]> {
+/**
+ * Fetches all student documents from Firestore without any filtering or grouping.
+ * This is useful for contexts like the PPI page where all versions (including archived) are needed.
+ * @returns A promise that resolves to an array of all Student objects.
+ */
+export async function getAllStudentDocs(): Promise<Student[]> {
     const querySnapshot = await getDocs(collection(db, 'students'));
-    const allStudents = await Promise.all(querySnapshot.docs.map(studentFromDoc));
+    return await Promise.all(querySnapshot.docs.map(studentFromDoc));
+}
+
+
+export async function getStudents(): Promise<Student[]> {
+    const allStudents = await getAllStudentDocs();
 
     // Group students by a unique key (firstName + lastName + birthDate)
     const groupedStudents = groupBy(allStudents, s => `${s.firstName}-${s.lastName}-${s.birthDate || ''}`);
