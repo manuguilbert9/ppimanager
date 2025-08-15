@@ -98,6 +98,7 @@ export default function StudentsPage() {
                   <TableHead>Classe</TableHead>
                   <TableHead>Âge</TableHead>
                   <TableHead>Statut PPI</TableHead>
+                  <TableHead>Fin notif. MDPH</TableHead>
                   <TableHead>Dernière mise à jour du PPI</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -130,6 +131,7 @@ export default function StudentsPage() {
                         {statusText[student.ppiStatus]}
                       </Badge>
                     </TableCell>
+                    <TableCell>{student.mdphNotificationExpiration}</TableCell>
                     <TableCell>{student.lastUpdate}</TableCell>
                     <TableCell>
                       <div className="flex justify-end">
