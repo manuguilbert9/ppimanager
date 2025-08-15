@@ -1,8 +1,9 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -12,83 +13,105 @@ import {
 } from '@/components/ui/card';
 import { getStudents } from '@/lib/students-repository';
 import type { Student, Objective } from '@/types';
-import { Loader2, User, Calendar } from 'lucide-react';
+import { Loader2, User, Calendar, WandSparkles } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-
-interface ObjectiveGroup {
-  objectiveTitle: string;
-  students: {
-    id: string;
-    name: string;
-    deadline?: string;
-  }[];
-}
+import { groupObjectives, type StudentObjectiveGroup, type ObjectiveWithStudent } from '@/ai/flows/group-objectives-flow';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function PilotagePage() {
-  const { data: students, loading } = useDataFetching(getStudents);
+  const { data: students, loading: loadingStudents } = useDataFetching(getStudents);
+  const { toast } = useToast();
 
-  const objectiveGroups = useMemo(() => {
+  const [objectiveGroups, setObjectiveGroups] = useState<StudentObjectiveGroup[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisDone, setAnalysisDone] = useState(false);
+
+  const allActiveObjectives = useMemo<ObjectiveWithStudent[]>(() => {
     if (!students) return [];
-
-    const groups: { [title: string]: ObjectiveGroup['students'] } = {};
-
-    students.forEach((student) => {
-      if (student.objectives && student.ppiStatus !== 'archived') {
-        student.objectives.forEach((objective) => {
-          if (objective.title && !objective.validationDate) { // Only active objectives
-            if (!groups[objective.title]) {
-              groups[objective.title] = [];
-            }
-            groups[objective.title].push({
-              id: student.id,
-              name: `${student.firstName} ${student.lastName}`,
-              deadline: objective.deadline,
-            });
-          }
-        });
-      }
-    });
-
-    return Object.entries(groups).map(([title, studentList]) => ({
-      objectiveTitle: title,
-      students: studentList,
-    }));
+    return students.flatMap((student) =>
+      (student.objectives || [])
+        .filter((objective) => objective.title && !objective.validationDate)
+        .map((objective) => ({
+          objectiveTitle: objective.title,
+          studentId: student.id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          deadline: objective.deadline,
+        }))
+    );
   }, [students]);
 
-
-  if (loading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    setObjectiveGroups([]);
+    try {
+      const result = await groupObjectives({ objectives: allActiveObjectives });
+      setObjectiveGroups(result.groups);
+      setAnalysisDone(true);
+    } catch (error) {
+      console.error("AI analysis failed:", error);
+      toast({
+        variant: 'destructive',
+        title: "Erreur de l'analyse IA",
+        description: "Une erreur est survenue. Veuillez réessayer.",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const loading = loadingStudents || isAnalyzing;
 
   return (
     <>
       <PageHeader
         title="Pilotage des apprentissages"
-        description="Regroupez les élèves par objectifs communs pour organiser des ateliers de travail."
-      />
+        description="Utilisez l'IA pour regrouper les élèves par objectifs similaires et organiser des ateliers."
+      >
+        <Button onClick={handleAnalyze} disabled={loading || allActiveObjectives.length === 0}>
+          {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <WandSparkles className="mr-2 h-4 w-4" />}
+          Lancer l'analyse par IA
+        </Button>
+      </PageHeader>
       
-      {objectiveGroups.length === 0 ? (
+      {loading && (
+         <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            {isAnalyzing && <p className="ml-4 text-muted-foreground">Analyse IA en cours...</p>}
+        </div>
+      )}
+
+      {!loading && !analysisDone && (
+         <Alert>
+          <WandSparkles className="h-4 w-4" />
+          <AlertTitle>Prêt pour l'analyse !</AlertTitle>
+          <AlertDescription>
+            {allActiveObjectives.length > 0
+              ? `Il y a ${allActiveObjectives.length} objectifs actifs à analyser. Cliquez sur "Lancer l'analyse par IA" pour créer des groupes de travail pertinents.`
+              : "Aucun objectif actif à analyser pour le moment. Ajoutez des objectifs aux PPI de vos élèves."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!loading && analysisDone && objectiveGroups.length === 0 && (
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              Aucun objectif commun trouvé parmi les élèves actifs pour le moment.
+              L'analyse IA n'a pas pu former de groupes. Vérifiez que des objectifs sont bien définis pour les élèves.
             </p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      )}
+
+      {!loading && objectiveGroups.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {objectiveGroups.map((group) => (
-            <Card key={group.objectiveTitle}>
+            <Card key={group.groupTitle}>
               <CardHeader>
-                <CardTitle className="text-lg">{group.objectiveTitle}</CardTitle>
+                <CardTitle className="text-lg">{group.groupTitle}</CardTitle>
                 <CardDescription>
-                  {group.students.length} élève(s) travaillent sur cet objectif.
+                  <span className="font-semibold">Justification :</span> {group.rationale}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -101,8 +124,11 @@ export default function PilotagePage() {
                                 {student.name}
                             </Link>
                         </div>
+                         <p className="text-sm text-muted-foreground mt-2 pl-1">
+                            <span className="font-semibold">Objectif :</span> {student.objectiveTitle}
+                         </p>
                         {student.deadline && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 ml-1">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 pl-1">
                                 <Calendar className="h-4 w-4" />
                                 <span>Échéance: {student.deadline}</span>
                             </div>
