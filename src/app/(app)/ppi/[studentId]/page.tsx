@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cloneDeep } from 'lodash';
 import { SavePpiButton } from './save-ppi-button';
+import { GenerateProseButton } from './generate-prose-button';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)
@@ -192,6 +193,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           description="Profil global de l'élève et synthèse de son projet."
         >
           <div className="flex items-center gap-3">
+            <GenerateProseButton student={student} />
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
                Importer des données
             </Button>

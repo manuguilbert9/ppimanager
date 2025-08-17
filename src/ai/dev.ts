@@ -4,3 +4,4 @@ import './flows/suggest-adaptations-flow';
 import './flows/suggest-needs-flow';
 import './flows/group-objectives-flow';
 import './flows/ask-expert-flow';
+import './flows/generate-student-prose-flow';
