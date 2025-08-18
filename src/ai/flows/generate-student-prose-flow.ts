@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { Strengths, Difficulties, Needs, Objective, GlobalProfile } from '@/types';
 
 const GenerateStudentProseInputSchema = z.object({
     firstName: z.string(),
@@ -94,13 +93,12 @@ const generateStudentProseFlow = ai.defineFlow(
         if (!content || (Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
             return;
         }
-        studentDataString += `${title.toUpperCase()}\n`;
+        studentDataString += `\n\n${title.toUpperCase()}\n`;
         if (Array.isArray(content)) {
             studentDataString += content.map(item => `- ${item}`).join('\n');
         } else {
             studentDataString += `${content}\n`;
         }
-        studentDataString += '\n\n';
     };
     
     // Strengths
@@ -133,6 +131,8 @@ const generateStudentProseFlow = ai.defineFlow(
         if (input.needs.pedagogicalAccommodations) addSection("Aménagements pédagogiques", input.needs.pedagogicalAccommodations);
         if (input.needs.humanAssistance) addSection("Aide humaine", input.needs.humanAssistance);
         if (input.needs.compensatoryTools) addSection("Outils de compensation", input.needs.compensatoryTools);
+        if (input.needs.specialEducationalApproach) addSection("Approche éducative particulière", input.needs.specialEducationalApproach);
+        if (input.needs.complementaryCare) addSection("Soins et rééducations complémentaires", input.needs.complementaryCare);
     }
 
     const { output } = await prompt({
