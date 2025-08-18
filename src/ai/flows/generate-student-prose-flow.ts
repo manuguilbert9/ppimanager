@@ -72,7 +72,7 @@ const prompt = ai.definePrompt({
     {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{{strengths.socialSkills}}}{{/if}}
     {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{{strengths.exploitableInterests}}}{{/if}}
     {{/if}}
-    
+
     {{#if globalProfile}}
     COMPÉTENCES TRANSVERSALES (issues du profil global) :
     {{#if globalProfile.communicationSkills}}- Compétences en communication : {{{globalProfile.communicationSkills}}}{{/if}}
