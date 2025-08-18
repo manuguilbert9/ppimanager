@@ -55,14 +55,14 @@ const getAge = (birthDate?: string): number | null => {
     return isNaN(age) ? null : age;
 };
 
-const parseDate = (dateStr?: string): Date | null => {
+const parseDate = (dateStr?: string): number | null => {
     if (!dateStr) return null;
     const parts = dateStr.split('/');
     if (parts.length !== 3) return null;
     const [day, month, year] = parts.map(p => parseInt(p, 10));
     // Note: month is 0-indexed in JS Date
     const date = new Date(year, month - 1, day);
-    return isNaN(date.getTime()) ? null : date;
+    return isNaN(date.getTime()) ? null : date.getTime();
 };
 
 export default function StudentsPage() {
@@ -101,10 +101,10 @@ export default function StudentsPage() {
             sortKeys.push(student => getAge(student.birthDate));
             break;
         case 'mdphNotificationExpiration':
-            sortKeys.push(student => parseDate(student.mdphNotificationExpiration)?.getTime() || 0);
+            sortKeys.push(student => parseDate(student.mdphNotificationExpiration) || 0);
             break;
         case 'lastUpdate':
-            sortKeys.push(student => parseDate(student.lastUpdate)?.getTime() || 0);
+            sortKeys.push('lastUpdateTimestamp');
             break;
         default:
             sortKeys.push(sortConfig.key);

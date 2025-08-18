@@ -28,7 +28,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         className: classe?.name ?? 'N/A',
         teacherName: classe?.teacherName ?? 'N/A',
         lastUpdate: lastUpdateDate.toLocaleDateString('fr-FR'),
-        lastUpdateDate: lastUpdateDate, // Keep date object for sorting
+        lastUpdateTimestamp: lastUpdateDate.getTime(), // Use serializable timestamp
         ppiStatus: data.ppiStatus || 'draft',
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
         globalProfile: data.globalProfile || {},
@@ -66,7 +66,7 @@ export async function getStudents(): Promise<Student[]> {
 
             // If no active student, it means all are archived. In that case, show the most recent one.
             if (!studentToShow) {
-                studentToShow = orderBy(studentGroup, ['lastUpdateDate'], ['desc'])[0];
+                studentToShow = orderBy(studentGroup, ['lastUpdateTimestamp'], ['desc'])[0];
             }
             
             if (studentToShow) {
@@ -89,7 +89,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives' | 'lastUpdateTimestamp'>) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
@@ -109,7 +109,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'te
     }
 }
 
-export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'avatarUrl'>>) {
+export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'avatarUrl' | 'lastUpdateTimestamp'>>) {
     try {
         const studentRef = doc(db, 'students', id);
         await updateDoc(studentRef, {
@@ -162,7 +162,7 @@ export async function duplicatePpi(studentId: string) {
 
         // Create new student record for the new PPI
         const newStudentRef = doc(collection(db, 'students'));
-        const { id, lastUpdateDate, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
+        const { id, lastUpdateTimestamp, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
         batch.set(newStudentRef, {
             ...dataToSet,
             lastUpdate: serverTimestamp(),

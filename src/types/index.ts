@@ -79,7 +79,7 @@ export type Student = {
   className: string; // To avoid joins on list pages
   teacherName: string; // To avoid joins on list pages
   lastUpdate: string;
-  lastUpdateDate?: Date; // For sorting purposes, not stored in Firestore
+  lastUpdateTimestamp?: number; // For sorting purposes, not stored in Firestore
   ppiStatus: PpiStatus;
   avatarUrl: string;
   globalProfile?: GlobalProfile;
