@@ -66,24 +66,24 @@ const prompt = ai.definePrompt({
     Voici les informations sur l'élève, prénommé {{{firstName}}} :
 
     POINTS FORTS (ce sur quoi on peut s'appuyer) :
-    - Compétences académiques : {{{strengths.academicSkills}}}
-    - Forces cognitives et comportementales : {{{strengths.cognitiveStrengths}}}
-    - Habiletés sociales et communicationnelles : {{{strengths.socialSkills}}}
-    - Intérêts exploitables : {{{strengths.exploitableInterests}}}
-    - Compétences en communication : {{{globalProfile.communicationSkills}}}
-    - Compétences motrices : {{{globalProfile.motorSkills}}}
-    - Autonomie quotidienne : {{{globalProfile.dailyLifeAutonomy}}}
+    {{#if strengths.academicSkills}}- Compétences académiques : {{{strengths.academicSkills}}}{{/if}}
+    {{#if strengths.cognitiveStrengths}}- Forces cognitives et comportementales : {{{strengths.cognitiveStrengths}}}{{/if}}
+    {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{{strengths.socialSkills}}}{{/if}}
+    {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{{strengths.exploitableInterests}}}{{/if}}
+    {{#if globalProfile.communicationSkills}}- Compétences en communication : {{{globalProfile.communicationSkills}}}{{/if}}
+    {{#if globalProfile.motorSkills}}- Compétences motrices : {{{globalProfile.motorSkills}}}{{/if}}
+    {{#if globalProfile.dailyLifeAutonomy}}- Autonomie quotidienne : {{{globalProfile.dailyLifeAutonomy}}}{{/if}}
 
     DIFFICULTÉS (les défis à relever) :
-    - Cognitives : {{{difficulties.cognitiveDifficulties}}}
-    - Scolaires : {{{difficulties.schoolDifficulties}}}
-    - Motrices : {{{difficulties.motorDifficulties}}}
-    - Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}
+    {{#if difficulties.cognitiveDifficulties}}- Cognitives : {{{difficulties.cognitiveDifficulties}}}{{/if}}
+    {{#if difficulties.schoolDifficulties}}- Scolaires : {{{difficulties.schoolDifficulties}}}{{/if}}
+    {{#if difficulties.motorDifficulties}}- Motrices : {{{difficulties.motorDifficulties}}}{{/if}}
+    {{#if difficulties.socioEmotionalDifficulties}}- Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}{{/if}}
 
     BESOINS (les aménagements et aides nécessaires) :
-    - Aménagements pédagogiques : {{{needs.pedagogicalAccommodations}}}
-    - Aide humaine : {{{needs.humanAssistance}}}
-    - Outils de compensation : {{{needs.compensatoryTools}}}
+    {{#if needs.pedagogicalAccommodations}}- Aménagements pédagogiques : {{{needs.pedagogicalAccommodations}}}{{/if}}
+    {{#if needs.humanAssistance}}- Aide humaine : {{{needs.humanAssistance}}}{{/if}}
+    {{#if needs.compensatoryTools}}- Outils de compensation : {{{needs.compensatoryTools}}}{{/if}}
 
     INSTRUCTIONS DE RÉDACTION :
     1.  Commence par une introduction présentant brièvement {{{firstName}}}.
@@ -107,3 +107,4 @@ const generateStudentProseFlow = ai.defineFlow(
     return output!;
   }
 );
+
