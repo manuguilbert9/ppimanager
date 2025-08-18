@@ -67,33 +67,33 @@ const prompt = ai.definePrompt({
 
     {{#if strengths}}
     POINTS FORTS (ce sur quoi on peut s'appuyer) :
-    {{#if strengths.academicSkills}}- Compétences académiques : {{{strengths.academicSkills}}}{{/if}}
-    {{#if strengths.cognitiveStrengths}}- Forces cognitives et comportementales : {{{strengths.cognitiveStrengths}}}{{/if}}
-    {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{{strengths.socialSkills}}}{{/if}}
-    {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{{strengths.exploitableInterests}}}{{/if}}
+    {{#if strengths.academicSkills}}- Compétences académiques : {{strengths.academicSkills}}{{/if}}
+    {{#if strengths.cognitiveStrengths}}- Forces cognitives et comportementales : {{strengths.cognitiveStrengths}}{{/if}}
+    {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{strengths.socialSkills}}{{/if}}
+    {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{strengths.exploitableInterests}}{{/if}}
     {{/if}}
 
     {{#if globalProfile}}
     COMPÉTENCES TRANSVERSALES (issues du profil global) :
-    {{#if globalProfile.communicationSkills}}- Compétences en communication : {{{globalProfile.communicationSkills}}}{{/if}}
-    {{#if globalProfile.motorSkills}}- Compétences motrices : {{{globalProfile.motorSkills}}}{{/if}}
-    {{#if globalProfile.dailyLifeAutonomy}}- Autonomie quotidienne : {{{globalProfile.dailyLifeAutonomy}}}{{/if}}
+    {{#if globalProfile.communicationSkills}}- Compétences en communication : {{globalProfile.communicationSkills}}{{/if}}
+    {{#if globalProfile.motorSkills}}- Compétences motrices : {{globalProfile.motorSkills}}{{/if}}
+    {{#if globalProfile.dailyLifeAutonomy}}- Autonomie quotidienne : {{globalProfile.dailyLifeAutonomy}}{{/if}}
     {{/if}}
 
     {{#if difficulties}}
     DIFFICULTÉS (les défis à relever) :
-    {{#if difficulties.cognitiveDifficulties}}- Cognitives : {{{difficulties.cognitiveDifficulties}}}{{/if}}
-    {{#if difficulties.schoolDifficulties}}- Scolaires : {{{difficulties.schoolDifficulties}}}{{/if}}
-    {{#if difficulties.motorDifficulties}}- Motrices : {{{difficulties.motorDifficulties}}}{{/if}}
-    {{#if difficulties.socioEmotionalDifficulties}}- Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}{{/if}}
-    {{#if difficulties.disabilityConstraints}}- Contraintes du handicap : {{{difficulties.disabilityConstraints}}}{{/if}}
+    {{#if difficulties.cognitiveDifficulties}}- Cognitives : {{difficulties.cognitiveDifficulties}}{{/if}}
+    {{#if difficulties.schoolDifficulties}}- Scolaires : {{difficulties.schoolDifficulties}}{{/if}}
+    {{#if difficulties.motorDifficulties}}- Motrices : {{difficulties.motorDifficulties}}{{/if}}
+    {{#if difficulties.socioEmotionalDifficulties}}- Socio-émotionnelles : {{difficulties.socioEmotionalDifficulties}}{{/if}}
+    {{#if difficulties.disabilityConstraints}}- Contraintes du handicap : {{difficulties.disabilityConstraints}}{{/if}}
     {{/if}}
 
     {{#if needs}}
     BESOINS (les aménagements et aides nécessaires) :
-    {{#if needs.pedagogicalAccommodations}}- Aménagements pédagogiques : {{{needs.pedagogicalAccommodations}}}{{/if}}
-    {{#if needs.humanAssistance}}- Aide humaine : {{{needs.humanAssistance}}}{{/if}}
-    {{#if needs.compensatoryTools}}- Outils de compensation : {{{needs.compensatoryTools}}}{{/if}}
+    {{#if needs.pedagogicalAccommodations}}- Aménagements pédagogiques : {{needs.pedagogicalAccommodations}}{{/if}}
+    {{#if needs.humanAssistance}}- Aide humaine : {{needs.humanAssistance}}{{/if}}
+    {{#if needs.compensatoryTools}}- Outils de compensation : {{needs.compensatoryTools}}{{/if}}
     {{/if}}
 
     INSTRUCTIONS DE RÉDACTION :
