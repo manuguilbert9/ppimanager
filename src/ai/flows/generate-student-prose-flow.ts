@@ -70,6 +70,8 @@ const prompt = ai.definePrompt({
     {{#if strengths.cognitiveStrengths}}- Forces cognitives et comportementales : {{{strengths.cognitiveStrengths}}}{{/if}}
     {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{{strengths.socialSkills}}}{{/if}}
     {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{{strengths.exploitableInterests}}}{{/if}}
+    
+    COMPÉTENCES TRANSVERSALES (issues du profil global) :
     {{#if globalProfile.communicationSkills}}- Compétences en communication : {{{globalProfile.communicationSkills}}}{{/if}}
     {{#if globalProfile.motorSkills}}- Compétences motrices : {{{globalProfile.motorSkills}}}{{/if}}
     {{#if globalProfile.dailyLifeAutonomy}}- Autonomie quotidienne : {{{globalProfile.dailyLifeAutonomy}}}{{/if}}
