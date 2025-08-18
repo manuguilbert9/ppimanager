@@ -3,16 +3,19 @@
 
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import type { Student } from '@/types';
-import { generateStudentProse } from '@/ai/flows/generate-student-prose-flow';
+import { generateStudentProse, type GenerateStudentProseInput } from '@/ai/flows/generate-student-prose-flow';
 
 export async function generateProseDocx(student: Student): Promise<Blob> {
-    const proseResult = await generateStudentProse({
+    // Secure the data before sending it to the AI flow
+    const safeStudentData: GenerateStudentProseInput = {
         firstName: student.firstName,
-        strengths: student.strengths,
-        difficulties: student.difficulties,
-        needs: student.needs,
-        globalProfile: student.globalProfile,
-    });
+        strengths: student.strengths || {},
+        difficulties: student.difficulties || {},
+        needs: student.needs || {},
+        globalProfile: student.globalProfile || {},
+    };
+    
+    const proseResult = await generateStudentProse(safeStudentData);
 
     const proseParagraphs = proseResult.prose.split('\n').map(text => new Paragraph({
         text,
