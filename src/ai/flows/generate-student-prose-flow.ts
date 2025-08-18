@@ -54,7 +54,10 @@ export async function generateStudentProse(input: GenerateStudentProseInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'generateStudentProsePrompt',
-  input: { schema: GenerateStudentProseInputSchema },
+  input: { schema: z.object({
+    firstName: z.string(),
+    studentData: z.string(),
+  }) },
   output: { schema: GenerateStudentProseOutputSchema },
   prompt: `
     Tu es un expert en ingénierie pédagogique et un rédacteur spécialisé dans le domaine du handicap.
@@ -63,38 +66,8 @@ const prompt = ai.definePrompt({
     Le texte doit être rédigé dans un style professionnel, bienveillant et objectif. Il doit être fluide, cohérent et éviter le simple listage des points.
     Il doit donner une vision globale et nuancée de l'élève, en liant les différentes informations entre elles.
 
-    Voici les informations sur l'élève, prénommé {{{firstName}}} :
-
-    {{#if strengths}}
-    POINTS FORTS (ce sur quoi on peut s'appuyer) :
-    {{#if strengths.academicSkills}}- Compétences académiques : {{strengths.academicSkills}}{{/if}}
-    {{#if strengths.cognitiveStrengths}}- Forces cognitives et comportementales : {{strengths.cognitiveStrengths}}{{/if}}
-    {{#if strengths.socialSkills}}- Habiletés sociales et communicationnelles : {{strengths.socialSkills}}{{/if}}
-    {{#if strengths.exploitableInterests}}- Intérêts exploitables : {{strengths.exploitableInterests}}{{/if}}
-    {{/if}}
-
-    {{#if globalProfile}}
-    COMPÉTENCES TRANSVERSALES (issues du profil global) :
-    {{#if globalProfile.communicationSkills}}- Compétences en communication : {{globalProfile.communicationSkills}}{{/if}}
-    {{#if globalProfile.motorSkills}}- Compétences motrices : {{globalProfile.motorSkills}}{{/if}}
-    {{#if globalProfile.dailyLifeAutonomy}}- Autonomie quotidienne : {{globalProfile.dailyLifeAutonomy}}{{/if}}
-    {{/if}}
-
-    {{#if difficulties}}
-    DIFFICULTÉS (les défis à relever) :
-    {{#if difficulties.cognitiveDifficulties}}- Cognitives : {{difficulties.cognitiveDifficulties}}{{/if}}
-    {{#if difficulties.schoolDifficulties}}- Scolaires : {{difficulties.schoolDifficulties}}{{/if}}
-    {{#if difficulties.motorDifficulties}}- Motrices : {{difficulties.motorDifficulties}}{{/if}}
-    {{#if difficulties.socioEmotionalDifficulties}}- Socio-émotionnelles : {{difficulties.socioEmotionalDifficulties}}{{/if}}
-    {{#if difficulties.disabilityConstraints}}- Contraintes du handicap : {{difficulties.disabilityConstraints}}{{/if}}
-    {{/if}}
-
-    {{#if needs}}
-    BESOINS (les aménagements et aides nécessaires) :
-    {{#if needs.pedagogicalAccommodations}}- Aménagements pédagogiques : {{needs.pedagogicalAccommodations}}{{/if}}
-    {{#if needs.humanAssistance}}- Aide humaine : {{needs.humanAssistance}}{{/if}}
-    {{#if needs.compensatoryTools}}- Outils de compensation : {{needs.compensatoryTools}}{{/if}}
-    {{/if}}
+    Voici les informations brutes sur l'élève, prénommé {{{firstName}}} :
+    {{{studentData}}}
 
     INSTRUCTIONS DE RÉDACTION :
     1.  Commence par une introduction présentant brièvement {{{firstName}}}.
@@ -114,7 +87,58 @@ const generateStudentProseFlow = ai.defineFlow(
     outputSchema: GenerateStudentProseOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+
+    let studentDataString = "";
+
+    const addSection = (title: string, content: string[] | string | undefined) => {
+        if (!content || (Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
+            return;
+        }
+        studentDataString += `${title.toUpperCase()}\n`;
+        if (Array.isArray(content)) {
+            studentDataString += content.map(item => `- ${item}`).join('\n');
+        } else {
+            studentDataString += `${content}\n`;
+        }
+        studentDataString += '\n\n';
+    };
+    
+    // Strengths
+    if (input.strengths) {
+        addSection("Compétences académiques", input.strengths.academicSkills);
+        addSection("Forces cognitives et comportementales", input.strengths.cognitiveStrengths);
+        addSection("Habiletés sociales et communicationnelles", input.strengths.socialSkills);
+        addSection("Intérêts exploitables", input.strengths.exploitableInterests);
+    }
+
+    // Global Profile
+    if (input.globalProfile) {
+        addSection("Compétences en communication (profil global)", input.globalProfile.communicationSkills);
+        addSection("Compétences motrices (profil global)", input.globalProfile.motorSkills);
+        addSection("Autonomie quotidienne (profil global)", input.globalProfile.dailyLifeAutonomy);
+        addSection("Loisirs (profil global)", input.globalProfile.hobbies);
+    }
+    
+    // Difficulties
+    if (input.difficulties) {
+        addSection("Difficultés cognitives", input.difficulties.cognitiveDifficulties);
+        addSection("Difficultés scolaires", input.difficulties.schoolDifficulties);
+        addSection("Difficultés motrices", input.difficulties.motorDifficulties);
+        addSection("Difficultés socio-émotionnelles", input.difficulties.socioEmotionalDifficulties);
+        addSection("Contraintes du handicap", input.difficulties.disabilityConstraints);
+    }
+
+    // Needs
+    if (input.needs) {
+        addSection("Aménagements pédagogiques", input.needs.pedagogicalAccommodations);
+        addSection("Aide humaine", input.needs.humanAssistance);
+        addSection("Outils de compensation", input.needs.compensatoryTools);
+    }
+
+    const { output } = await prompt({
+        firstName: input.firstName,
+        studentData: studentDataString,
+    });
     return output!;
   }
 );
