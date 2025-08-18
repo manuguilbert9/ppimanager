@@ -91,9 +91,7 @@ const generateStudentProseFlow = ai.defineFlow(
     let studentDataString = "";
 
     const addSection = (title: string, content: string[] | string | undefined) => {
-        if (!content) return;
-        
-        if ((Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
+        if (!content || (Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
             return;
         }
         studentDataString += `${title.toUpperCase()}\n`;
@@ -107,34 +105,34 @@ const generateStudentProseFlow = ai.defineFlow(
     
     // Strengths
     if (input.strengths) {
-        addSection("Compétences académiques", input.strengths.academicSkills);
-        addSection("Forces cognitives et comportementales", input.strengths.cognitiveStrengths);
-        addSection("Habiletés sociales et communicationnelles", input.strengths.socialSkills);
-        addSection("Intérêts exploitables", input.strengths.exploitableInterests);
+        if (input.strengths.academicSkills) addSection("Compétences académiques", input.strengths.academicSkills);
+        if (input.strengths.cognitiveStrengths) addSection("Forces cognitives et comportementales", input.strengths.cognitiveStrengths);
+        if (input.strengths.socialSkills) addSection("Habiletés sociales et communicationnelles", input.strengths.socialSkills);
+        if (input.strengths.exploitableInterests) addSection("Intérêts exploitables", input.strengths.exploitableInterests);
     }
 
     // Global Profile
     if (input.globalProfile) {
-        addSection("Compétences en communication (profil global)", input.globalProfile.communicationSkills);
-        addSection("Compétences motrices (profil global)", input.globalProfile.motorSkills);
-        addSection("Autonomie quotidienne (profil global)", input.globalProfile.dailyLifeAutonomy);
-        addSection("Loisirs (profil global)", input.globalProfile.hobbies);
+        if (input.globalProfile.communicationSkills) addSection("Compétences en communication (profil global)", input.globalProfile.communicationSkills);
+        if (input.globalProfile.motorSkills) addSection("Compétences motrices (profil global)", input.globalProfile.motorSkills);
+        if (input.globalProfile.dailyLifeAutonomy) addSection("Autonomie quotidienne (profil global)", input.globalProfile.dailyLifeAutonomy);
+        if (input.globalProfile.hobbies) addSection("Loisirs (profil global)", input.globalProfile.hobbies);
     }
     
     // Difficulties
     if (input.difficulties) {
-        addSection("Difficultés cognitives", input.difficulties.cognitiveDifficulties);
-        addSection("Difficultés scolaires", input.difficulties.schoolDifficulties);
-        addSection("Difficultés motrices", input.difficulties.motorDifficulties);
-        addSection("Difficultés socio-émotionnelles", input.difficulties.socioEmotionalDifficulties);
-        addSection("Contraintes du handicap", input.difficulties.disabilityConstraints);
+        if (input.difficulties.cognitiveDifficulties) addSection("Difficultés cognitives", input.difficulties.cognitiveDifficulties);
+        if (input.difficulties.schoolDifficulties) addSection("Difficultés scolaires", input.difficulties.schoolDifficulties);
+        if (input.difficulties.motorDifficulties) addSection("Difficultés motrices", input.difficulties.motorDifficulties);
+        if (input.difficulties.socioEmotionalDifficulties) addSection("Difficultés socio-émotionnelles", input.difficulties.socioEmotionalDifficulties);
+        if (input.difficulties.disabilityConstraints) addSection("Contraintes du handicap", input.difficulties.disabilityConstraints);
     }
 
     // Needs
     if (input.needs) {
-        addSection("Aménagements pédagogiques", input.needs.pedagogicalAccommodations);
-        addSection("Aide humaine", input.needs.humanAssistance);
-        addSection("Outils de compensation", input.needs.compensatoryTools);
+        if (input.needs.pedagogicalAccommodations) addSection("Aménagements pédagogiques", input.needs.pedagogicalAccommodations);
+        if (input.needs.humanAssistance) addSection("Aide humaine", input.needs.humanAssistance);
+        if (input.needs.compensatoryTools) addSection("Outils de compensation", input.needs.compensatoryTools);
     }
 
     const { output } = await prompt({
