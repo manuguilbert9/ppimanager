@@ -91,7 +91,9 @@ const generateStudentProseFlow = ai.defineFlow(
     let studentDataString = "";
 
     const addSection = (title: string, content: string[] | string | undefined) => {
-        if (!content || (Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
+        if (!content) return;
+        
+        if ((Array.isArray(content) && content.length === 0) || (typeof content === 'string' && content.trim() === '')) {
             return;
         }
         studentDataString += `${title.toUpperCase()}\n`;
