@@ -117,16 +117,24 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
     // Replace family contacts if provided
     if (data.familyContacts && data.familyContacts.length > 0) {
-      updatedStudentData.familyContacts = data.familyContacts.map(c => ({
-        id: Math.random().toString(36).substring(7),
-        title: c.title ?? "",
-        name: c.name ?? "",
-        phone: c.phone,
-        email: c.email,
-        street: c.street,
-        postalCode: c.postalCode,
-        city: c.city,
-      }));
+      updatedStudentData.familyContacts = data.familyContacts.map(c => {
+        let cleanEmail = c.email || "";
+        const emailMatch = cleanEmail.match(/\[(.*?)\]/);
+        if (emailMatch) {
+            cleanEmail = emailMatch[1];
+        }
+
+        return {
+            id: Math.random().toString(36).substring(7),
+            title: c.title ?? "",
+            name: c.name ?? "",
+            phone: c.phone,
+            email: cleanEmail,
+            street: c.street,
+            postalCode: c.postalCode,
+            city: c.city,
+        };
+      });
     }
 
     // Merge nested objects
@@ -143,6 +151,8 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     try {
         await updateStudent(student.id, updatedStudentData);
         setStudent(updatedStudentData);
+        // We also need to reset the form with the newly imported data
+        methods.reset(updatedStudentData);
         toast({
           title: 'Importation réussie',
           description: 'Les informations ont été mises à jour dans le PPI.',
@@ -193,7 +203,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           description="Profil global de l'élève et synthèse de son projet."
         >
           <div className="flex items-center gap-3">
-            <GenerateProseButton student={student} />
+            <GenerateProseButton student={methods.getValues()} />
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
                Importer des données
             </Button>

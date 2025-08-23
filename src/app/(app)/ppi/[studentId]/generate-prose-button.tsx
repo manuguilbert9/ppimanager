@@ -8,14 +8,14 @@ import { generateProseDocx } from '@/lib/prose-docx-exporter';
 import { FileText, Loader2 } from 'lucide-react';
 import type { Student } from '@/types';
 
-export function GenerateProseButton({ student }: { student: Student }) {
+export function GenerateProseButton({ student }: { student: Partial<Student> }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const blob = await generateProseDocx(student);
+      const blob = await generateProseDocx(student as Student);
 
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
