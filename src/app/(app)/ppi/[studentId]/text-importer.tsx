@@ -40,37 +40,47 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
       return;
     }
 
-    // 1. Clean up markdown code blocks
-    if (textToParse.startsWith('```json')) {
-      textToParse = textToParse.substring(7);
-    } else if (textToParse.startsWith('```')) {
-      textToParse = textToParse.substring(3);
-    }
-    if (textToParse.endsWith('```')) {
-      textToParse = textToParse.slice(0, -3);
-    }
-    textToParse = textToParse.trim();
-
-    // 2. Fix for double-encoded JSON strings (e.g., \" instead of ")
-    textToParse = textToParse.replace(/\\"/g, '"');
-    
-    // 3. Remove illegal control characters (like newlines) inside string literals
-    textToParse = textToParse.replace(/[\x00-\x1F\x7F]/g, (char) => {
-        // Allow tab and newline to be escaped, remove others.
-        if (char === '\n') return '\\n';
-        if (char === '\t') return '\\t';
-        return '';
-    });
-
-
-    setIsLoading(true);
+    // Comprehensive cleaning process
     try {
+      // Step 1: Remove potential Byte Order Mark (BOM) at the start of the string.
+      if (textToParse.charCodeAt(0) === 0xFEFF) {
+          textToParse = textToParse.substring(1);
+      }
+
+      // Step 2: Clean up markdown code blocks
+      if (textToParse.startsWith('```json')) {
+        textToParse = textToParse.substring(7);
+      } else if (textToParse.startsWith('```')) {
+        textToParse = textToParse.substring(3);
+      }
+      if (textToParse.endsWith('```')) {
+        textToParse = textToParse.slice(0, -3);
+      }
+      textToParse = textToParse.trim();
+
+      // Step 3: Fix for double-encoded JSON strings (e.g., \" instead of ")
+      textToParse = textToParse.replace(/\\"/g, '"');
+      
+      // Step 4: Remove illegal control characters (like newlines) inside string literals
+      // This regex finds control characters (U+0000 to U+001F) that are not part of a valid escape sequence.
+      textToParse = textToParse.replace(/[\x00-\x1F\x7F]/g, (char) => {
+          switch (char) {
+              case '\n': return '\\n';
+              case '\t': return '\\t';
+              case '\r': return '\\r';
+              case '\b': return '\\b';
+              case '\f': return '\\f';
+              default: return '';
+          }
+      });
+
+      setIsLoading(true);
       const data: ExtractedData = JSON.parse(textToParse);
       onImport(data);
       onOpenChange(false);
       setJsonText('');
     } catch (error: any) {
-      console.error(error);
+      console.error("JSON Parsing Error:", error);
       toast({
         variant: 'destructive',
         title: "Erreur lors de l'importation du JSON",
