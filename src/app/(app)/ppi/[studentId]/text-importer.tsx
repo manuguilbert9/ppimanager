@@ -43,8 +43,7 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
     // Automatically clean up markdown code blocks if present
     if (textToParse.startsWith('```json')) {
       textToParse = textToParse.substring(7);
-    }
-    if (textToParse.startsWith('```')) {
+    } else if (textToParse.startsWith('```')) {
       textToParse = textToParse.substring(3);
     }
     if (textToParse.endsWith('```')) {
@@ -59,12 +58,13 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
       onImport(data);
       onOpenChange(false);
       setJsonText('');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: "Erreur lors de l'importation",
-        description: "Le texte fourni n'est pas un JSON valide. Veuillez vérifier le format et réessayez.",
+        title: "Erreur lors de l'importation du JSON",
+        description: `Le format est invalide. Erreur : ${error.message}`,
+        duration: 9000,
       });
     } finally {
       setIsLoading(false);
