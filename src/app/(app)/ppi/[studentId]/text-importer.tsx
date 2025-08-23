@@ -40,7 +40,7 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
       return;
     }
 
-    // Automatically clean up markdown code blocks if present
+    // 1. Clean up markdown code blocks
     if (textToParse.startsWith('```json')) {
       textToParse = textToParse.substring(7);
     } else if (textToParse.startsWith('```')) {
@@ -51,8 +51,16 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
     }
     textToParse = textToParse.trim();
 
-    // Fix for double-encoded JSON strings (e.g., \" instead of ")
+    // 2. Fix for double-encoded JSON strings (e.g., \" instead of ")
     textToParse = textToParse.replace(/\\"/g, '"');
+    
+    // 3. Remove illegal control characters (like newlines) inside string literals
+    textToParse = textToParse.replace(/[\x00-\x1F\x7F]/g, (char) => {
+        // Allow tab and newline to be escaped, remove others.
+        if (char === '\n') return '\\n';
+        if (char === '\t') return '\\t';
+        return '';
+    });
 
 
     setIsLoading(true);
