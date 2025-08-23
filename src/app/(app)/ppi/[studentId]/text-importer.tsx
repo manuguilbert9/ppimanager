@@ -17,6 +17,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { ExtractedData } from '@/types/schemas';
+import { extractDataFromText } from '@/ai/flows/extract-data-flow';
 
 interface TextImporterProps {
   open: boolean;
@@ -25,66 +26,46 @@ interface TextImporterProps {
 }
 
 export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps) {
-  const [jsonText, setJsonText] = useState('');
+  const [textToAnalyze, setTextToAnalyze] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleImportJson = () => {
-    let textToParse = jsonText.trim();
-    if (!textToParse) {
+  const handleImport = async () => {
+    if (!textToAnalyze.trim()) {
       toast({
         variant: 'destructive',
         title: 'Aucun texte fourni',
-        description: 'Veuillez coller le JSON à importer.',
+        description: 'Veuillez coller le texte à analyser.',
       });
       return;
     }
 
-    // Comprehensive cleaning process
+    setIsLoading(true);
     try {
-      // Step 1: Remove potential Byte Order Mark (BOM) at the start of the string.
-      if (textToParse.charCodeAt(0) === 0xFEFF) {
-          textToParse = textToParse.substring(1);
-      }
-
-      // Step 2: Clean up markdown code blocks
-      if (textToParse.startsWith('```json')) {
-        textToParse = textToParse.substring(7);
-      } else if (textToParse.startsWith('```')) {
-        textToParse = textToParse.substring(3);
-      }
-      if (textToParse.endsWith('```')) {
-        textToParse = textToParse.slice(0, -3);
-      }
-      textToParse = textToParse.trim();
-
-      // Step 3: Fix for double-encoded JSON strings (e.g., \" instead of ")
-      textToParse = textToParse.replace(/\\"/g, '"');
+      const result = await extractDataFromText({ text: textToAnalyze });
       
-      // Step 4: Remove illegal control characters (like newlines) inside string literals
-      // This regex finds control characters (U+0000 to U+001F) that are not part of a valid escape sequence.
-      textToParse = textToParse.replace(/[\x00-\x1F\x7F]/g, (char) => {
-          switch (char) {
-              case '\n': return '\\n';
-              case '\t': return '\\t';
-              case '\r': return '\\r';
-              case '\b': return '\\b';
-              case '\f': return '\\f';
-              default: return '';
+      // Post-process the extracted data
+      const processedData: ExtractedData = {
+        ...result,
+        familyContacts: (result.familyContacts || []).map(contact => {
+          let cleanEmail = contact.email || "";
+          const emailMatch = cleanEmail.match(/\[(.*?)\]/);
+          if (emailMatch) {
+              cleanEmail = emailMatch[1];
           }
-      });
+          return { ...contact, email: cleanEmail };
+        })
+      };
 
-      setIsLoading(true);
-      const data: ExtractedData = JSON.parse(textToParse);
-      onImport(data);
+      onImport(processedData);
       onOpenChange(false);
-      setJsonText('');
+      setTextToAnalyze('');
     } catch (error: any) {
-      console.error("JSON Parsing Error:", error);
+      console.error("Analysis or Import Error:", error);
       toast({
         variant: 'destructive',
-        title: "Erreur lors de l'importation du JSON",
-        description: `Le format est invalide. Erreur : ${error.message}`,
+        title: "Erreur lors de l'analyse du texte",
+        description: `Une erreur est survenue. Erreur : ${error.message}`,
         duration: 9000,
       });
     } finally {
@@ -92,21 +73,19 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
     }
   };
 
-
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Importer les données depuis un JSON</DialogTitle>
+            <DialogTitle>Importer les données par analyse de texte</DialogTitle>
             <DialogDescription>
-              Collez le texte au format JSON ci-dessous. Il sera utilisé pour pré-remplir automatiquement les champs du PPI.
+              Collez un texte brut (GEVASco, compte-rendu...). L'IA l'analysera pour pré-remplir automatiquement les champs du PPI.
             </DialogDescription>
              <div className="pt-4">
                <Button asChild variant="outline">
-                    {/* MODIFICATION : Collez votre lien ici */}
                     <Link href="https://chatgpt.com/g/g-689ca48c5530819198ff061fb06f1e49-gevasco-vers-flashppi" target="_blank">
                         <ExternalLink className="mr-2 h-4 w-4" />
-                        GevaSco vers FlashPPI
+                        Utiliser le GPT GevaSco (optionnel)
                     </Link>
                 </Button>
             </div>
@@ -114,21 +93,24 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
           
           <div className="grid gap-4 py-4">
             <Textarea
-              placeholder="Collez ici le JSON..."
+              placeholder="Collez ici le texte à analyser..."
               className="min-h-[300px] font-mono text-xs"
-              value={jsonText}
-              onChange={(e) => setJsonText(e.target.value)}
+              value={textToAnalyze}
+              onChange={(e) => setTextToAnalyze(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleImportJson} disabled={isLoading}>
+            <Button onClick={handleImport} disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Importation en cours...
+                  Analyse en cours...
                 </>
               ) : (
-                'Importer le JSON'
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Analyser et Importer
+                </>
               )}
             </Button>
           </DialogFooter>
