@@ -51,6 +51,9 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
     }
     textToParse = textToParse.trim();
 
+    // Fix for double-encoded JSON strings (e.g., \" instead of ")
+    textToParse = textToParse.replace(/\\"/g, '"');
+
 
     setIsLoading(true);
     try {
