@@ -30,7 +30,8 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
   const { toast } = useToast();
 
   const handleImportJson = () => {
-    if (!jsonText.trim()) {
+    let textToParse = jsonText.trim();
+    if (!textToParse) {
       toast({
         variant: 'destructive',
         title: 'Aucun texte fourni',
@@ -39,9 +40,22 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
       return;
     }
 
+    // Automatically clean up markdown code blocks if present
+    if (textToParse.startsWith('```json')) {
+      textToParse = textToParse.substring(7);
+    }
+    if (textToParse.startsWith('```')) {
+      textToParse = textToParse.substring(3);
+    }
+    if (textToParse.endsWith('```')) {
+      textToParse = textToParse.slice(0, -3);
+    }
+    textToParse = textToParse.trim();
+
+
     setIsLoading(true);
     try {
-      const data: ExtractedData = JSON.parse(jsonText);
+      const data: ExtractedData = JSON.parse(textToParse);
       onImport(data);
       onOpenChange(false);
       setJsonText('');
