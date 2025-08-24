@@ -5,7 +5,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 // Check if the app is already initialized to prevent errors
 if (!getApps().length) {
   // When deployed to Firebase App Hosting, process.env will have the secrets.
-  // For local development, you would need a .env.local file.
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
     initializeApp({
       credential: cert({
@@ -16,8 +15,7 @@ if (!getApps().length) {
       }),
     });
   } else {
-    // This will use the default credentials in the App Hosting environment.
-    // This is the part that is currently failing.
+    // This will use the default credentials in the App Hosting environment if secrets are not set.
     console.warn("Authentification explicite non configurée, tentative avec les identifiants par défaut de l'application.");
     initializeApp();
   }
