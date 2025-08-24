@@ -16,7 +16,8 @@ if (!getApps().length) {
     });
   } else {
     // This will use the default credentials in the App Hosting environment if secrets are not set.
-    console.warn("Authentification explicite non configurée, tentative avec les identifiants par défaut de l'application.");
+    // This is the path that was failing.
+    console.warn("Explicit authentication not configured, attempting with default App credentials.");
     initializeApp();
   }
 }
