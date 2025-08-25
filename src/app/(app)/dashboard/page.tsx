@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -26,7 +26,6 @@ import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
 import type { Student, Ppi } from '@/types';
 import { getLibraryItemsCount } from '@/lib/library-repository';
-import { DebugPanel } from './debug-panel';
 
 export default function DashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -75,9 +74,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Suspense fallback={<div className="mb-4">Chargement du panneau de diagnostic...</div>}>
-        <DebugPanel />
-      </Suspense>
       <PageHeader title="Tableau de bord" description="Ravi de vous revoir, voici un résumé de vos activités." />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
