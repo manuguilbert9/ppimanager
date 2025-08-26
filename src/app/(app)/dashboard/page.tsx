@@ -94,7 +94,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ppis.filter((p: Ppi) => p.status !== 'archived').length}</div>
+            <div className="text-2xl font-bold">{ppis.filter((p: Ppi) => p.status === 'draft' || p.status === 'validated').length}</div>
             <p className="text-xs text-muted-foreground">Pour tous les élèves</p>
           </CardContent>
         </Card>
