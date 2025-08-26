@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/page-header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GlobalProfileForm, globalProfileSchema } from './global-profile';
 import { StrengthsForm, strengthsSchema } from './strengths-form';
-import { getAllLibraryItems } from '@/lib/library-repository';
+import { getAllLibraryItems, addLibraryItems } from '@/lib/library-repository';
 import { DifficultiesForm, difficultiesSchema } from './difficulties-form';
 import { NeedsForm, needsSchema } from './needs-form';
 import { ObjectivesForm, objectivesSchema } from './objectives-form';
@@ -109,6 +109,26 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
 
+    // Save all new items to the library first
+    if (data.globalProfile) {
+        if (data.globalProfile.disabilityNatures) addLibraryItems(data.globalProfile.disabilityNatures, 'disabilityNatures');
+        if (data.globalProfile.associatedDisorders) addLibraryItems(data.globalProfile.associatedDisorders, 'associatedDisorders');
+        if (data.globalProfile.medicalNeeds) addLibraryItems(data.globalProfile.medicalNeeds, 'medicalNeeds');
+        if (data.globalProfile.hobbies) addLibraryItems(data.globalProfile.hobbies, 'hobbies');
+    }
+    if (data.strengths) {
+        if (data.strengths.academicSkills) addLibraryItems(data.strengths.academicSkills, 'academicSkills');
+        if (data.strengths.cognitiveStrengths) addLibraryItems(data.strengths.cognitiveStrengths, 'cognitiveStrengths');
+        if (data.strengths.socialSkills) addLibraryItems(data.strengths.socialSkills, 'socialSkills');
+        if (data.strengths.exploitableInterests) addLibraryItems(data.strengths.exploitableInterests, 'exploitableInterests');
+    }
+    if (data.difficulties) {
+        if (data.difficulties.cognitiveDifficulties) addLibraryItems(data.difficulties.cognitiveDifficulties, 'cognitiveDifficulties');
+        if (data.difficulties.schoolDifficulties) addLibraryItems(data.difficulties.schoolDifficulties, 'schoolDifficulties');
+        if (data.difficulties.motorDifficulties) addLibraryItems(data.difficulties.motorDifficulties, 'motorDifficulties');
+        if (data.difficulties.socioEmotionalDifficulties) addLibraryItems(data.difficulties.socioEmotionalDifficulties, 'socioEmotionalDifficulties');
+    }
+    
     const updatedStudentData = cloneDeep(student);
 
     // Merge direct properties
@@ -139,16 +159,44 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         };
       });
     }
+    
+    // Helper function to merge array fields without duplicates
+    const mergeArrayField = (target: string[] | undefined, source: string[] | undefined): string[] => {
+        const targetSet = new Set(target || []);
+        (source || []).forEach(item => targetSet.add(item));
+        return Array.from(targetSet);
+    };
 
     // Merge nested objects
     if (data.globalProfile) {
-        updatedStudentData.globalProfile = { ...updatedStudentData.globalProfile, ...data.globalProfile };
+        updatedStudentData.globalProfile = { 
+            ...updatedStudentData.globalProfile,
+            ...data.globalProfile,
+            disabilityNatures: mergeArrayField(updatedStudentData.globalProfile?.disabilityNatures, data.globalProfile.disabilityNatures),
+            associatedDisorders: mergeArrayField(updatedStudentData.globalProfile?.associatedDisorders, data.globalProfile.associatedDisorders),
+            medicalNeeds: mergeArrayField(updatedStudentData.globalProfile?.medicalNeeds, data.globalProfile.medicalNeeds),
+            hobbies: mergeArrayField(updatedStudentData.globalProfile?.hobbies, data.globalProfile.hobbies),
+        };
     }
     if (data.strengths) {
-        updatedStudentData.strengths = { ...updatedStudentData.strengths, ...data.strengths };
+        updatedStudentData.strengths = { 
+            ...updatedStudentData.strengths, 
+            ...data.strengths,
+            academicSkills: mergeArrayField(updatedStudentData.strengths?.academicSkills, data.strengths.academicSkills),
+            cognitiveStrengths: mergeArrayField(updatedStudentData.strengths?.cognitiveStrengths, data.strengths.cognitiveStrengths),
+            socialSkills: mergeArrayField(updatedStudentData.strengths?.socialSkills, data.strengths.socialSkills),
+            exploitableInterests: mergeArrayField(updatedStudentData.strengths?.exploitableInterests, data.strengths.exploitableInterests),
+        };
     }
     if (data.difficulties) {
-        updatedStudentData.difficulties = { ...updatedStudentData.difficulties, ...data.difficulties };
+        updatedStudentData.difficulties = { 
+            ...updatedStudentData.difficulties, 
+            ...data.difficulties,
+            cognitiveDifficulties: mergeArrayField(updatedStudentData.difficulties?.cognitiveDifficulties, data.difficulties.cognitiveDifficulties),
+            schoolDifficulties: mergeArrayField(updatedStudentData.difficulties?.schoolDifficulties, data.difficulties.schoolDifficulties),
+            motorDifficulties: mergeArrayField(updatedStudentData.difficulties?.motorDifficulties, data.difficulties.motorDifficulties),
+            socioEmotionalDifficulties: mergeArrayField(updatedStudentData.difficulties?.socioEmotionalDifficulties, data.difficulties.socioEmotionalDifficulties),
+        };
     }
 
     try {
@@ -158,7 +206,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         methods.reset(updatedStudentData);
         toast({
           title: 'Importation réussie',
-          description: 'Les informations ont été mises à jour dans le PPI.',
+          description: 'Les informations ont été mises à jour dans le PPI et la bibliothèque.',
         });
     } catch(e) {
         console.error("Failed to update student after import", e);
@@ -272,3 +320,5 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     </FormProvider>
   );
 }
+
+    
