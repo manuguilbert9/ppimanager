@@ -62,7 +62,7 @@ export type Objective = {
   validationDate?: string;
 };
 
-export type PpiStatus = 'draft' | 'validated' | 'archived';
+export type PpiStatus = 'draft' | 'validated' | 'archived' | 'to_create';
 
 export type Student = {
   id: string;
@@ -149,3 +149,10 @@ export type Group = {
     students: GroupStudent[];
     createdAt: string;
 };
+
+export interface ImportedStudent {
+  firstName: string;
+  lastName: string;
+  birthDate?: string;
+  className: string;
+}

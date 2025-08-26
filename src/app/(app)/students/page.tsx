@@ -21,14 +21,16 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getStudents } from '@/lib/students-repository';
-import type { Student, Classe } from '@/types';
+import type { Student, Classe, PpiStatus } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
 import { orderBy } from 'lodash';
 import { SortableHeader, SortDirection } from './sortable-header';
+import { StudentImporter } from './student-importer';
+import { Button } from '@/components/ui/button';
 
 type SortKey = 'name' | 'className' | 'age' | 'ppiStatus' | 'mdphNotificationExpiration' | 'lastUpdate';
 
@@ -36,12 +38,17 @@ const getAge = (birthDate?: string): number | null => {
     if (!birthDate) return null;
     
     const parts = birthDate.split('/');
-    let formattedDate = birthDate;
-    if (parts.length === 3) {
-      formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    if (parts.length !== 3) return null;
+
+    const [day, month, year] = parts.map(p => parseInt(p, 10));
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    
+    // Simple date format validation
+    if (year < 1900 || year > new Date().getFullYear() || month < 1 || month > 12 || day < 1 || day > 31) {
+        return null;
     }
 
-    const birth = new Date(formattedDate);
+    const birth = new Date(year, month - 1, day);
     if (isNaN(birth.getTime())) {
         return null;
     }
@@ -69,6 +76,7 @@ export default function StudentsPage() {
   const { data: students, loading: loadingStudents, refresh: refreshStudents } = useDataFetching(getStudents);
   const { data: classes, loading: loadingClasses } = useDataFetching(getClasses);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
+  const [isImporterOpen, setIsImporterOpen] = useState(false);
 
   const loading = loadingStudents || loadingClasses;
 
@@ -98,7 +106,7 @@ export default function StudentsPage() {
             sortOrders.push(sortConfig.direction, 'asc', 'asc');
             break;
         case 'age':
-            sortKeys.push(student => getAge(student.birthDate));
+            sortKeys.push(student => getAge(student.birthDate) ?? -1);
             break;
         case 'mdphNotificationExpiration':
             sortKeys.push(student => parseDate(student.mdphNotificationExpiration) || 0);
@@ -114,16 +122,11 @@ export default function StudentsPage() {
     return orderBy(data, sortKeys, sortOrders);
   }, [students, sortConfig, loading]);
 
-  const statusVariant = {
-    validated: 'default',
-    draft: 'secondary',
-    archived: 'outline',
-  } as const;
-
-  const statusText = {
-    validated: 'Validé',
-    draft: 'Brouillon',
-    archived: 'Archivé',
+  const statusConfig: Record<PpiStatus, { variant: "default" | "secondary" | "outline" | "destructive", text: string }> = {
+    validated: { variant: 'default', text: 'Validé' },
+    draft: { variant: 'secondary', text: 'Brouillon' },
+    archived: { variant: 'outline', text: 'Archivé' },
+    to_create: { variant: 'destructive', text: 'À créer' },
   };
 
   return (
@@ -132,8 +135,20 @@ export default function StudentsPage() {
         title="Gestion des élèves"
         description="Gérez les profils des élèves et leurs PPI associés."
       >
-        <AddStudentForm classes={classes} onStudentAdded={refreshStudents} />
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImporterOpen(true)}>
+                <Upload className="mr-2 h-4 w-4"/>
+                Importer des élèves
+            </Button>
+            <AddStudentForm classes={classes} onStudentAdded={refreshStudents} />
+        </div>
       </PageHeader>
+      
+      <StudentImporter 
+        open={isImporterOpen} 
+        onOpenChange={setIsImporterOpen} 
+        onSuccess={refreshStudents}
+      />
 
       <Card>
         <CardHeader>
@@ -226,8 +241,8 @@ export default function StudentsPage() {
                     <TableCell>{student.className}</TableCell>
                     <TableCell>{getAge(student.birthDate) ?? 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant[student.ppiStatus]}>
-                        {statusText[student.ppiStatus]}
+                      <Badge variant={statusConfig[student.ppiStatus].variant}>
+                        {statusConfig[student.ppiStatus].text}
                       </Badge>
                     </TableCell>
                     <TableCell>{student.mdphNotificationExpiration}</TableCell>

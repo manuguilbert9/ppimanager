@@ -17,23 +17,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Loader2 } from 'lucide-react';
 
-const statusConfig = {
+const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outline' | 'destructive', text: string }> = {
   draft: {
     variant: 'secondary',
     text: 'Brouillon',
-    next: 'validated',
   },
   validated: {
     variant: 'default',
     text: 'Validé',
-    next: 'archived',
   },
   archived: {
     variant: 'outline',
     text: 'Archivé',
-    next: 'draft',
   },
-} as const;
+  to_create: {
+    variant: 'destructive',
+    text: 'À créer',
+  },
+};
+
 
 export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusChanged: () => void; }) {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -82,6 +84,14 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
   const currentStatus = ppi.status;
   const config = statusConfig[currentStatus];
 
+  if (currentStatus === 'to_create') {
+    return (
+        <Badge variant={config.variant} className="cursor-pointer">
+          {config.text}
+        </Badge>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -98,7 +108,7 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {Object.entries(statusConfig).map(([statusKey, statusValue]) => (
+        {Object.entries(statusConfig).filter(([statusKey]) => statusKey !== 'to_create').map(([statusKey, statusValue]) => (
           <DropdownMenuItem
             key={statusKey}
             disabled={currentStatus === statusKey || isUpdating}

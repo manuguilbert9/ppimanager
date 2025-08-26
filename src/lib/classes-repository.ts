@@ -1,3 +1,4 @@
+
 'use server';
 
 import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -29,10 +30,14 @@ export async function getClasse(id: string): Promise<Classe | null> {
     return classeFromDoc(docSnap);
 }
 
-export async function addClasse(classe: { name: string; teacherName: string; }) {
+export async function addClasse(classe: { name: string; teacherName: string; }): Promise<Classe> {
     try {
-        await addDoc(collection(db, 'classes'), classe);
+        const docRef = await addDoc(collection(db, 'classes'), classe);
         revalidatePath('/classes');
+        return {
+            id: docRef.id,
+            ...classe,
+        };
     } catch (error) {
         console.error("Error adding document: ", error);
         throw new Error('Failed to add classe');

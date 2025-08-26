@@ -3,9 +3,9 @@
 
 import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Student } from '@/types';
+import type { Student, ImportedStudent, Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
-import { getClasse } from './classes-repository';
+import { getClasse, addClasse } from './classes-repository';
 import { groupBy, orderBy } from 'lodash';
 
 async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
@@ -93,7 +93,7 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'te
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
-            ppiStatus: 'draft',
+            ppiStatus: student.ppiStatus || 'to_create',
             lastUpdate: serverTimestamp(),
             avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
             globalProfile: {},
@@ -176,4 +176,75 @@ export async function duplicatePpi(studentId: string) {
         console.error("Error duplicating PPI: ", error);
         throw new Error('Failed to duplicate PPI');
     }
+}
+
+const normalizeClassName = (name: string) => {
+    return name.toLowerCase().replace(/ue\s/g, '').trim();
+}
+
+export async function importStudents(students: ImportedStudent[]): Promise<{ added: number, skipped: number }> {
+    const existingStudents = await getStudents();
+    const existingClasses = await getClasses();
+
+    const existingStudentKeys = new Set(existingStudents.map(s => `${s.firstName.toLowerCase()}-${s.lastName.toLowerCase()}-${s.birthDate || ''}`));
+    const classMap = new Map<string, Classe>();
+    existingClasses.forEach(c => classMap.set(normalizeClassName(c.name), c));
+
+    let added = 0;
+    let skipped = 0;
+    
+    const batch = writeBatch(db);
+
+    for (const student of students) {
+        const studentKey = `${student.firstName.toLowerCase()}-${student.lastName.toLowerCase()}-${student.birthDate || ''}`;
+        if (existingStudentKeys.has(studentKey)) {
+            skipped++;
+            continue;
+        }
+
+        let studentClass: Classe | undefined;
+        const normalizedClassName = normalizeClassName(student.className);
+
+        if (classMap.has(normalizedClassName)) {
+            studentClass = classMap.get(normalizedClassName);
+        } else {
+            // Create new class if it doesn't exist
+            try {
+                const newClass = await addClasse({ name: student.className, teacherName: 'N/A' });
+                classMap.set(normalizedClassName, newClass);
+                studentClass = newClass;
+            } catch (error) {
+                console.error(`Failed to create class ${student.className}`, error);
+                continue; // Skip student if class creation fails
+            }
+        }
+        
+        if (!studentClass) {
+            skipped++;
+            continue;
+        }
+
+        const newStudentDocRef = doc(collection(db, 'students'));
+        batch.set(newStudentDocRef, {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            birthDate: student.birthDate || '',
+            classId: studentClass.id,
+            ppiStatus: 'to_create',
+            lastUpdate: serverTimestamp(),
+            familyContacts: [],
+            avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
+        });
+
+        added++;
+        existingStudentKeys.add(studentKey); // Add to set to prevent duplicate additions from the same import file
+    }
+
+    await batch.commit();
+
+    if (added > 0) {
+        revalidatePath('/students');
+    }
+
+    return { added, skipped };
 }
