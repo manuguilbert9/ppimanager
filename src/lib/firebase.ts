@@ -8,12 +8,12 @@ import { getAuth } from "firebase/auth";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  "projectId": "flashppi",
-  "appId": "1:555605811875:web:f6c3c7f43bd9f7bc1c9516",
-  "storageBucket": "flashppi.firebasestorage.app",
-  "apiKey": "AIzaSyB7fCSlGlVe8qNroFwCmkUqnYwXMf71UPg",
-  "authDomain": "flashppi.firebaseapp.com",
-  "messagingSenderId": "555605811875"
+  "projectId": "ppimanager",
+  "appId": "1:254869216152:web:27b247c92bcf8d5144e9ed",
+  "storageBucket": "ppimanager.firebasestorage.app",
+  "apiKey": "AIzaSyDePmita_3v9eePQYfBAIrxDfW3VvJIldI",
+  "authDomain": "ppimanager.firebaseapp.com",
+  "messagingSenderId": "254869216152"
 };
 
 // Initialize Firebase
