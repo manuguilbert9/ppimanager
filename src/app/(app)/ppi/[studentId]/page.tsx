@@ -40,6 +40,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [errorLoading, setErrorLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -50,10 +51,12 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
   useEffect(() => {
     const fetchData = async () => {
+      setErrorLoading(false);
       try {
         const studentData = await getStudent(params.studentId);
         if (!studentData) {
           notFound();
+          return;
         }
         setStudent(studentData);
         
@@ -95,7 +98,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         }
       } catch (error) {
         console.error("Failed to fetch page data:", error);
-        notFound();
+        setErrorLoading(true);
       }
     };
 
@@ -187,7 +190,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     }
   };
 
-  if (!student || classes.length === 0) {
+  if (!student || classes.length === 0 || errorLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
