@@ -56,12 +56,14 @@ export default function DashboardPage() {
     validated: 'default',
     draft: 'secondary',
     archived: 'outline',
+    to_create: 'destructive',
   } as const;
 
   const statusText = {
     validated: 'Validé',
     draft: 'Brouillon',
     archived: 'Archivé',
+    to_create: 'À créer',
   };
 
   if (loading) {
