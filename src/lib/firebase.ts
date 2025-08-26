@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = {
   "projectId": "ppimanager",
   "appId": "1:254869216152:web:27b247c92bcf8d5144e9ed",
-  "storageBucket": "ppimanager.firebasestorage.app",
+  "storageBucket": "ppimanager.appspot.com",
   "apiKey": "AIzaSyDePmita_3v9eePQYfBAIrxDfW3VvJIldI",
   "authDomain": "ppimanager.firebaseapp.com",
   "messagingSenderId": "254869216152"

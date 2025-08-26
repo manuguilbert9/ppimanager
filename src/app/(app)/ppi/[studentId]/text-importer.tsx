@@ -83,7 +83,7 @@ export function TextImporter({ open, onOpenChange, onImport }: TextImporterProps
             </DialogDescription>
              <div className="pt-4">
                <Button asChild variant="outline">
-                    <Link href="https://chatgpt.com/g/g-689ca48c5530819198ff061fb06f1e49-gevasco-vers-flashppi" target="_blank">
+                    <Link href="https://chatgpt.com/g/g-689ca48c5530819198ff061fb06f1e49-gevasco-vers-ppimanager" target="_blank">
                         <ExternalLink className="mr-2 h-4 w-4" />
                         Utiliser le GPT GevaSco (optionnel)
                     </Link>

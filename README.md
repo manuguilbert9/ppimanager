@@ -1,10 +1,10 @@
-# Application FlashPPI
+# Application PPIManager
 
 ## Description Générale
 
-FlashPPI est une application web conçue pour les enseignants, coordinateurs et professionnels de l'éducation spécialisée. Son objectif principal est de simplifier et d'optimiser la création, la gestion et le suivi des Projets Pédagogiques Individualisés (PPI) pour les élèves à besoins éducatifs particuliers.
+PPIManager est une application web conçue pour les enseignants, coordinateurs et professionnels de l'éducation spécialisée. Son objectif principal est de simplifier et d'optimiser la création, la gestion et le suivi des Projets Pédagogiques Individualisés (PPI) pour les élèves à besoins éducatifs particuliers.
 
-L'application centralise toutes les informations relatives à un élève, structure la rédaction des PPI en sections claires, et intègre des outils d'intelligence artificielle pour assister les professionnels dans leur travail. En automatisant les tâches répétitives et en fournissant des suggestions pertinentes, FlashPPI permet de se concentrer sur l'essentiel : la mise en place d'un accompagnement pédagogique de qualité, cohérent et véritablement individualisé.
+L'application centralise toutes les informations relatives à un élève, structure la rédaction des PPI en sections claires, et intègre des outils d'intelligence artificielle pour assister les professionnels dans leur travail. En automatisant les tâches répétitives et en fournissant des suggestions pertinentes, PPIManager permet de se concentrer sur l'essentiel : la mise en place d'un accompagnement pédagogique de qualité, cohérent et véritablement individualisé.
 
 ---
 

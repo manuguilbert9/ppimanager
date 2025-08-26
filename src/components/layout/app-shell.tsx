@@ -61,7 +61,7 @@ const AppLogo = () => (
         strokeLinejoin="round"
       />
     </svg>
-    <span className="text-lg font-semibold tracking-tight">FlashPPI</span>
+    <span className="text-lg font-semibold tracking-tight">PPIManager</span>
   </div>
 );
 
