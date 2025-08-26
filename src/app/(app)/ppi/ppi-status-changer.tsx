@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outline' | 'destructive', text: string }> = {
   draft: {
@@ -37,9 +38,10 @@ const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outl
 };
 
 
-export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusChanged: () => void; }) {
+export function PpiStatusChanger({ ppi, onStatusChanged, as, children }: { ppi: Ppi; onStatusChanged: () => void; as?: 'button'; children?: React.ReactNode }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleStatusChange = async (newStatus: PpiStatus) => {
     setIsUpdating(true);
@@ -69,7 +71,7 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
         title: 'Nouveau PPI créé',
         description: `Un nouveau brouillon de PPI a été créé pour ${ppi.studentName}.`,
       });
-      onStatusChanged();
+      router.push('/ppi'); // Redirect to PPI list after duplication
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -92,9 +94,12 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
     );
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+  const triggerContent = as === 'button' ? (
+    <Button variant="outline" size="lg" className="shadow-lg" disabled={isUpdating}>
+        {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Statut : {config.text}
+    </Button>
+    ) : (
         <Button
           variant="ghost"
           size="sm"
@@ -106,6 +111,13 @@ export function PpiStatusChanger({ ppi, onStatusChanged }: { ppi: Ppi; onStatusC
             {config.text}
           </Badge>
         </Button>
+  );
+
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {triggerContent}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {Object.entries(statusConfig).filter(([statusKey]) => statusKey !== 'to_create').map(([statusKey, statusValue]) => (

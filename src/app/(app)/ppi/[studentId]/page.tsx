@@ -24,7 +24,7 @@ import type { ExtractedData } from '@/types/schemas';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cloneDeep } from 'lodash';
-import { SavePpiButton } from './save-ppi-button';
+import { PpiActionsFooter } from './ppi-actions-footer';
 import { GenerateProseButton } from './generate-prose-button';
 
 const ppiFormSchema = administrativeSchema
@@ -49,61 +49,62 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     defaultValues: {},
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setErrorLoading(false);
-      try {
-        const studentData = await getStudent(params.studentId);
-        if (!studentData) {
-          notFound();
-          return;
-        }
-        setStudent(studentData);
-        
-        const libraryData = await getAllLibraryItems();
-        setLibraryItems(libraryData);
-        
-        const classesData = await getClasses();
-        setClasses(classesData);
-
-        // Reset form here after all data is fetched
-        if (studentData && classesData.length > 0) {
-            const defaultValues = {
-                // Administrative
-                firstName: studentData.firstName,
-                lastName: studentData.lastName,
-                birthDate: studentData.birthDate || '',
-                sex: studentData.sex,
-                school: studentData.school || '',
-                level: studentData.level || '',
-                mdphNotificationTitle: studentData.mdphNotificationTitle || '',
-                mdphNotificationExpiration: studentData.mdphNotificationExpiration || '',
-                familyContacts: studentData.familyContacts || [],
-                classId: studentData.classId,
-                // Global Profile
-                globalProfile: studentData.globalProfile || {},
-                // Strengths
-                strengths: studentData.strengths || {},
-                // Difficulties
-                difficulties: studentData.difficulties || {},
-                // Needs
-                needs: studentData.needs || {},
-                // Objectives
-                objectives: (studentData.objectives || []).map(o => ({
-                    ...o,
-                    id: o.id || Math.random().toString(36).substring(7),
-                })),
-            };
-            methods.reset(defaultValues);
-        }
-      } catch (error) {
-        console.error("Failed to fetch page data:", error);
-        setErrorLoading(true);
+  const fetchData = async () => {
+    setErrorLoading(false);
+    try {
+      const studentData = await getStudent(params.studentId);
+      if (!studentData) {
+        notFound();
+        return;
       }
-    };
+      setStudent(studentData);
+      
+      const libraryData = await getAllLibraryItems();
+      setLibraryItems(libraryData);
+      
+      const classesData = await getClasses();
+      setClasses(classesData);
 
+      // Reset form here after all data is fetched
+      if (studentData && classesData.length > 0) {
+          const defaultValues = {
+              // Administrative
+              firstName: studentData.firstName,
+              lastName: studentData.lastName,
+              birthDate: studentData.birthDate || '',
+              sex: studentData.sex,
+              school: studentData.school || '',
+              level: studentData.level || '',
+              mdphNotificationTitle: studentData.mdphNotificationTitle || '',
+              mdphNotificationExpiration: studentData.mdphNotificationExpiration || '',
+              familyContacts: studentData.familyContacts || [],
+              classId: studentData.classId,
+              // Global Profile
+              globalProfile: studentData.globalProfile || {},
+              // Strengths
+              strengths: studentData.strengths || {},
+              // Difficulties
+              difficulties: studentData.difficulties || {},
+              // Needs
+              needs: studentData.needs || {},
+              // Objectives
+              objectives: (studentData.objectives || []).map(o => ({
+                  ...o,
+                  id: o.id || Math.random().toString(36).substring(7),
+              })),
+              ppiStatus: studentData.ppiStatus,
+          };
+          methods.reset(defaultValues);
+      }
+    } catch (error) {
+      console.error("Failed to fetch page data:", error);
+      setErrorLoading(true);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
-  }, [params.studentId, methods]);
+  }, [params.studentId]);
 
 
   const handleImport = async (data: ExtractedData) => {
@@ -183,7 +184,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
             ...updatedStudentData.strengths, 
             ...data.strengths,
             academicSkills: mergeArrayField(updatedStudentData.strengths?.academicSkills, data.strengths.academicSkills),
-            cognitiveStrengths: mergeArrayField(updatedStudentData.strengths?.cognitiveStrengths, data.strengths.cognitiveStrengths),
+            cognitiveStrengths: mergeArrayField(updatedStudentData.strengths?.cognitiveStrengths, data.strengths.socialSkills),
             socialSkills: mergeArrayField(updatedStudentData.strengths?.socialSkills, data.strengths.socialSkills),
             exploitableInterests: mergeArrayField(updatedStudentData.strengths?.exploitableInterests, data.strengths.exploitableInterests),
         };
@@ -244,6 +245,14 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  const ppiForStatusChanger = {
+      id: student.id,
+      studentId: student.id,
+      studentName: `${student.firstName} ${student.lastName}`,
+      status: student.ppiStatus,
+      lastUpdate: student.lastUpdate,
   }
 
   return (
@@ -314,7 +323,11 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           />
         </div>
         
-        <SavePpiButton onSubmit={methods.handleSubmit(onSubmit)} />
+        <PpiActionsFooter 
+          onSubmit={methods.handleSubmit(onSubmit)} 
+          ppi={ppiForStatusChanger}
+          onStatusChange={fetchData}
+        />
 
       </form>
     </FormProvider>
