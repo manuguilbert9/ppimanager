@@ -53,7 +53,12 @@ export async function suggestObjectives(input: SuggestObjectivesInput): Promise<
 
 const prompt = ai.definePrompt({
   name: 'suggestObjectivesPrompt',
-  input: { schema: SuggestObjectivesInputSchema },
+  input: { schema: z.object({
+      strengths: SuggestObjectivesInputSchema.shape.strengths,
+      difficulties: SuggestObjectivesInputSchema.shape.difficulties,
+      needs: SuggestObjectivesInputSchema.shape.needs,
+      currentDate: z.string(),
+  }) },
   output: { schema: SuggestObjectivesOutputSchema },
   prompt: `
     Tu es un expert en ingénierie pédagogique spécialisé dans l'éducation inclusive.
@@ -90,7 +95,7 @@ const prompt = ai.definePrompt({
     Pour chaque objectif, formule :
     1.  Un intitulé clair, spécifique et centré sur l'élève (commençant par un verbe d'action).
     2.  Un critère de réussite simple et observable.
-    3.  Une échéance réaliste dans le futur (par exemple, dans 2 ou 3 mois à partir de la date d'aujourd'hui) et sous forme de date précise (format JJ/MM/AAAA).
+    3.  Une échéance réaliste. Nous sommes le {{{currentDate}}}, donc l'échéance doit être DANS LE FUTUR (par exemple, dans 2 ou 3 mois). L'échéance doit être une date précise au format JJ/MM/AAAA.
 
     Les objectifs doivent être pertinents, réalisables et directement liés aux besoins identifiés, tout en s'appuyant sur les points forts de l'élève.
     Assure-toi que les suggestions soient variées (scolaires, transversaux comme l'autonomie ou la socialisation).
@@ -104,7 +109,11 @@ const suggestObjectivesFlow = ai.defineFlow(
     outputSchema: SuggestObjectivesOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    const { output } = await prompt({
+        ...input,
+        currentDate,
+    });
     return output!;
   }
 );
