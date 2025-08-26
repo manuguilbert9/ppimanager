@@ -40,7 +40,7 @@ export function SavePpiButton({ onSubmit }: SavePpiButtonProps) {
     if (isSaved) {
       return <><CheckCircle className="mr-2 h-4 w-4" /> Enregistré !</>;
     }
-    return <><Save className="mr-2 h-4 w-4" /> Sauvegarder les modifications</>;
+    return <><Save className="mr-2 h-4 w-4" /> Sauvegarder</>;
   };
 
   if (!isDirty && !isSaving && !isSaved) {
@@ -48,16 +48,12 @@ export function SavePpiButton({ onSubmit }: SavePpiButtonProps) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <Button
-        type="button"
-        size="lg"
-        onClick={handleSave}
-        disabled={isSaving || isSaved}
-        className="shadow-lg"
-      >
-        {getButtonContent()}
-      </Button>
-    </div>
+    <Button
+      type="button"
+      onClick={handleSave}
+      disabled={isSaving || isSaved}
+    >
+      {getButtonContent()}
+    </Button>
   );
 }

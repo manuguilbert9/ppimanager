@@ -6,7 +6,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getStudent, updateStudent } from '@/lib/students-repository';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GlobalProfileForm, globalProfileSchema } from './global-profile';
@@ -24,8 +24,9 @@ import type { ExtractedData } from '@/types/schemas';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cloneDeep } from 'lodash';
-import { PpiActionsFooter } from './ppi-actions-footer';
+import { SavePpiButton } from './save-ppi-button';
 import { GenerateProseButton } from './generate-prose-button';
+import { PpiStatusChanger } from '../ppi-status-changer';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)
@@ -54,7 +55,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     try {
       const studentData = await getStudent(params.studentId);
       if (!studentData) {
-        notFound();
+        setErrorLoading(true);
         return;
       }
       setStudent(studentData);
@@ -242,7 +243,15 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   if (!student || classes.length === 0 || errorLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        {errorLoading ? (
+            <div className="text-center text-destructive">
+                <p>Impossible de charger les données de l'élève.</p>
+                <p className="text-sm">Veuillez vérifier votre connexion et réessayer.</p>
+                <Button onClick={fetchData} className="mt-4">Réessayer</Button>
+            </div>
+        ) : (
+            <Loader2 className="h-8 w-8 animate-spin" />
+        )}
       </div>
     );
   }
@@ -257,16 +266,18 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
+      <form>
         <PageHeader
           title={`PPI de ${student.firstName} ${student.lastName}`}
           description="Profil global de l'élève et synthèse de son projet."
         >
           <div className="flex items-center gap-3">
+            <PpiStatusChanger ppi={ppiForStatusChanger} onStatusChanged={fetchData} as="button" />
             <GenerateProseButton student={methods.getValues()} />
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
                Importer des données
             </Button>
+            <SavePpiButton onSubmit={methods.handleSubmit(onSubmit)} />
             <Avatar className="h-10 w-10">
               <AvatarImage
                 src={student.avatarUrl}
@@ -322,16 +333,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
             adaptationsSuggestions={getSuggestions('adaptations')}
           />
         </div>
-        
-        <PpiActionsFooter 
-          onSubmit={methods.handleSubmit(onSubmit)} 
-          ppi={ppiForStatusChanger}
-          onStatusChange={fetchData}
-        />
-
       </form>
     </FormProvider>
   );
 }
-
-    
