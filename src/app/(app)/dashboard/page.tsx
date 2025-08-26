@@ -19,18 +19,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, FileText, Library, Users, Loader2 } from 'lucide-react';
+import { ArrowRight, FileText, Users, Loader2, Group as GroupIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
-import type { Student, Ppi } from '@/types';
-import { getLibraryItemsCount } from '@/lib/library-repository';
+import { getGroups } from '@/lib/groups-repository';
+import type { Student, Ppi, Group } from '@/types';
 
 export default function DashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [ppis, setPpis] = useState<Ppi[]>([]);
-  const [libraryItemsCount, setLibraryItemsCount] = useState<number>(0);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,10 +38,10 @@ export default function DashboardPage() {
       try {
         const studentsData = await getStudents();
         const ppisData = await getPpis();
-        const libraryCountData = await getLibraryItemsCount();
+        const groupsData = await getGroups();
         setStudents(studentsData);
         setPpis(ppisData);
-        setLibraryItemsCount(libraryCountData);
+        setGroups(groupsData);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -100,12 +100,12 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Éléments de la bibliothèque</CardTitle>
-            <Library className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Groupes de travail</CardTitle>
+            <GroupIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{libraryItemsCount}</div>
-            <p className="text-xs text-muted-foreground">Objectifs, besoins, etc. réutilisables.</p>
+            <div className="text-2xl font-bold">{groups.length}</div>
+            <p className="text-xs text-muted-foreground">Groupes actifs créés.</p>
           </CardContent>
         </Card>
       </div>
