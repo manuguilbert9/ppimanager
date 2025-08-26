@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -40,7 +41,8 @@ const SuggestObjectivesOutputSchema = z.object({
   objectives: z.array(z.object({
     title: z.string().describe("L'intitulé clair et concis de l'objectif."),
     successCriteria: z.string().describe("Le critère de réussite mesurable pour cet objectif."),
-    deadline: z.string().describe("L'échéance suggérée pour atteindre l'objectif (ex: 'Fin du trimestre', 'Fin de l'année scolaire')."),
+    deadline: z.string().describe("L'échéance suggérée pour atteindre l'objectif, au format JJ/MM/AAAA. Par exemple, si nous sommes en septembre 2024, une échéance pourrait être '15/11/2024'."),
+    validationDate: z.string().optional().describe("La date de validation de l'objectif, au format JJ/MM/AAAA."),
   })),
 });
 export type SuggestObjectivesOutput = z.infer<typeof SuggestObjectivesOutputSchema>;
@@ -88,7 +90,7 @@ const prompt = ai.definePrompt({
     Pour chaque objectif, formule :
     1.  Un intitulé clair, spécifique et centré sur l'élève (commençant par un verbe d'action).
     2.  Un critère de réussite simple et observable.
-    3.  Une échéance réaliste.
+    3.  Une échéance réaliste sous forme de date précise (format JJ/MM/AAAA).
 
     Les objectifs doivent être pertinents, réalisables et directement liés aux besoins identifiés, tout en s'appuyant sur les points forts de l'élève.
     Assure-toi que les suggestions soient variées (scolaires, transversaux comme l'autonomie ou la socialisation).

@@ -24,6 +24,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Separator } from '@/components/ui/separator';
+import { DatePicker } from '@/components/date-picker';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -311,30 +312,36 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                control={form.control}
-                name={`objectives.${originalIndex}.deadline`}
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Échéance</FormLabel>
-                    <FormControl>
-                        <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+                  control={form.control}
+                  name={`objectives.${originalIndex}.deadline`}
+                  render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Échéance</FormLabel>
+                          <FormControl>
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                  )}
                 />
                 <FormField
-                control={form.control}
-                name={`objectives.${originalIndex}.validationDate`}
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Date de validation</FormLabel>
-                    <FormControl>
-                        <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+                  control={form.control}
+                  name={`objectives.${originalIndex}.validationDate`}
+                  render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Date de validation</FormLabel>
+                           <FormControl>
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                  )}
                 />
             </div>
         </AccordionContent>
