@@ -112,8 +112,8 @@ const UpcomingObjectives = ({ students }: { students: Student[] }) => {
                                 {upcomingObjectives[month].map(obj => (
                                     <li key={obj.id} className="flex items-start gap-4">
                                         <div className="flex flex-col items-center">
-                                            <span className="text-xl font-bold">{format(obj.deadlineDate, 'dd')}</span>
-                                            <span className="text-xs text-muted-foreground">{format(obj.deadlineDate, 'MMM')}</span>
+                                            <span className="text-xl font-bold">{format(obj.deadlineDate, 'dd', { locale: fr })}</span>
+                                            <span className="text-xs text-muted-foreground">{format(obj.deadlineDate, 'MMM', { locale: fr })}</span>
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-semibold leading-tight">{obj.title}</p>
