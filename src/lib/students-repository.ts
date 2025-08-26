@@ -5,7 +5,7 @@ import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serve
 import { db } from './firebase';
 import type { Student, ImportedStudent, Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
-import { getClasse, addClasse } from './classes-repository';
+import { getClasse, addClasse, getClasses } from './classes-repository';
 import { groupBy, orderBy } from 'lodash';
 
 async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
