@@ -248,7 +248,7 @@ export default function StudentsPage() {
                     </TableCell>
                     <TableCell>
                       <ViewNotesDialog studentName={`${student.firstName} ${student.lastName}`} notes={student.notes}>
-                          <Button variant="ghost" size="icon" disabled={!student.notes}>
+                          <Button variant="ghost" size="icon">
                               <FileText className="h-4 w-4" />
                           </Button>
                       </ViewNotesDialog>
