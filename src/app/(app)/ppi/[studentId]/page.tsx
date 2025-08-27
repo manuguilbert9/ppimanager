@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getStudent, updateStudent } from '@/lib/students-repository';
@@ -24,11 +24,12 @@ import type { Student, Classe, LibraryItem } from '@/types';
 import type { ExtractedData } from '@/types/schemas';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { cloneDeep } from 'lodash';
-import { SavePpiButton } from './save-ppi-button';
+import { cloneDeep, isEqual } from 'lodash';
 import { GenerateProseButton } from './generate-prose-button';
-import { PpiStatusChanger } from '../ppi-status-changer';
+import { PpiStatusChanger } from '../../ppi/ppi-status-changer';
 import { PpiNotesDrawer } from './ppi-notes-drawer';
+import { useDebounce } from '@/hooks/use-debounce';
+import { AutoSaveIndicator, SaveStatus } from './auto-save-indicator';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)
@@ -47,6 +48,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const [errorLoading, setErrorLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
 
   const methods = useForm<z.infer<typeof ppiFormSchema>>({
     resolver: zodResolver(ppiFormSchema),
@@ -100,6 +102,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
               notes: studentData.notes || '',
           };
           methods.reset(defaultValues);
+          setSaveStatus('saved');
       }
     } catch (error) {
       console.error("Failed to fetch page data:", error);
@@ -110,6 +113,26 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   useEffect(() => {
     fetchData();
   }, [params.studentId]);
+
+  const watchedValues = useWatch({ control: methods.control });
+  const debouncedValues = useDebounce(watchedValues, 2000);
+
+  useEffect(() => {
+    const isDirty = !isEqual(methods.formState.defaultValues, debouncedValues);
+    if (isDirty && !methods.formState.isSubmitting) {
+      setSaveStatus('saving');
+      methods.handleSubmit(onSubmit)();
+    }
+  }, [debouncedValues]);
+  
+  useEffect(() => {
+    const subscription = methods.watch(() => {
+        if (saveStatus !== 'saving') {
+             setSaveStatus('unsaved');
+        }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods.watch, saveStatus]);
 
 
   const handleImport = async (data: ExtractedData) => {
@@ -233,14 +256,14 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     try {
       await updateStudent(student.id, values);
       methods.reset(values); // Reset form with new values to mark it as "clean"
-      return true; // Indicate success
+      setSaveStatus('saved');
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
         description: 'Une erreur est survenue lors de la sauvegarde.',
       });
-      return false; // Indicate failure
+      setSaveStatus('unsaved');
     }
   };
 
@@ -275,7 +298,8 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           title={`PPI de ${student.firstName} ${student.lastName}`}
           description="Profil global de l'élève et synthèse de son projet."
         >
-          <div className="flex items-center gap-3">
+           <div className="flex items-center gap-3">
+             <AutoSaveIndicator status={saveStatus} />
             <PpiStatusChanger ppi={ppiForStatusChanger} onStatusChanged={fetchData} as="button" />
             <GenerateProseButton student={methods.getValues()} />
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
@@ -337,11 +361,9 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           />
         </div>
         
-        <SavePpiButton onSubmit={methods.handleSubmit(onSubmit)} isFloating />
-        <PpiNotesDrawer onSubmit={methods.handleSubmit(onSubmit)} />
+        <PpiNotesDrawer />
 
       </form>
     </FormProvider>
   );
 }
- 
