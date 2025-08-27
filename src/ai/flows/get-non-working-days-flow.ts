@@ -33,16 +33,18 @@ const prompt = ai.definePrompt({
     Ta mission est de fournir une liste exhaustive de toutes les dates non travaillées pour les écoles de la Zone B en France pour l'année {{{year}}}.
     La liste doit inclure :
     1.  Tous les jours fériés officiels en France.
-    2.  Toutes les dates comprises dans les vacances scolaires de la Zone B (Toussaint, Noël, Hiver, Printemps, Été).
+    2.  Toutes les dates comprises dans les vacances scolaires de la Zone B (Toussaint, Noël, Hiver, Printemps).
+    3.  L'intégralité des mois de Juillet et Août doit être considérée comme faisant partie des vacances d'été.
 
     INSTRUCTIONS IMPORTANTES :
     -   Le format de chaque date dans la liste DOIT être "AAAA-MM-JJ".
-    -   N'inclus PAS les samedis et dimanches dans la liste, sauf s'ils sont aussi un jour férié. Le calcul des week-ends sera fait séparément.
+    -   N'inclus PAS les samedis et dimanches en dehors des périodes de vacances et des jours fériés, ils sont gérés séparément.
     -   Assure-toi que les plages de vacances incluent bien le premier ET le dernier jour.
-    -   Pour l'année en cours, si les vacances d'été de l'année scolaire {{{year}}}-{{{year}}+1 ne sont pas encore définies, ne les invente pas.
+    -   Pour l'année en cours, si les vacances (hors été) de l'année scolaire {{{year}}}-{{{year}}+1 ne sont pas encore définies, ne les invente pas.
 
     Exemple pour le 1er mai 2024 : ["2024-05-01"]
     Exemple pour les vacances de la Toussaint 2024 (Zone B) du 19 oct au 4 nov : ["2024-10-19", "2024-10-20", ..., "2024-11-04"]
+    Exemple pour les vacances d'été : inclure toutes les dates du "AAAA-07-01" au "AAAA-08-31".
 
     Génère la liste de dates pour l'année {{{year}}}.
   `,
