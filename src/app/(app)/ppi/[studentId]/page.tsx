@@ -16,7 +16,7 @@ import { DifficultiesForm, difficultiesSchema } from './difficulties-form';
 import { NeedsForm, needsSchema } from './needs-form';
 import { ObjectivesForm, objectivesSchema } from './objectives-form';
 import { AdministrativeForm, administrativeSchema } from './administrative-form';
-import { NotesForm, notesSchema } from './notes-form';
+import { notesSchema } from './notes-form';
 import { getClasses } from '@/lib/classes-repository';
 import { TextImporter } from './text-importer';
 import { Loader2 } from 'lucide-react';
@@ -28,6 +28,7 @@ import { cloneDeep } from 'lodash';
 import { SavePpiButton } from './save-ppi-button';
 import { GenerateProseButton } from './generate-prose-button';
 import { PpiStatusChanger } from '@/app/(app)/ppi/ppi-status-changer';
+import { PpiNotesDrawer } from './ppi-notes-drawer';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)
@@ -335,8 +336,10 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
             objectivesSuggestions={getSuggestions('objectives')}
             adaptationsSuggestions={getSuggestions('adaptations')}
           />
-          <NotesForm />
         </div>
+        
+        <PpiNotesDrawer />
+
       </form>
     </FormProvider>
   );
