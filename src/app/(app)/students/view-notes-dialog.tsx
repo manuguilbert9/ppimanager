@@ -13,11 +13,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { updateStudent } from '@/lib/students-repository';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 interface ViewNotesDialogProps {
   studentId: string;
@@ -72,10 +72,10 @@ export function ViewNotesDialog({ studentId, studentName, notes, children, onSuc
             Consultez ou modifiez les notes enregistrées pour cet élève.
           </DialogDescription>
         </DialogHeader>
-        <Textarea
+        <RichTextEditor
           value={editedNotes}
-          onChange={(e) => setEditedNotes(e.target.value)}
-          className="h-72 w-full text-base"
+          onChange={setEditedNotes}
+          className="min-h-[300px]"
           placeholder="Saisissez ici vos notes de suivi..."
         />
         <DialogFooter>
