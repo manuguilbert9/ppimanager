@@ -122,7 +122,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
       setSaveStatus('saving');
       methods.handleSubmit(onSubmit)();
     }
-  }, [debouncedValues]);
+  }, [debouncedValues, saveStatus, methods]);
   
   useEffect(() => {
     const subscription = methods.watch((value, { name, type }) => {
@@ -131,7 +131,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         }
     });
     return () => subscription.unsubscribe();
-  }, [methods.watch, saveStatus]);
+  }, [methods.watch, saveStatus, methods.formState.dirtyFields]);
 
 
   const handleImport = async (data: ExtractedData) => {
@@ -254,7 +254,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     if (!student) return;
     try {
       await updateStudent(student.id, values);
-      methods.reset(values, { keepValues: true }); // Reset form with new values to mark it as "clean"
+      methods.reset(values, { keepValues: true, keepDirty: false }); 
       setSaveStatus('saved');
     } catch (error) {
       toast({
