@@ -18,12 +18,11 @@ import { Notebook } from 'lucide-react';
 import { NotesForm } from './notes-form';
 import { SavePpiButton } from './save-ppi-button';
 
-export function PpiNotesDrawer() {
-  const { handleSubmit } = useFormContext();
+interface PpiNotesDrawerProps {
+  onSubmit: () => Promise<boolean>;
+}
 
-  // This is a dummy onSubmit function because the actual save is handled by the main button
-  // We just need it to trigger the main form's onSubmit handler.
-  const onNotesSave = async () => {};
+export function PpiNotesDrawer({ onSubmit }: PpiNotesDrawerProps) {
 
   return (
     <Sheet>
@@ -49,7 +48,7 @@ export function PpiNotesDrawer() {
           <NotesForm />
         </div>
         <SheetFooter>
-           <SavePpiButton onSubmit={handleSubmit(onNotesSave)} />
+           <SavePpiButton onSubmit={onSubmit} />
         </SheetFooter>
       </SheetContent>
     </Sheet>
