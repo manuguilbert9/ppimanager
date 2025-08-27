@@ -1,7 +1,7 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, doc, getDoc, deleteDoc, updateDoc, query, where, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -57,10 +57,29 @@ export async function updateClasse(id: string, classe: { name: string; teacherNa
 
 export async function deleteClasse(id: string) {
     try {
-        await deleteDoc(doc(db, "classes", id));
+        const batch = writeBatch(db);
+
+        // 1. Find all students in the class
+        const studentsQuery = query(collection(db, 'students'), where('classId', '==', id));
+        const studentsSnapshot = await getDocs(studentsQuery);
+
+        // 2. Delete each student found
+        studentsSnapshot.forEach(studentDoc => {
+            batch.delete(studentDoc.ref);
+        });
+
+        // 3. Delete the class itself
+        const classRef = doc(db, "classes", id);
+        batch.delete(classRef);
+
+        // 4. Commit the batch
+        await batch.commit();
+
         revalidatePath('/classes');
+        revalidatePath('/students');
+        revalidatePath('/ppi');
     } catch (error) {
-        console.error("Error deleting document: ", error);
+        console.error("Error deleting class and its students: ", error);
         throw new Error('Failed to delete classe');
     }
 }
