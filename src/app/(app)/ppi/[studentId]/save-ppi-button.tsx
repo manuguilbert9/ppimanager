@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useFormContext, useFormState } from 'react-hook-form';
+import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -14,18 +14,20 @@ interface SavePpiButtonProps {
 }
 
 export function SavePpiButton({ onSubmit, isFloating = false }: SavePpiButtonProps) {
-  const { control, getValues } = useFormContext();
-  const { isDirty, defaultValues } = useFormState({ control });
+  const { control } = useFormContext();
+  const { defaultValues } = useFormState({ control });
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
   
-  // Use a more robust dirty check
   const [isActuallyDirty, setIsActuallyDirty] = useState(false);
   
-  const currentValues = getValues();
+  // Watch all form values
+  const currentValues = useWatch({ control });
   
   useEffect(() => {
+    if (!defaultValues) return;
+
     // Check deep equality to see if anything has changed.
     const hasChanged = !isEqual(currentValues, defaultValues);
     setIsActuallyDirty(hasChanged);
