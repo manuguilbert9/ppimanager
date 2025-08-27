@@ -60,7 +60,6 @@ export function StudentActions({ student, classes }: { student: Student, classes
         <DropdownMenuItem asChild>
           <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
         </DropdownMenuItem>
-         <ViewNotesDialog studentName={`${student.firstName} ${student.lastName}`} notes={student.notes} />
         {student.ppiStatus === 'archived' && (
           <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
             {isDuplicating ? (

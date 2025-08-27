@@ -10,23 +10,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ViewNotesDialogProps {
   studentName: string;
   notes?: string;
+  children: React.ReactNode;
 }
 
-export function ViewNotesDialog({ studentName, notes }: ViewNotesDialogProps) {
+export function ViewNotesDialog({ studentName, notes, children }: ViewNotesDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          Consulter les notes
-        </DropdownMenuItem>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>

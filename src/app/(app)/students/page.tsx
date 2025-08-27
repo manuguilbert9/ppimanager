@@ -24,13 +24,14 @@ import type { Student, Classe, PpiStatus, Ppi } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, FileText } from 'lucide-react';
 import { useDataFetching } from '@/hooks/use-data-fetching';
 import { orderBy } from 'lodash';
 import { SortableHeader, SortDirection } from './sortable-header';
 import { StudentImporter } from './student-importer';
 import { Button } from '@/components/ui/button';
 import { PpiStatusChanger } from '../ppi/ppi-status-changer';
+import { ViewNotesDialog } from './view-notes-dialog';
 
 type SortKey = 'name' | 'className' | 'age' | 'ppiStatus' | 'mdphNotificationExpiration' | 'lastUpdate';
 
@@ -199,6 +200,7 @@ export default function StudentsPage() {
                         onSort={handleSort}
                     />
                   </TableHead>
+                   <TableHead>Notes</TableHead>
                   <TableHead>
                     <SortableHeader
                         label="Fin notif. MDPH"
@@ -243,6 +245,13 @@ export default function StudentsPage() {
                     <TableCell>{getAge(student.birthDate) ?? 'N/A'}</TableCell>
                     <TableCell>
                       <PpiStatusChanger ppi={studentToPpi(student)} onStatusChanged={refreshStudents} />
+                    </TableCell>
+                    <TableCell>
+                      <ViewNotesDialog studentName={`${student.firstName} ${student.lastName}`} notes={student.notes}>
+                          <Button variant="ghost" size="icon" disabled={!student.notes}>
+                              <FileText className="h-4 w-4" />
+                          </Button>
+                      </ViewNotesDialog>
                     </TableCell>
                     <TableCell>{student.mdphNotificationExpiration}</TableCell>
                     <TableCell>{student.lastUpdate}</TableCell>
