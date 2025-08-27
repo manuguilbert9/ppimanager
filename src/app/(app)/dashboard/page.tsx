@@ -68,9 +68,7 @@ const calculateRemainingSessions = (
     const dateString = format(day, 'yyyy-MM-dd');
 
     // A day is a working day if it's a school day (Mon, Tue, Thu, Fri)
-    // AND it's not a weekend (already covered by schoolDays)
-    // AND it's not a Wednesday
-    // AND it's not in the holidays list provided by the AI.
+    // AND it's not a holiday/vacation day provided by the AI.
     if (schoolDays.includes(dayOfWeek) && !holidays.has(dateString)) {
       workingDays++;
     }
