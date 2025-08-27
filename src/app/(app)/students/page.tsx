@@ -247,7 +247,12 @@ export default function StudentsPage() {
                       <PpiStatusChanger ppi={studentToPpi(student)} onStatusChanged={refreshStudents} />
                     </TableCell>
                     <TableCell>
-                      <ViewNotesDialog studentName={`${student.firstName} ${student.lastName}`} notes={student.notes}>
+                      <ViewNotesDialog 
+                        studentId={student.id}
+                        studentName={`${student.firstName} ${student.lastName}`} 
+                        notes={student.notes}
+                        onSuccess={refreshStudents}
+                      >
                           <Button variant="ghost" size="icon">
                               <FileText className="h-4 w-4" />
                           </Button>
