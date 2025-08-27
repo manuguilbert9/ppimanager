@@ -87,6 +87,7 @@ export type Student = {
   difficulties?: Difficulties;
   needs?: Needs;
   objectives?: Objective[];
+  notes?: string;
 };
 
 export type Ppi = {

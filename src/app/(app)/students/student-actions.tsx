@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { ViewNotesDialog } from './view-notes-dialog';
 
 export function StudentActions({ student, classes }: { student: Student, classes: Classe[] }) {
   const { toast } = useToast();
@@ -59,6 +60,7 @@ export function StudentActions({ student, classes }: { student: Student, classes
         <DropdownMenuItem asChild>
           <Link href={`/ppi/${student.id}`}>Voir le PPI</Link>
         </DropdownMenuItem>
+         <ViewNotesDialog studentName={`${student.firstName} ${student.lastName}`} notes={student.notes} />
         {student.ppiStatus === 'archived' && (
           <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
             {isDuplicating ? (

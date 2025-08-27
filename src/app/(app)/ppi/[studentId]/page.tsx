@@ -16,6 +16,7 @@ import { DifficultiesForm, difficultiesSchema } from './difficulties-form';
 import { NeedsForm, needsSchema } from './needs-form';
 import { ObjectivesForm, objectivesSchema } from './objectives-form';
 import { AdministrativeForm, administrativeSchema } from './administrative-form';
+import { NotesForm, notesSchema } from './notes-form';
 import { getClasses } from '@/lib/classes-repository';
 import { TextImporter } from './text-importer';
 import { Loader2 } from 'lucide-react';
@@ -33,7 +34,8 @@ const ppiFormSchema = administrativeSchema
   .merge(strengthsSchema)
   .merge(difficultiesSchema)
   .merge(needsSchema)
-  .merge(objectivesSchema);
+  .merge(objectivesSchema)
+  .merge(notesSchema);
 
 
 export default function PpiStudentPage({ params }: { params: { studentId: string } }) {
@@ -94,6 +96,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
                   id: o.id || Math.random().toString(36).substring(7),
               })),
               ppiStatus: studentData.ppiStatus,
+              notes: studentData.notes || '',
           };
           methods.reset(defaultValues);
       }
@@ -332,6 +335,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
             objectivesSuggestions={getSuggestions('objectives')}
             adaptationsSuggestions={getSuggestions('adaptations')}
           />
+          <NotesForm />
         </div>
       </form>
     </FormProvider>
