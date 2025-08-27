@@ -18,6 +18,17 @@ import {
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outline' | 'destructive', text: string }> = {
   draft: {
@@ -86,12 +97,31 @@ export function PpiStatusChanger({ ppi, onStatusChanged, as, children, className
 
   const currentStatus = ppi.status;
   const config = statusConfig[currentStatus];
-
+  
   if (currentStatus === 'to_create') {
     return (
-        <Badge variant={config.variant} className={cn("cursor-pointer", className)}>
-          {config.text}
-        </Badge>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+           <Badge variant={config.variant} className={cn("cursor-pointer", className)}>
+             {config.text}
+           </Badge>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Créer le PPI de {ppi.studentName} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cela va initialiser le PPI de l'élève en tant que brouillon. Vous pourrez ensuite le modifier.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleStatusChange('draft')} disabled={isUpdating}>
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Commencer la rédaction
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 
@@ -101,23 +131,16 @@ export function PpiStatusChanger({ ppi, onStatusChanged, as, children, className
         Statut : {config.text}
     </Button>
     ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn("p-0 h-auto", className)}
-          disabled={isUpdating}
-        >
-          <Badge variant={config.variant} className="cursor-pointer">
-            {isUpdating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-            {config.text}
-          </Badge>
-        </Button>
+    <Badge variant={config.variant} className={cn("cursor-pointer", className)}>
+        {isUpdating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+        {config.text}
+    </Badge>
   );
 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger disabled={isUpdating}>
         {triggerContent}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
