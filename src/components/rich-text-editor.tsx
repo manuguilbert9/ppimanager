@@ -37,7 +37,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
   ];
 
   return (
-    <div className={cn("bg-background rounded-md border border-input", className)}>
+    <div className={cn("bg-background rounded-md border border-input text-base", className)}>
         <ReactQuill
             theme="snow"
             value={value}
