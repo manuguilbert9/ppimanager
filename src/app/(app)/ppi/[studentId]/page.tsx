@@ -27,7 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cloneDeep } from 'lodash';
 import { SavePpiButton } from './save-ppi-button';
 import { GenerateProseButton } from './generate-prose-button';
-import { PpiStatusChanger } from '@/app/(app)/ppi/ppi-status-changer';
+import { PpiStatusChanger } from '../ppi-status-changer';
 import { PpiNotesDrawer } from './ppi-notes-drawer';
 
 const ppiFormSchema = administrativeSchema
@@ -281,7 +281,6 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
                Importer des données
             </Button>
-            <SavePpiButton onSubmit={methods.handleSubmit(onSubmit)} />
             <Avatar className="h-10 w-10">
               <AvatarImage
                 src={student.avatarUrl}
@@ -338,9 +337,11 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
           />
         </div>
         
+        <SavePpiButton onSubmit={methods.handleSubmit(onSubmit)} isFloating />
         <PpiNotesDrawer onSubmit={methods.handleSubmit(onSubmit)} />
 
       </form>
     </FormProvider>
   );
 }
+ 

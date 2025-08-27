@@ -1,23 +1,36 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormContext, useFormState } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { isEqual } from 'lodash';
 
 interface SavePpiButtonProps {
     onSubmit: () => Promise<boolean>;
+    isFloating?: boolean;
 }
 
-export function SavePpiButton({ onSubmit }: SavePpiButtonProps) {
-  const { control } = useFormContext();
-  const { isDirty } = useFormState({ control });
+export function SavePpiButton({ onSubmit, isFloating = false }: SavePpiButtonProps) {
+  const { control, getValues } = useFormContext();
+  const { isDirty, defaultValues } = useFormState({ control });
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
-
+  
+  // Use a more robust dirty check
+  const [isActuallyDirty, setIsActuallyDirty] = useState(false);
+  
+  const currentValues = getValues();
+  
+  useEffect(() => {
+    // Check deep equality to see if anything has changed.
+    const hasChanged = !isEqual(currentValues, defaultValues);
+    setIsActuallyDirty(hasChanged);
+  }, [currentValues, defaultValues]);
+  
   const handleSave = async () => {
     setIsSaving(true);
     setIsSaved(false);
@@ -43,8 +56,24 @@ export function SavePpiButton({ onSubmit }: SavePpiButtonProps) {
     return <><Save className="mr-2 h-4 w-4" /> Sauvegarder</>;
   };
 
-  if (!isDirty && !isSaving && !isSaved) {
+  if (!isActuallyDirty && !isSaving && !isSaved) {
     return null;
+  }
+
+  if (isFloating) {
+      return (
+         <div className="fixed bottom-24 right-6 z-50 animate-in fade-in-50 slide-in-from-bottom-10 duration-300">
+             <Button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving || isSaved}
+                size="lg"
+                className="shadow-lg"
+                >
+                {getButtonContent()}
+            </Button>
+         </div>
+      )
   }
 
   return (
