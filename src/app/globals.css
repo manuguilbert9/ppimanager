@@ -83,3 +83,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Custom styles for React Quill to match ShadCN theme */
+  .ql-editor {
+      @apply text-base;
+  }
+  .ql-container.ql-snow {
+    @apply border-input;
+  }
+  .ql-toolbar.ql-snow {
+    @apply rounded-t-md border-input bg-background;
+  }
+  .ql-snow .ql-stroke {
+    @apply stroke-foreground;
+  }
+  .ql-snow .ql-picker-label {
+      @apply text-foreground;
+  }
+  .ql-snow .ql-picker-options {
+      @apply bg-popover text-popover-foreground border-border shadow-md;
+  }
+  .ql-snow .ql-picker-item:hover,
+  .ql-snow .ql-picker-item.ql-selected {
+      @apply text-accent-foreground bg-accent;
+  }
+  .ql-snow .ql-tooltip {
+      @apply bg-popover text-popover-foreground border-border shadow-md rounded-md;
+  }
+  .ql-snow .ql-tooltip input[type=text] {
+      @apply bg-input text-foreground border-border;
+  }
+   .ql-snow .ql-tooltip a.ql-action::after {
+      @apply border-r-0;
+      content: 'Enregistrer';
+      padding-right: 0;
+   }
+}

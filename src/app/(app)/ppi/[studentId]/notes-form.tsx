@@ -4,8 +4,8 @@
 import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 export const notesSchema = z.object({
   notes: z.string().optional(),
@@ -30,10 +30,11 @@ export function NotesForm() {
             <FormItem>
               <FormLabel>Contenu des notes</FormLabel>
               <FormControl>
-                <Textarea
-                  {...field}
-                  rows={10}
+                <RichTextEditor
+                  value={field.value || ''}
+                  onChange={field.onChange}
                   placeholder="Saisissez ici vos notes de suivi..."
+                  className="min-h-[250px]"
                 />
               </FormControl>
               <FormMessage />
