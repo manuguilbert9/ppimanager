@@ -50,7 +50,7 @@ const parseDeadline = (deadline?: string): Date | null => {
 
 const calculateRemainingSessions = (
   deadline: Date,
-  nonWorkingDays: Set<string>
+  holidays: Set<string>
 ): { totalDays: number; workingDays: number; nonWorkingDaysCount: number } | null => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -61,19 +61,22 @@ const calculateRemainingSessions = (
 
   const interval = eachDayOfInterval({ start: today, end: deadline });
   let workingDays = 0;
-  let nonWorkingDaysCount = 0;
   const schoolDays = [1, 2, 4, 5]; // Monday, Tuesday, Thursday, Friday
 
   interval.forEach(day => {
     const dayOfWeek = day.getDay();
     const dateString = format(day, 'yyyy-MM-dd');
 
-    if (schoolDays.includes(dayOfWeek) && !nonWorkingDays.has(dateString)) {
+    // A day is a working day if it's a school day (Mon, Tue, Thu, Fri)
+    // AND it's not a weekend (already covered by schoolDays)
+    // AND it's not a Wednesday
+    // AND it's not in the holidays list provided by the AI.
+    if (schoolDays.includes(dayOfWeek) && !holidays.has(dateString)) {
       workingDays++;
-    } else {
-      nonWorkingDaysCount++;
     }
   });
+  
+  const nonWorkingDaysCount = interval.length - workingDays;
 
   return { totalDays: interval.length, workingDays, nonWorkingDaysCount };
 };
