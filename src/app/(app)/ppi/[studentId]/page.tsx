@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cloneDeep } from 'lodash';
 import { SavePpiButton } from './save-ppi-button';
 import { GenerateProseButton } from './generate-prose-button';
-import { PpiStatusChanger } from '../ppi-status-changer';
+import { PpiStatusChanger } from '@/app/(app)/ppi/ppi-status-changer';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)

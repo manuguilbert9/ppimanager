@@ -109,13 +109,17 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'te
     }
 }
 
-export async function updateStudent(id: string, student: Partial<Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'avatarUrl' | 'lastUpdateTimestamp'>>) {
+export async function updateStudent(id: string, student: Partial<Student>) {
     try {
         const studentRef = doc(db, 'students', id);
+        // We remove properties that should not be written to Firestore
+        const { className, teacherName, lastUpdateTimestamp, ...dataToUpdate } = student;
+        
         await updateDoc(studentRef, {
-            ...student,
+            ...dataToUpdate,
             lastUpdate: serverTimestamp()
         });
+
         revalidatePath('/students');
         revalidatePath(`/ppi/${id}`);
     } catch (error) {
