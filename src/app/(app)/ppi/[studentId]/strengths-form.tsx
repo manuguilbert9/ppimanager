@@ -40,7 +40,7 @@ export function StrengthsForm({
   const badgeClassName = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
 
   return (
-    <Card className="bg-emerald-50/50">
+    <Card className="border-l-4 border-green-500">
       <CardHeader>
         <div>
           <CardTitle>Points d'appuis</CardTitle>

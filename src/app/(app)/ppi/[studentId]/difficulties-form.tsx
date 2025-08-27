@@ -45,7 +45,7 @@ export function DifficultiesForm({
   const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
 
   return (
-    <Card className="bg-red-50/40">
+    <Card className="border-l-4 border-red-500">
       <CardHeader>
         <div>
           <CardTitle>Difficultés de l’élève</CardTitle>

@@ -116,7 +116,7 @@ export function NeedsForm({
   const badgeClassName = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
 
   return (
-    <Card className="bg-sky-50/50">
+    <Card className="border-l-4 border-sky-500">
       <CardHeader>
         <div>
           <CardTitle>Besoins éducatifs particuliers</CardTitle>

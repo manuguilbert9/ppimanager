@@ -367,7 +367,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   return (
-    <Card className="bg-fuchsia-50/40">
+    <Card className="border-l-4 border-fuchsia-500">
       <CardHeader>
         <div>
           <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>

@@ -53,7 +53,7 @@ export function AdministrativeForm({ classes }: { classes: Classe[] }) {
   const selectedClass = classes.find(c => c.id === watchedClassId);
 
   return (
-    <Card className="bg-blue-50/50">
+    <Card className="border-l-4 border-blue-500">
       <CardHeader>
         <div>
           <CardTitle>Informations administratives</CardTitle>

@@ -52,7 +52,7 @@ export function GlobalProfileForm({
   }
 
   return (
-    <Card className="bg-gray-50/50">
+    <Card className="border-l-4 border-slate-500">
       <CardHeader>
         <div>
           <CardTitle>Profil global de l’élève</CardTitle>
