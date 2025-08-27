@@ -26,9 +26,11 @@ import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
 import { getGroups } from '@/lib/groups-repository';
 import type { Student, Ppi, Group, Objective } from '@/types';
-import { format, parse } from 'date-fns';
+import { format, parse, eachDayOfInterval, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PpiStatusChanger } from '../ppi/ppi-status-changer';
+import { getNonWorkingDays } from '@/ai/flows/get-non-working-days-flow';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface UpcomingObjective extends Objective {
     studentId: string;
@@ -39,13 +41,68 @@ interface UpcomingObjective extends Objective {
 const parseDeadline = (deadline?: string): Date | null => {
     if (!deadline) return null;
     try {
+        // Handle dd/MM/yyyy and potentially other formats if needed
         return parse(deadline, 'dd/MM/yyyy', new Date());
     } catch (e) {
         return null;
     }
 };
 
+const calculateRemainingSessions = (
+  deadline: Date,
+  nonWorkingDays: Set<string>
+): { totalDays: number; workingDays: number; nonWorkingDaysCount: number } | null => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (deadline < today) {
+    return null;
+  }
+
+  const interval = eachDayOfInterval({ start: today, end: deadline });
+  let workingDays = 0;
+  let nonWorkingDaysCount = 0;
+  const schoolDays = [1, 2, 4, 5]; // Monday, Tuesday, Thursday, Friday
+
+  interval.forEach(day => {
+    const dayOfWeek = day.getDay();
+    const dateString = format(day, 'yyyy-MM-dd');
+
+    if (schoolDays.includes(dayOfWeek) && !nonWorkingDays.has(dateString)) {
+      workingDays++;
+    } else {
+      nonWorkingDaysCount++;
+    }
+  });
+
+  return { totalDays: interval.length, workingDays, nonWorkingDaysCount };
+};
+
+
 const UpcomingObjectives = ({ students }: { students: Student[] }) => {
+    const [nonWorkingDays, setNonWorkingDays] = useState<Set<string>>(new Set());
+    const [loadingHolidays, setLoadingHolidays] = useState(true);
+
+    useEffect(() => {
+        const fetchHolidays = async () => {
+            setLoadingHolidays(true);
+            try {
+                const currentYear = new Date().getFullYear();
+                const [holidaysCurrentYear, holidaysNextYear] = await Promise.all([
+                    getNonWorkingDays({ year: currentYear }),
+                    getNonWorkingDays({ year: currentYear + 1 }),
+                ]);
+                const allHolidays = new Set([...holidaysCurrentYear.dates, ...holidaysNextYear.dates]);
+                setNonWorkingDays(allHolidays);
+            } catch (error) {
+                console.error("Failed to fetch non-working days:", error);
+            } finally {
+                setLoadingHolidays(false);
+            }
+        };
+        fetchHolidays();
+    }, []);
+
     const upcomingObjectives = useMemo<Record<string, UpcomingObjective[]>>(() => {
         const objectives: UpcomingObjective[] = [];
         const now = new Date();
@@ -100,34 +157,59 @@ const UpcomingObjectives = ({ students }: { students: Student[] }) => {
     }
 
     return (
-        <div className="space-y-8">
-            <h2 className="text-2xl font-bold tracking-tight">Échéances à venir</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {monthKeys.map(month => (
-                    <Card key={month}>
-                        <CardHeader>
-                            <CardTitle className="text-lg">{month}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="space-y-4">
-                                {upcomingObjectives[month].map(obj => (
-                                    <li key={obj.id} className="flex items-start gap-4">
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-xl font-bold">{format(obj.deadlineDate, 'dd', { locale: fr })}</span>
-                                            <span className="text-xs text-muted-foreground">{format(obj.deadlineDate, 'MMM', { locale: fr })}</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="font-semibold leading-tight">{obj.title}</p>
-                                            <Link href={`/ppi/${obj.studentId}`} className="text-sm text-muted-foreground hover:underline">{obj.studentName}</Link>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </CardContent>
-                    </Card>
-                ))}
+        <TooltipProvider>
+            <div className="space-y-8">
+                <h2 className="text-2xl font-bold tracking-tight">Échéances à venir</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {monthKeys.map(month => (
+                        <Card key={month}>
+                            <CardHeader>
+                                <CardTitle className="text-lg">{month}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="space-y-4">
+                                    {upcomingObjectives[month].map(obj => {
+                                        const sessionInfo = calculateRemainingSessions(obj.deadlineDate, nonWorkingDays);
+                                        return (
+                                            <li key={obj.id} className="flex items-start gap-4">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-xl font-bold">{format(obj.deadlineDate, 'dd', { locale: fr })}</span>
+                                                    <span className="text-xs text-muted-foreground">{format(obj.deadlineDate, 'MMM', { locale: fr })}</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-semibold leading-tight">{obj.title}</p>
+                                                    <Link href={`/ppi/${obj.studentId}`} className="text-sm text-muted-foreground hover:underline">{obj.studentName}</Link>
+                                                    
+                                                    {loadingHolidays ? (
+                                                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                                            <Loader2 className="h-3 w-3 animate-spin" /> Calcul des séances...
+                                                        </div>
+                                                    ) : sessionInfo && (
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <p className="text-xs text-primary font-semibold mt-1 cursor-help">
+                                                                    {sessionInfo.workingDays} séance{sessionInfo.workingDays > 1 ? 's' : ''} restante{sessionInfo.workingDays > 1 ? 's' : ''}
+                                                                </p>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Jusqu'au {format(obj.deadlineDate, 'dd/MM/yyyy')}</p>
+                                                                <p>{sessionInfo.totalDays} jours au total</p>
+                                                                <p>{sessionInfo.workingDays} jours de classe</p>
+                                                                <p>{sessionInfo.nonWorkingDaysCount} jours non-travaillés</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
-        </div>
+        </TooltipProvider>
     );
 };
 

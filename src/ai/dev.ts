@@ -6,3 +6,4 @@ import './flows/group-objectives-flow';
 import './flows/ask-expert-flow';
 import './flows/generate-student-prose-flow';
 import './flows/extract-data-flow';
+import './flows/get-non-working-days-flow';
