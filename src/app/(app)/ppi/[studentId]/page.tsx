@@ -118,16 +118,15 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const debouncedValues = useDebounce(watchedValues, 2000);
 
   useEffect(() => {
-    const isDirty = !isEqual(methods.formState.defaultValues, debouncedValues);
-    if (isDirty && !methods.formState.isSubmitting) {
+    if (saveStatus === 'unsaved' && !methods.formState.isSubmitting) {
       setSaveStatus('saving');
       methods.handleSubmit(onSubmit)();
     }
   }, [debouncedValues]);
   
   useEffect(() => {
-    const subscription = methods.watch(() => {
-        if (saveStatus !== 'saving') {
+    const subscription = methods.watch((value, { name, type }) => {
+        if (type === 'change' && saveStatus !== 'saving' && Object.keys(methods.formState.dirtyFields).length > 0) {
              setSaveStatus('unsaved');
         }
     });
@@ -255,7 +254,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     if (!student) return;
     try {
       await updateStudent(student.id, values);
-      methods.reset(values); // Reset form with new values to mark it as "clean"
+      methods.reset(values, { keepValues: true }); // Reset form with new values to mark it as "clean"
       setSaveStatus('saved');
     } catch (error) {
       toast({
@@ -263,7 +262,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         title: 'Erreur',
         description: 'Une erreur est survenue lors de la sauvegarde.',
       });
-      setSaveStatus('unsaved');
+      setSaveStatus('error');
     }
   };
 

@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -24,7 +25,6 @@ import type { Ppi } from '@/types';
 import { PpiStatusChanger } from './ppi-status-changer';
 import { ExportPpiButton } from './export-ppi-button';
 import { Loader2 } from 'lucide-react';
-import { useDataFetching } from '@/hooks/use-data-fetching';
 
 const PpiSection = ({
   title,
@@ -83,7 +83,24 @@ const PpiSection = ({
 };
 
 export default function PpiPage() {
-  const { data: ppis, loading, refresh } = useDataFetching(getPpis);
+  const [ppis, setPpis] = useState<Ppi[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPpis = async () => {
+    setLoading(true);
+    try {
+      const data = await getPpis();
+      setPpis(data);
+    } catch (error) {
+      console.error("Failed to fetch PPIs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPpis();
+  }, []);
 
   if (loading) {
     return (
@@ -108,19 +125,19 @@ export default function PpiPage() {
           title="Brouillons"
           description="Les PPI en cours de rédaction ou de modification."
           ppis={draftPpis}
-          onStatusChange={refresh}
+          onStatusChange={fetchPpis}
         />
         <PpiSection
           title="Validés"
           description="Les PPI validés et actuellement en application."
           ppis={validatedPpis}
-          onStatusChange={refresh}
+          onStatusChange={fetchPpis}
         />
         <PpiSection
           title="Archivés"
           description="Les PPI des années précédentes ou des élèves sortis."
           ppis={archivedPpis}
-          onStatusChange={refresh}
+          onStatusChange={fetchPpis}
         />
       </div>
     </>

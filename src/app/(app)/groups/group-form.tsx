@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -25,8 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Group } from '@/types';
-import { useDataFetching } from '@/hooks/use-data-fetching';
+import type { Group, Student } from '@/types';
 import { getStudents } from '@/lib/students-repository';
 import type { StudentObjectiveProfile } from '@/ai/flows/group-objectives-flow';
 import { addGroup, updateGroup } from '@/lib/groups-repository';
@@ -64,7 +64,25 @@ interface GroupFormProps {
 export function GroupForm({ group, onSuccess, children }: GroupFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { data: students, loading: loadingStudents } = useDataFetching(getStudents);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      const fetchStudents = async () => {
+        setLoadingStudents(true);
+        try {
+          const data = await getStudents();
+          setStudents(data);
+        } catch (error) {
+          console.error("Failed to fetch students", error);
+        } finally {
+          setLoadingStudents(false);
+        }
+      };
+      fetchStudents();
+    }
+  }, [open]);
 
   const allActiveObjectives = useMemo<StudentObjectiveProfile[]>(() => {
     if (!students) return [];
@@ -97,7 +115,7 @@ export function GroupForm({ group, onSuccess, children }: GroupFormProps) {
     } else {
       form.reset({ groupTitle: '', rationale: '', students: [] });
     }
-  }, [group, form]);
+  }, [group, form, open]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

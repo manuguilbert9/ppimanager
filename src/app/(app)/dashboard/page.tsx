@@ -141,9 +141,11 @@ export default function DashboardPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const studentsData = await getStudents();
-      const ppisData = await getPpis();
-      const groupsData = await getGroups();
+      const [studentsData, ppisData, groupsData] = await Promise.all([
+        getStudents(),
+        getPpis(),
+        getGroups()
+      ]);
       setStudents(studentsData);
       setPpis(ppisData);
       setGroups(groupsData);

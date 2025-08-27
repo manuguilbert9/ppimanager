@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getGroups, deleteGroup } from '@/lib/groups-repository';
 import type { Group } from '@/types';
-import { useDataFetching } from '@/hooks/use-data-fetching';
 import { Loader2, Trash2, FileDown, User, Calendar, PlusCircle, Edit } from 'lucide-react';
 import {
   Table,
@@ -34,10 +33,27 @@ import { generateGroupDocx } from '@/lib/group-docx-exporter';
 import { GroupForm } from './group-form';
 
 export default function GroupsPage() {
-  const { data: groups, loading, refresh } = useDataFetching(getGroups);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const fetchGroups = async () => {
+    setLoading(true);
+    try {
+      const data = await getGroups();
+      setGroups(data);
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -47,7 +63,7 @@ export default function GroupsPage() {
         title: 'Groupe supprimé',
         description: 'Le groupe de travail a été supprimé avec succès.',
       });
-      refresh();
+      fetchGroups();
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -87,7 +103,7 @@ export default function GroupsPage() {
         title="Groupes de travail sauvegardés"
         description="Gérez et exportez les groupes de travail créés à partir des suggestions de l'IA."
       >
-        <GroupForm onSuccess={refresh}>
+        <GroupForm onSuccess={fetchGroups}>
             <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un groupe
@@ -162,7 +178,7 @@ export default function GroupsPage() {
                       <TableCell>{group.createdAt}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                             <GroupForm group={group} onSuccess={refresh}>
+                             <GroupForm group={group} onSuccess={fetchGroups}>
                                 <Button variant="outline" size="sm">
                                     <Edit className="mr-2 h-4 w-4" /> Modifier
                                 </Button>

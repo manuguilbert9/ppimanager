@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -25,7 +25,6 @@ import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
 import { Loader2, Upload, FileText } from 'lucide-react';
-import { useDataFetching } from '@/hooks/use-data-fetching';
 import { orderBy } from 'lodash';
 import { SortableHeader, SortDirection } from './sortable-header';
 import { StudentImporter } from './student-importer';
@@ -74,12 +73,28 @@ const parseDate = (dateStr?: string): number | null => {
 };
 
 export default function StudentsPage() {
-  const { data: students, loading: loadingStudents, refresh: refreshStudents } = useDataFetching(getStudents);
-  const { data: classes, loading: loadingClasses } = useDataFetching(getClasses);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Classe[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
   const [isImporterOpen, setIsImporterOpen] = useState(false);
 
-  const loading = loadingStudents || loadingClasses;
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [studentsData, classesData] = await Promise.all([getStudents(), getClasses()]);
+      setStudents(studentsData);
+      setClasses(classesData);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleSort = (key: SortKey) => {
     let direction: SortDirection = 'asc';
@@ -142,14 +157,14 @@ export default function StudentsPage() {
                 <Upload className="mr-2 h-4 w-4"/>
                 Importer des élèves
             </Button>
-            <AddStudentForm classes={classes} onStudentAdded={refreshStudents} />
+            <AddStudentForm classes={classes} onStudentAdded={fetchData} />
         </div>
       </PageHeader>
       
       <StudentImporter 
         open={isImporterOpen} 
         onOpenChange={setIsImporterOpen} 
-        onSuccess={refreshStudents}
+        onSuccess={fetchData}
       />
 
       <Card>
@@ -244,14 +259,14 @@ export default function StudentsPage() {
                     <TableCell>{student.className}</TableCell>
                     <TableCell>{getAge(student.birthDate) ?? 'N/A'}</TableCell>
                     <TableCell>
-                      <PpiStatusChanger ppi={studentToPpi(student)} onStatusChanged={refreshStudents} />
+                      <PpiStatusChanger ppi={studentToPpi(student)} onStatusChanged={fetchData} />
                     </TableCell>
                     <TableCell>
                       <ViewNotesDialog 
                         studentId={student.id}
                         studentName={`${student.firstName} ${student.lastName}`} 
                         notes={student.notes}
-                        onSuccess={refreshStudents}
+                        onSuccess={fetchData}
                       >
                           <Button variant="ghost" size="icon">
                               <FileText className="h-4 w-4" />

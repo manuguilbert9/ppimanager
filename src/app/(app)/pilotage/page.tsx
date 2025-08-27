@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,6 @@ import {
 import { getStudents } from '@/lib/students-repository';
 import type { Student, Objective } from '@/types';
 import { Loader2, User, Calendar, WandSparkles, Save } from 'lucide-react';
-import { useDataFetching } from '@/hooks/use-data-fetching';
 import Link from 'next/link';
 import { groupObjectives, type StudentObjectiveGroup, type StudentObjectiveProfile } from '@/ai/flows/group-objectives-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -22,13 +21,29 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { addGroup } from '@/lib/groups-repository';
 
 export default function PilotagePage() {
-  const { data: students, loading: loadingStudents } = useDataFetching(getStudents);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const { toast } = useToast();
 
   const [objectiveGroups, setObjectiveGroups] = useState<StudentObjectiveGroup[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisDone, setAnalysisDone] = useState(false);
   const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoadingStudents(true);
+      try {
+        const data = await getStudents();
+        setStudents(data);
+      } catch (error) {
+        console.error("Failed to fetch students:", error);
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const allActiveObjectives = useMemo<StudentObjectiveProfile[]>(() => {
     if (!students) return [];
