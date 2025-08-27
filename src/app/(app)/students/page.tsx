@@ -18,10 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getStudents } from '@/lib/students-repository';
-import type { Student, Classe, PpiStatus } from '@/types';
+import type { Student, Classe, PpiStatus, Ppi } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
 import { getClasses } from '@/lib/classes-repository';
@@ -31,6 +30,7 @@ import { orderBy } from 'lodash';
 import { SortableHeader, SortDirection } from './sortable-header';
 import { StudentImporter } from './student-importer';
 import { Button } from '@/components/ui/button';
+import { PpiStatusChanger } from '../ppi/ppi-status-changer';
 
 type SortKey = 'name' | 'className' | 'age' | 'ppiStatus' | 'mdphNotificationExpiration' | 'lastUpdate';
 
@@ -121,13 +121,14 @@ export default function StudentsPage() {
 
     return orderBy(data, sortKeys, sortOrders);
   }, [students, sortConfig, loading]);
-
-  const statusConfig: Record<PpiStatus, { variant: "default" | "secondary" | "outline" | "destructive", text: string }> = {
-    validated: { variant: 'default', text: 'Validé' },
-    draft: { variant: 'secondary', text: 'Brouillon' },
-    archived: { variant: 'outline', text: 'Archivé' },
-    to_create: { variant: 'destructive', text: 'À créer' },
-  };
+  
+  const studentToPpi = (student: Student): Ppi => ({
+    id: student.id,
+    studentId: student.id,
+    studentName: `${student.firstName} ${student.lastName}`,
+    lastUpdate: student.lastUpdate,
+    status: student.ppiStatus,
+  });
 
   return (
     <>
@@ -241,9 +242,7 @@ export default function StudentsPage() {
                     <TableCell>{student.className}</TableCell>
                     <TableCell>{getAge(student.birthDate) ?? 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={statusConfig[student.ppiStatus].variant}>
-                        {statusConfig[student.ppiStatus].text}
-                      </Badge>
+                      <PpiStatusChanger ppi={studentToPpi(student)} onStatusChanged={refreshStudents} />
                     </TableCell>
                     <TableCell>{student.mdphNotificationExpiration}</TableCell>
                     <TableCell>{student.lastUpdate}</TableCell>

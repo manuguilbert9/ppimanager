@@ -28,6 +28,7 @@ import { getGroups } from '@/lib/groups-repository';
 import type { Student, Ppi, Group, Objective } from '@/types';
 import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { PpiStatusChanger } from '../ppi/ppi-status-changer';
 
 interface UpcomingObjective extends Objective {
     studentId: string;
@@ -137,38 +138,25 @@ export default function DashboardPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const studentsData = await getStudents();
-        const ppisData = await getPpis();
-        const groupsData = await getGroups();
-        setStudents(studentsData);
-        setPpis(ppisData);
-        setGroups(groupsData);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const studentsData = await getStudents();
+      const ppisData = await getPpis();
+      const groupsData = await getGroups();
+      setStudents(studentsData);
+      setPpis(ppisData);
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
-
-  const statusVariant = {
-    validated: 'default',
-    draft: 'secondary',
-    archived: 'outline',
-    to_create: 'destructive',
-  } as const;
-
-  const statusText = {
-    validated: 'Validé',
-    draft: 'Brouillon',
-    archived: 'Archivé',
-    to_create: 'À créer',
-  };
 
   if (loading) {
     return (
@@ -248,7 +236,7 @@ export default function DashboardPage() {
                         <TableRow key={ppi.id}>
                             <TableCell className="font-medium">{ppi.studentName}</TableCell>
                             <TableCell>
-                            <Badge variant={statusVariant[ppi.status]}>{statusText[ppi.status]}</Badge>
+                            <PpiStatusChanger ppi={ppi} onStatusChanged={fetchData} />
                             </TableCell>
                             <TableCell>{ppi.lastUpdate}</TableCell>
                             <TableCell className="text-right">

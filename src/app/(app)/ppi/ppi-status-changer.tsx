@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outline' | 'destructive', text: string }> = {
   draft: {
@@ -38,7 +39,7 @@ const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outl
 };
 
 
-export function PpiStatusChanger({ ppi, onStatusChanged, as, children }: { ppi: Ppi; onStatusChanged: () => void; as?: 'button'; children?: React.ReactNode }) {
+export function PpiStatusChanger({ ppi, onStatusChanged, as, children, className }: { ppi: Ppi; onStatusChanged: () => void; as?: 'button'; children?: React.ReactNode, className?: string; }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -88,14 +89,14 @@ export function PpiStatusChanger({ ppi, onStatusChanged, as, children }: { ppi: 
 
   if (currentStatus === 'to_create') {
     return (
-        <Badge variant={config.variant} className="cursor-pointer">
+        <Badge variant={config.variant} className={cn("cursor-pointer", className)}>
           {config.text}
         </Badge>
     );
   }
 
   const triggerContent = as === 'button' ? (
-    <Button variant="outline" size="lg" className="shadow-lg" disabled={isUpdating}>
+    <Button variant="outline" size="lg" className={cn("shadow-lg", className)} disabled={isUpdating}>
         {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Statut : {config.text}
     </Button>
@@ -103,7 +104,7 @@ export function PpiStatusChanger({ ppi, onStatusChanged, as, children }: { ppi: 
         <Button
           variant="ghost"
           size="sm"
-          className="p-0 h-auto"
+          className={cn("p-0 h-auto", className)}
           disabled={isUpdating}
         >
           <Badge variant={config.variant} className="cursor-pointer">
