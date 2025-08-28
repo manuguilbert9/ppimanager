@@ -1,6 +1,7 @@
 
 'use client';
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import {
   SidebarProvider,
   Sidebar,
@@ -16,51 +17,12 @@ import { Header } from './header';
 
 const AppLogo = () => (
   <div className="flex items-center gap-2 p-2">
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="text-primary"
-    >
-      <path
-        d="M12 2L4 7V17L12 22L20 17V7L12 2Z"
-        stroke="#0891B2" 
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4 7L12 12"
-        stroke="#0891B2"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M20 7L12 12"
-        stroke="#0891B2"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 22V12"
-        stroke="#0891B2"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M15 2L8 13H16L9 22"
-        fill="#FBBF24"
-        stroke="#FBBF24"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <Image 
+      src="/logo_ppimanager.png" 
+      alt="PPIManager Logo"
+      width={32}
+      height={32}
+    />
     <span className="text-lg font-semibold tracking-tight">PPIManager</span>
   </div>
 );
