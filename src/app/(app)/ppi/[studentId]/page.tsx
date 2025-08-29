@@ -24,12 +24,11 @@ import type { Student, Classe, LibraryItem } from '@/types';
 import type { ExtractedData } from '@/types/schemas';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { GenerateProseButton } from './generate-prose-button';
 import { PpiStatusChanger } from '../../ppi/ppi-status-changer';
 import { PpiNotesDrawer } from './ppi-notes-drawer';
-import { useDebounce } from '@/hooks/use-debounce';
-import { AutoSaveIndicator, SaveStatus } from './auto-save-indicator';
+import { SavePpiButton } from './save-ppi-button';
 
 const ppiFormSchema = administrativeSchema
   .merge(globalProfileSchema)
@@ -48,12 +47,13 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   const [errorLoading, setErrorLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
 
   const methods = useForm<z.infer<typeof ppiFormSchema>>({
     resolver: zodResolver(ppiFormSchema),
     defaultValues: {},
   });
+
+  const { formState: { isDirty, isSubmitting } } = methods;
 
   const fetchData = async () => {
     setErrorLoading(false);
@@ -102,7 +102,6 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
               notes: studentData.notes || '',
           };
           methods.reset(defaultValues);
-          setSaveStatus('saved');
       }
     } catch (error) {
       console.error("Failed to fetch page data:", error);
@@ -113,26 +112,6 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
   useEffect(() => {
     fetchData();
   }, [params.studentId]);
-
-  const watchedValues = useWatch({ control: methods.control });
-  const debouncedValues = useDebounce(watchedValues, 2000);
-
-  useEffect(() => {
-    if (saveStatus === 'unsaved' && !methods.formState.isSubmitting) {
-      setSaveStatus('saving');
-      methods.handleSubmit(onSubmit)();
-    }
-  }, [debouncedValues, saveStatus, methods]);
-  
-  useEffect(() => {
-    const subscription = methods.watch((value, { name, type }) => {
-        if (type === 'change' && saveStatus !== 'saving' && Object.keys(methods.formState.dirtyFields).length > 0) {
-             setSaveStatus('unsaved');
-        }
-    });
-    return () => subscription.unsubscribe();
-  }, [methods.watch, saveStatus, methods.formState.dirtyFields]);
-
 
   const handleImport = async (data: ExtractedData) => {
     if (!student) return;
@@ -255,14 +234,16 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
     try {
       await updateStudent(student.id, values);
       methods.reset(values, { keepValues: true, keepDirty: false }); 
-      setSaveStatus('saved');
+      toast({
+        title: 'Modifications enregistrées',
+        description: `Le PPI de ${values.firstName} a été mis à jour.`,
+      });
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
         description: 'Une erreur est survenue lors de la sauvegarde.',
       });
-      setSaveStatus('error');
     }
   };
 
@@ -292,13 +273,12 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
 
   return (
     <FormProvider {...methods}>
-      <form>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
         <PageHeader
           title={`PPI de ${student.firstName} ${student.lastName}`}
           description="Profil global de l'élève et synthèse de son projet."
         >
            <div className="flex items-center gap-3">
-             <AutoSaveIndicator status={saveStatus} />
             <PpiStatusChanger ppi={ppiForStatusChanger} onStatusChanged={fetchData} as="button" />
             <GenerateProseButton student={methods.getValues()} />
             <Button variant="outline" type="button" onClick={() => setIsImporting(true)}>
@@ -361,6 +341,7 @@ export default function PpiStudentPage({ params }: { params: { studentId: string
         </div>
         
         <PpiNotesDrawer />
+        <SavePpiButton isDirty={isDirty} isSubmitting={isSubmitting} />
 
       </form>
     </FormProvider>
