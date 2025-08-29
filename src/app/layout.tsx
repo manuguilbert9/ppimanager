@@ -6,6 +6,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 export const metadata: Metadata = {
   title: 'PPIManager',
   description: 'Gérez efficacement les PPI des élèves.',
+  icons: {
+    icon: '/logo_ppimanager.png',
+  },
 };
 
 export default function RootLayout({
