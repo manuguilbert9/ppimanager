@@ -31,7 +31,6 @@ import { fr } from 'date-fns/locale';
 import { PpiStatusChanger } from '../ppi/ppi-status-changer';
 import { getNonWorkingDays } from '@/ai/flows/get-non-working-days-flow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DebugPanel } from './debug-panel';
 
 interface UpcomingObjective extends Objective {
     studentId: string;
@@ -256,7 +255,6 @@ export default function DashboardPage() {
     <>
       <PageHeader title="Tableau de bord" description="Ravi de vous revoir, voici un résumé de vos activités." />
        <div className="space-y-8">
-            <DebugPanel />
             <UpcomingObjectives students={students} />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -342,3 +340,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
