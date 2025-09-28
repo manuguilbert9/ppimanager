@@ -122,6 +122,9 @@ export function NeedsForm({
         strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
         difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
       };
+      
+      console.log('DEBUG: Données envoyées à l\'IA (côté client)', JSON.stringify(studentProfile, null, 2));
+
       const result = await suggestNeeds(studentProfile);
       setSuggestions(sanitizeNeedsOutput(result));
     } catch (error) {

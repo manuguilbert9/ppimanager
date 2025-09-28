@@ -92,8 +92,8 @@ const suggestNeedsFlow = ai.defineFlow(
     outputSchema: SuggestNeedsOutputSchema,
   },
   async (input) => {
+    console.log('DEBUG: Données reçues par l\'IA (côté serveur)', JSON.stringify(input, null, 2));
     const { output } = await prompt(input);
     return output!;
   }
 );
-
