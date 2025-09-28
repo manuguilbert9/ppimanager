@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import type { PpiFormValues } from './page';
 
 export const difficultiesSchema = z.object({
   difficulties: z.object({
@@ -29,18 +30,72 @@ interface DifficultiesFormProps {
 }
 
 
-export function DifficultiesForm({ 
+export function DifficultiesForm({
   cognitiveDifficultiesSuggestions,
   schoolDifficultiesSuggestions,
   motorDifficultiesSuggestions,
   socioEmotionalDifficultiesSuggestions,
   disabilityConstraintsSuggestions,
 }: DifficultiesFormProps) {
-  const form = useFormContext<z.infer<typeof difficultiesSchema>>();
+  const form = useFormContext<PpiFormValues>();
+
+  type DifficultyCategory =
+    | 'cognitiveDifficulties'
+    | 'schoolDifficulties'
+    | 'motorDifficulties'
+    | 'socioEmotionalDifficulties'
+    | 'disabilityConstraints';
+
+  const [draggedItem, setDraggedItem] = useState<{ value: string; category: DifficultyCategory } | null>(null);
 
   const handleValuesChange = (values: string[] | undefined, category: 'cognitiveDifficulties' | 'schoolDifficulties' | 'motorDifficulties' | 'socioEmotionalDifficulties' | 'disabilityConstraints') => {
       if (values) addLibraryItems(values, category);
   }
+
+  const updateCategoryValues = (category: DifficultyCategory, values: string[]) => {
+      const fieldName = `difficulties.${category}` as `difficulties.${DifficultyCategory}`;
+      form.setValue(fieldName, values, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+      });
+      handleValuesChange(values, category);
+  };
+
+  const handleDrop = (targetCategory: DifficultyCategory) => {
+      if (!draggedItem) {
+          return;
+      }
+
+      if (draggedItem.category === targetCategory) {
+          setDraggedItem(null);
+          return;
+      }
+
+      const sourceFieldName = `difficulties.${draggedItem.category}` as `difficulties.${DifficultyCategory}`;
+      const targetFieldName = `difficulties.${targetCategory}` as `difficulties.${DifficultyCategory}`;
+
+      const sourceValues = form.getValues(sourceFieldName) ?? [];
+      const targetValues = form.getValues(targetFieldName) ?? [];
+
+      if (!sourceValues.includes(draggedItem.value)) {
+          setDraggedItem(null);
+          return;
+      }
+
+      if (targetValues.includes(draggedItem.value)) {
+          setDraggedItem(null);
+          return;
+      }
+
+      const updatedSourceValues = sourceValues.filter((item) => item !== draggedItem.value);
+      updateCategoryValues(draggedItem.category, updatedSourceValues);
+
+      const updatedTargetValues = [...targetValues, draggedItem.value];
+      updateCategoryValues(targetCategory, updatedTargetValues);
+
+      setDraggedItem(null);
+  };
 
   const badgeClassName = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
 
@@ -63,35 +118,95 @@ export function DifficultiesForm({
                       <FormField control={form.control} name="difficulties.cognitiveDifficulties" render={({ field }) => (
                           <FormItem>
                               <FormLabel>Difficultés cognitives</FormLabel>
-                              <FormControl><ComboboxInput {...field} suggestions={cognitiveDifficultiesSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'cognitiveDifficulties')}} /></FormControl>
+                              <FormControl><ComboboxInput
+                                  {...field}
+                                  suggestions={cognitiveDifficultiesSuggestions}
+                                  badgeClassName={badgeClassName}
+                                  onChange={(v) => { field.onChange(v); handleValuesChange(v, 'cognitiveDifficulties')}}
+                                  dragConfig={{
+                                      category: 'cognitiveDifficulties',
+                                      draggedItem,
+                                      onDragStart: (value) => setDraggedItem({ value, category: 'cognitiveDifficulties' }),
+                                      onDragEnd: () => setDraggedItem(null),
+                                      onDrop: (category) => handleDrop(category as DifficultyCategory),
+                                  }}
+                              /></FormControl>
                               <FormMessage />
                           </FormItem>
                       )} />
                       <FormField control={form.control} name="difficulties.schoolDifficulties" render={({ field }) => (
                           <FormItem>
                               <FormLabel>Difficultés scolaires</FormLabel>
-                              <FormControl><ComboboxInput {...field} suggestions={schoolDifficultiesSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'schoolDifficulties')}} /></FormControl>
+                              <FormControl><ComboboxInput
+                                  {...field}
+                                  suggestions={schoolDifficultiesSuggestions}
+                                  badgeClassName={badgeClassName}
+                                  onChange={(v) => { field.onChange(v); handleValuesChange(v, 'schoolDifficulties')}}
+                                  dragConfig={{
+                                      category: 'schoolDifficulties',
+                                      draggedItem,
+                                      onDragStart: (value) => setDraggedItem({ value, category: 'schoolDifficulties' }),
+                                      onDragEnd: () => setDraggedItem(null),
+                                      onDrop: (category) => handleDrop(category as DifficultyCategory),
+                                  }}
+                              /></FormControl>
                               <FormMessage />
                           </FormItem>
                       )} />
                       <FormField control={form.control} name="difficulties.motorDifficulties" render={({ field }) => (
                           <FormItem>
                               <FormLabel>Difficultés motrices et fonctionnelles</FormLabel>
-                              <FormControl><ComboboxInput {...field} suggestions={motorDifficultiesSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'motorDifficulties')}} /></FormControl>
+                              <FormControl><ComboboxInput
+                                  {...field}
+                                  suggestions={motorDifficultiesSuggestions}
+                                  badgeClassName={badgeClassName}
+                                  onChange={(v) => { field.onChange(v); handleValuesChange(v, 'motorDifficulties')}}
+                                  dragConfig={{
+                                      category: 'motorDifficulties',
+                                      draggedItem,
+                                      onDragStart: (value) => setDraggedItem({ value, category: 'motorDifficulties' }),
+                                      onDragEnd: () => setDraggedItem(null),
+                                      onDrop: (category) => handleDrop(category as DifficultyCategory),
+                                  }}
+                              /></FormControl>
                               <FormMessage />
                           </FormItem>
                       )} />
                       <FormField control={form.control} name="difficulties.socioEmotionalDifficulties" render={({ field }) => (
                           <FormItem>
                               <FormLabel>Difficultés socio-émotionnelles ou comportementales</FormLabel>
-                              <FormControl><ComboboxInput {...field} suggestions={socioEmotionalDifficultiesSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'socioEmotionalDifficulties')}} /></FormControl>
+                              <FormControl><ComboboxInput
+                                  {...field}
+                                  suggestions={socioEmotionalDifficultiesSuggestions}
+                                  badgeClassName={badgeClassName}
+                                  onChange={(v) => { field.onChange(v); handleValuesChange(v, 'socioEmotionalDifficulties')}}
+                                  dragConfig={{
+                                      category: 'socioEmotionalDifficulties',
+                                      draggedItem,
+                                      onDragStart: (value) => setDraggedItem({ value, category: 'socioEmotionalDifficulties' }),
+                                      onDragEnd: () => setDraggedItem(null),
+                                      onDrop: (category) => handleDrop(category as DifficultyCategory),
+                                  }}
+                              /></FormControl>
                               <FormMessage />
                           </FormItem>
                       )} />
                       <FormField control={form.control} name="difficulties.disabilityConstraints" render={({ field }) => (
                           <FormItem>
                               <FormLabel>Contraintes liées au handicap</FormLabel>
-                              <FormControl><ComboboxInput {...field} suggestions={disabilityConstraintsSuggestions} badgeClassName={badgeClassName} onChange={(v) => { field.onChange(v); handleValuesChange(v, 'disabilityConstraints')}} /></FormControl>
+                              <FormControl><ComboboxInput
+                                  {...field}
+                                  suggestions={disabilityConstraintsSuggestions}
+                                  badgeClassName={badgeClassName}
+                                  onChange={(v) => { field.onChange(v); handleValuesChange(v, 'disabilityConstraints')}}
+                                  dragConfig={{
+                                      category: 'disabilityConstraints',
+                                      draggedItem,
+                                      onDragStart: (value) => setDraggedItem({ value, category: 'disabilityConstraints' }),
+                                      onDragEnd: () => setDraggedItem(null),
+                                      onDrop: (category) => handleDrop(category as DifficultyCategory),
+                                  }}
+                              /></FormControl>
                               <FormMessage />
                           </FormItem>
                       )} />
