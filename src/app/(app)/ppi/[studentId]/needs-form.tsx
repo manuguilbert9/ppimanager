@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
 import { useToast } from '@/hooks/use-toast';
 import type { PpiFormValues } from './page';
+import { getReadableErrorMessage, isServiceDisabledError } from '@/ai/errors';
 
 export const needsSchema = z.object({
   needs: z.object({
@@ -132,20 +133,30 @@ export function NeedsForm({
         strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
         difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
       };
-      
+
       setApiRequest(studentProfile);
       console.log('DEBUG: Données envoyées à l\'IA (côté client)', JSON.stringify(studentProfile, null, 2));
 
       const result = await suggestNeeds(studentProfile);
+      setApiResponse(result);
 
       setSuggestions(sanitizeNeedsOutput(result));
     } catch (error) {
       console.error(error);
       setApiError(error);
+      const errorMessage = getReadableErrorMessage(
+        error,
+        "Une erreur est survenue lors de la génération des suggestions de besoins."
+      );
+
+      const description = isServiceDisabledError(error)
+        ? "Le service Google Generative AI (Gemini) n'est pas activé pour ce projet. Activez l'API Generative Language depuis la console Google Cloud puis réessayez."
+        : errorMessage;
+
       toast({
         variant: 'destructive',
         title: 'Erreur de suggestion',
-        description: "Une erreur est survenue lors de la génération des suggestions de besoins.",
+        description,
       });
     } finally {
       setIsSuggesting(false);
