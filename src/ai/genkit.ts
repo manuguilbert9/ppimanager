@@ -13,6 +13,9 @@ if (!geminiApiKey) {
   );
 }
 
+// In App Hosting, the API key is automatically available in the environment.
+// The googleAI() plugin will find and use it without explicit configuration.
+
 export const ai = genkit({
   plugins: [
     googleAI({

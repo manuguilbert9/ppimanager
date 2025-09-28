@@ -9,3 +9,4 @@ secretEnv:
   - secret: FIREBASE_PROJECT_ID
   - secret: FIREBASE_CLIENT_EMAIL
   - secret: FIREBASE_PRIVATE_KEY
+  - secret: GEMINI_API_KEY

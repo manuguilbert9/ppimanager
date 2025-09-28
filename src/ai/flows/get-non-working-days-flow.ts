@@ -27,7 +27,10 @@ export async function getNonWorkingDays(input: GetNonWorkingDaysInput): Promise<
 
 const prompt = ai.definePrompt({
   name: 'getNonWorkingDaysPrompt',
-  input: { schema: GetNonWorkingDaysInputSchema },
+  input: { schema: z.object({
+      year: GetNonWorkingDaysInputSchema.shape.year,
+      nextYear: z.number(),
+  }) },
   output: { schema: GetNonWorkingDaysOutputSchema },
   prompt: `
     Ta mission est de fournir une liste exhaustive de toutes les dates correspondant aux vacances scolaires et jours fériés pour la Zone B en France pour l'année {{{year}}}.
@@ -40,7 +43,7 @@ const prompt = ai.definePrompt({
     -   Le format de chaque date dans la liste DOIT être "AAAA-MM-JJ".
     -   N'inclus PAS les samedis et dimanches en dehors des périodes de vacances et des jours fériés. La logique métier s'en chargera.
     -   Assure-toi que les plages de vacances incluent bien le premier ET le dernier jour de la période.
-    -   Pour l'année en cours, si les futures vacances (hors été) de l'année scolaire {{{year}}}-{{{year}}+1 ne sont pas encore officiellement définies, ne les invente pas.
+    -   Pour l'année en cours, si les futures vacances (hors été) de l'année scolaire {{{year}}}-{{{nextYear}}} ne sont pas encore officiellement définies, ne les invente pas.
 
     Exemple pour le 1er mai 2024 : la liste doit contenir "2024-05-01".
     Exemple pour les vacances de la Toussaint 2024 (Zone B) du samedi 19 oct au dimanche 3 nov : la liste doit contenir toutes les dates du "2024-10-19" au "2024-11-03" inclusivement.
@@ -57,7 +60,10 @@ const getNonWorkingDaysFlow = ai.defineFlow(
     outputSchema: GetNonWorkingDaysOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt({
+        year: input.year,
+        nextYear: input.year + 1,
+    });
     return output!;
   }
 );
