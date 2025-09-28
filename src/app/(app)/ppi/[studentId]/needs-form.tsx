@@ -137,7 +137,7 @@ export function NeedsForm({
       console.log('DEBUG: Données envoyées à l\'IA (côté client)', JSON.stringify(studentProfile, null, 2));
 
       const result = await suggestNeeds(studentProfile);
-      setApiResponse(result);
+
       setSuggestions(sanitizeNeedsOutput(result));
     } catch (error) {
       console.error(error);
