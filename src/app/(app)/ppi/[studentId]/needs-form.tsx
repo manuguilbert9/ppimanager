@@ -111,24 +111,37 @@ export function NeedsForm({
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
+  
+  // Debug states
+  const [apiRequest, setApiRequest] = useState<any>(null);
+  const [apiResponse, setApiResponse] = useState<any>(null);
+  const [apiError, setApiError] = useState<any>(null);
+
 
   const form = useFormContext<PpiFormValues>();
 
   const handleSuggestNeeds = async () => {
     setIsSuggesting(true);
     setSuggestions(null);
+    setApiRequest(null);
+    setApiResponse(null);
+    setApiError(null);
+
     try {
       const studentProfile: SuggestNeedsInput = {
         strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
         difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
       };
       
+      setApiRequest(studentProfile);
       console.log('DEBUG: Données envoyées à l\'IA (côté client)', JSON.stringify(studentProfile, null, 2));
 
       const result = await suggestNeeds(studentProfile);
+      setApiResponse(result);
       setSuggestions(sanitizeNeedsOutput(result));
     } catch (error) {
       console.error(error);
+      setApiError(error);
       toast({
         variant: 'destructive',
         title: 'Erreur de suggestion',
@@ -277,6 +290,40 @@ export function NeedsForm({
               </AccordionItem>
             </Accordion>
         </div>
+
+        {(apiRequest || apiResponse || apiError) && (
+            <div className="mt-8 p-4 border-t border-dashed">
+                <h3 className="text-lg font-semibold text-gray-700">Informations de débogage IA</h3>
+                
+                {apiRequest && (
+                    <div className="mt-4">
+                        <h4 className="font-semibold">Données envoyées à l'IA :</h4>
+                        <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-x-auto">
+                            <code>{JSON.stringify(apiRequest, null, 2)}</code>
+                        </pre>
+                    </div>
+                )}
+
+                {apiResponse && (
+                    <div className="mt-4">
+                        <h4 className="font-semibold">Données reçues de l'IA :</h4>
+                        <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-x-auto">
+                            <code>{JSON.stringify(apiResponse, null, 2)}</code>
+                        </pre>
+                    </div>
+                )}
+
+                {apiError && (
+                    <div className="mt-4">
+                        <h4 className="font-semibold text-destructive">Erreur de l'API :</h4>
+                        <pre className="mt-1 p-2 bg-red-50 border border-red-200 text-red-800 rounded text-xs overflow-x-auto">
+                            <code>{apiError instanceof Error ? apiError.stack : JSON.stringify(apiError, null, 2)}</code>
+                        </pre>
+                    </div>
+                )}
+            </div>
+        )}
+
       </CardContent>
     </Card>
   );
