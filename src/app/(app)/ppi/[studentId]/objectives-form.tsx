@@ -12,19 +12,20 @@ import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import type { Student, Objective } from '@/types';
+import type { Student, Objective, Strengths, Difficulties, Needs } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical } from 'lucide-react';
-import { suggestObjectives, SuggestObjectivesInput } from '@/ai/flows/suggest-objectives-flow';
+import { suggestObjectives, SuggestObjectivesInput, SuggestObjectivesOutput } from '@/ai/flows/suggest-objectives-flow';
 import { suggestAdaptations } from '@/ai/flows/suggest-adaptations-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ComboboxField } from '@/components/combobox-field';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Separator } from '@/components/ui/separator';
 import { DatePicker } from '@/components/date-picker';
+import type { PpiFormValues } from './page';
 
 const objectiveSchema = z.object({
   id: z.string().optional(),
@@ -76,12 +77,14 @@ const SortableObjectiveItem = ({
 };
 
 const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; adaptationsSuggestions: string[]; }) => {
-    const { getValues, setValue, control } = useFormContext<z.infer<typeof objectivesSchema>>();
+    const { getValues, setValue, control } = useFormContext<PpiFormValues>();
     const { toast } = useToast();
 
-    const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray({
-        control: control,
-        name: `objectives.${objectiveIndex}.adaptations`,
+    type ObjectiveAdaptationsFieldArrayName = `objectives.${number}.adaptations`;
+
+    const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray<PpiFormValues, ObjectiveAdaptationsFieldArrayName>({
+        control,
+        name: `objectives.${objectiveIndex}.adaptations` as ObjectiveAdaptationsFieldArrayName,
     });
 
     const [adaptationSuggestions, setAdaptationSuggestions] = useState<string[]>([]);
@@ -180,6 +183,47 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
 };
 
 
+const sanitizeStringArray = (values?: string[]) => {
+  if (!values) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      values
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0)
+    )
+  );
+};
+
+const sanitizeSection = <T extends Record<string, string[] | undefined> | undefined>(section: T): T | undefined => {
+  if (!section) {
+    return undefined;
+  }
+
+  const sanitizedEntries = Object.entries(section).reduce((acc, [key, value]) => {
+    const sanitized = sanitizeStringArray(value as string[] | undefined);
+    if (sanitized.length > 0) {
+      (acc as Record<string, string[]>)[key] = sanitized;
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  if (Object.keys(sanitizedEntries).length === 0) {
+    return undefined;
+  }
+
+  return sanitizedEntries as T;
+};
+
+const sanitizeObjectiveSuggestion = (suggestion: SuggestObjectivesOutput['objectives'][number]) => ({
+  title: suggestion.title.trim(),
+  successCriteria: suggestion.successCriteria.trim(),
+  deadline: suggestion.deadline.trim(),
+  validationDate: suggestion.validationDate?.trim(),
+});
+
 export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
   const [isSuggestingObjectives, setIsSuggestingObjectives] = useState(false);
@@ -190,7 +234,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     setIsMounted(true);
   }, []);
 
-  const form = useFormContext<z.infer<typeof objectivesSchema>>();
+  const form = useFormContext<PpiFormValues>();
   const { control } = form;
 
   const { fields, append, remove, move } = useFieldArray({
@@ -231,13 +275,31 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     setObjectiveSuggestions([]);
     try {
         const studentProfile: SuggestObjectivesInput = {
-            strengths: form.getValues('strengths') || {},
-            difficulties: form.getValues('difficulties') || {},
-            needs: form.getValues('needs') || {},
+            strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
+            difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
+            needs: sanitizeSection<Needs | undefined>(form.getValues('needs') as Needs | undefined),
         };
         
       const result = await suggestObjectives(studentProfile);
-      setObjectiveSuggestions(result.objectives);
+      const existingObjectiveTitles = new Set(
+        (form.getValues('objectives') || [])
+          .map((objective) => objective?.title?.trim().toLowerCase())
+          .filter((title): title is string => Boolean(title))
+      );
+
+      const sanitizedSuggestions = result.objectives
+        .map(sanitizeObjectiveSuggestion)
+        .filter((suggestion) => suggestion.title.length > 0)
+        .filter((suggestion) => !existingObjectiveTitles.has(suggestion.title.toLowerCase()));
+
+      setObjectiveSuggestions(
+        sanitizedSuggestions.map((suggestion) => ({
+          title: suggestion.title,
+          successCriteria: suggestion.successCriteria,
+          deadline: suggestion.deadline,
+          validationDate: suggestion.validationDate,
+        }))
+      );
     } catch (error) {
       console.error(error);
       toast({
@@ -251,16 +313,19 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   const addObjectiveSuggestionToForm = (suggestion: Objective) => {
-    append({ 
+    append({
         id: Math.random().toString(36).substring(7),
-        title: suggestion.title, 
-        successCriteria: suggestion.successCriteria, 
-        deadline: suggestion.deadline,
-        validationDate: '',
+        title: suggestion.title.trim(),
+        successCriteria: suggestion.successCriteria?.trim() || '',
+        deadline: suggestion.deadline?.trim() || '',
+        validationDate: suggestion.validationDate?.trim() || '',
         adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations : [],
     });
-    setObjectiveSuggestions(objectiveSuggestions.filter(s => s.title !== suggestion.title));
-  }
+    const normalizedTitle = suggestion.title.trim().toLowerCase();
+    setObjectiveSuggestions(
+      objectiveSuggestions.filter((s) => s.title.trim().toLowerCase() !== normalizedTitle)
+    );
+  };
   
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;

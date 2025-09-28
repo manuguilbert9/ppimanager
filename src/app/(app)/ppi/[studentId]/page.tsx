@@ -38,6 +38,8 @@ const ppiFormSchema = administrativeSchema
   .merge(objectivesSchema)
   .merge(notesSchema);
 
+export type PpiFormValues = z.infer<typeof ppiFormSchema>;
+
 
 export default function PpiStudentPage({ params }: { params: { studentId: string } }) {
   const [student, setStudent] = useState<Student | null>(null);

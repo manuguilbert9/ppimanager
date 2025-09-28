@@ -21,6 +21,17 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
+interface DragConfig {
+  category: string;
+  draggedItem?: {
+    value: string;
+    category: string;
+  } | null;
+  onDragStart: (value: string, category: string) => void;
+  onDragEnd: () => void;
+  onDrop: (category: string) => void;
+}
+
 interface ComboboxInputProps {
   value?: string[];
   onChange: (value: string[]) => void;
@@ -28,6 +39,7 @@ interface ComboboxInputProps {
   suggestions?: string[];
   badgeClassName?: string;
   singleSelection?: boolean;
+  dragConfig?: DragConfig;
 }
 
 const ComboboxInput = React.forwardRef<HTMLButtonElement, ComboboxInputProps>(
@@ -38,10 +50,13 @@ const ComboboxInput = React.forwardRef<HTMLButtonElement, ComboboxInputProps>(
     suggestions = [],
     badgeClassName,
     singleSelection = false,
+    dragConfig,
   }, ref) => {
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState('');
     
+    const [isDragOver, setIsDragOver] = React.useState(false);
+
     const handleUnselect = (item: string) => {
       onChange(value.filter((i) => i !== item));
     };
@@ -73,6 +88,34 @@ const ComboboxInput = React.forwardRef<HTMLButtonElement, ComboboxInputProps>(
     );
 
     const showCreateOption = inputValue.trim() && !filteredSuggestions.some(s => s.toLowerCase() === inputValue.trim().toLowerCase());
+
+    const allowDrop =
+      dragConfig?.draggedItem &&
+      dragConfig.draggedItem.category !== dragConfig.category;
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+      if (!dragConfig || !allowDrop) {
+        return;
+      }
+      e.preventDefault();
+      setIsDragOver(true);
+    };
+
+    const handleDragLeave = () => {
+      if (!dragConfig) {
+        return;
+      }
+      setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+      if (!dragConfig || !allowDrop) {
+        return;
+      }
+      e.preventDefault();
+      setIsDragOver(false);
+      dragConfig.onDrop(dragConfig.category);
+    };
 
     return (
       <div className="flex flex-col gap-2">
@@ -137,33 +180,61 @@ const ComboboxInput = React.forwardRef<HTMLButtonElement, ComboboxInputProps>(
           </PopoverContent>
         </Popover>
 
-        {!singleSelection && <div className="flex flex-wrap gap-1">
-          {value.map((item) => (
-            <Badge
-              key={item}
-              variant="secondary"
-              className={cn("flex items-center gap-1", badgeClassName)}
-            >
-              {item}
-              <button
-                type="button"
-                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleUnselect(item);
-                  }
+        {!singleSelection && (
+          <div
+            className={cn(
+              'flex flex-wrap gap-1',
+              dragConfig &&
+                'min-h-[2.75rem] items-center rounded-md border border-dashed p-2 transition-colors',
+              dragConfig &&
+                (isDragOver
+                  ? 'border-primary/50 bg-primary/10'
+                  : 'border-muted')
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {value.map((item) => (
+              <Badge
+                key={item}
+                variant="secondary"
+                className={cn('flex items-center gap-1', badgeClassName)}
+                draggable={!!dragConfig}
+                onDragStart={() => {
+                  dragConfig?.onDragStart(item, dragConfig.category);
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onDragEnd={() => {
+                  setIsDragOver(false);
+                  dragConfig?.onDragEnd();
                 }}
-                onClick={() => handleUnselect(item)}
               >
-                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            </Badge>
-          ))}
-        </div>}
+                {item}
+                <button
+                  type="button"
+                  className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleUnselect(item);
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={() => handleUnselect(item)}
+                >
+                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </Badge>
+            ))}
+            {value.length === 0 && dragConfig && (
+              <span className="text-xs text-muted-foreground">
+                Glissez et déposez des éléments ici
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   }
