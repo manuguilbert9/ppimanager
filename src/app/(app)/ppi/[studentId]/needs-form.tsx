@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Needs } from '@/types';
+import type { Difficulties, Needs, Strengths } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
@@ -15,6 +15,7 @@ import { Sparkles, Loader2, PlusCircle, WandSparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
 import { useToast } from '@/hooks/use-toast';
+import type { PpiFormValues } from './page';
 
 export const needsSchema = z.object({
   needs: z.object({
@@ -58,6 +59,48 @@ const SuggestionSection = ({ title, suggestions, onAdd }: { title: string; sugge
   );
 };
 
+const sanitizeStringArray = (values?: string[]) => {
+  if (!values) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      values
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0)
+    )
+  );
+};
+
+const sanitizeSection = <T extends Record<string, string[] | undefined> | undefined>(section: T): T | undefined => {
+  if (!section) {
+    return undefined;
+  }
+
+  const sanitizedEntries = Object.entries(section).reduce((acc, [key, value]) => {
+    const sanitized = sanitizeStringArray(value as string[] | undefined);
+    if (sanitized.length > 0) {
+      (acc as Record<string, string[]>)[key] = sanitized;
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  if (Object.keys(sanitizedEntries).length === 0) {
+    return undefined;
+  }
+
+  return sanitizedEntries as T;
+};
+
+const sanitizeNeedsOutput = (output: SuggestNeedsOutput): SuggestNeedsOutput => ({
+  pedagogicalAccommodations: sanitizeStringArray(output.pedagogicalAccommodations),
+  humanAssistance: sanitizeStringArray(output.humanAssistance),
+  compensatoryTools: sanitizeStringArray(output.compensatoryTools),
+  specialEducationalApproach: sanitizeStringArray(output.specialEducationalApproach),
+  complementaryCare: sanitizeStringArray(output.complementaryCare),
+});
+
 export function NeedsForm({
   pedagogicalAccommodationsSuggestions,
   humanAssistanceSuggestions,
@@ -69,18 +112,18 @@ export function NeedsForm({
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestNeedsOutput | null>(null);
 
-  const form = useFormContext<z.infer<typeof needsSchema>>();
+  const form = useFormContext<PpiFormValues>();
 
   const handleSuggestNeeds = async () => {
     setIsSuggesting(true);
     setSuggestions(null);
     try {
       const studentProfile: SuggestNeedsInput = {
-        strengths: form.getValues('strengths') || {},
-        difficulties: form.getValues('difficulties') || {},
+        strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
+        difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
       };
       const result = await suggestNeeds(studentProfile);
-      setSuggestions(result);
+      setSuggestions(sanitizeNeedsOutput(result));
     } catch (error) {
       console.error(error);
       toast({
@@ -96,9 +139,14 @@ export function NeedsForm({
   const addSuggestion = (suggestion: string, field: keyof Needs) => {
     const fieldName = `needs.${field}` as const;
     const currentValues = form.getValues(fieldName) || [];
-    if (!currentValues.includes(suggestion)) {
-      form.setValue(fieldName, [...currentValues, suggestion], { shouldDirty: true });
-      addLibraryItems([suggestion], field); // Add to library as well
+    const trimmedSuggestion = suggestion.trim();
+    if (!trimmedSuggestion) {
+      return;
+    }
+    if (!currentValues.includes(trimmedSuggestion)) {
+      const updatedValues = [...currentValues, trimmedSuggestion];
+      form.setValue(fieldName, updatedValues, { shouldDirty: true });
+      addLibraryItems([trimmedSuggestion], field); // Add to library as well
     }
     // Remove from suggestions list to avoid clutter
     if (suggestions) {
@@ -110,8 +158,11 @@ export function NeedsForm({
   };
   
   const handleValuesChange = (values: string[] | undefined, category: keyof Needs) => {
-      if (values) addLibraryItems(values, category);
-  }
+    const sanitized = sanitizeStringArray(values);
+    if (sanitized.length > 0) {
+      addLibraryItems(sanitized, category);
+    }
+  };
 
   const badgeClassName = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
 
