@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -52,18 +53,22 @@ const prompt = ai.definePrompt({
 
     Voici le profil de l'élève :
 
+    {{#if strengths}}
     POINTS FORTS (ce sont des leviers potentiels) :
-    - Compétences académiques : {{{strengths.academicSkills}}}
-    - Forces cognitives : {{{strengths.cognitiveStrengths}}}
-    - Habiletés sociales : {{{strengths.socialSkills}}}
-    - Intérêts : {{{strengths.exploitableInterests}}}
+    {{#if strengths.academicSkills}}- Compétences académiques : {{{strengths.academicSkills}}}{{/if}}
+    {{#if strengths.cognitiveStrengths}}- Forces cognitives : {{{strengths.cognitiveStrengths}}}{{/if}}
+    {{#if strengths.socialSkills}}- Habiletés sociales : {{{strengths.socialSkills}}}{{/if}}
+    {{#if strengths.exploitableInterests}}- Intérêts : {{{strengths.exploitableInterests}}}{{/if}}
+    {{/if}}
 
+    {{#if difficulties}}
     DIFFICULTÉS (ce sont les obstacles à surmonter) :
-    - Cognitives : {{{difficulties.cognitiveDifficulties}}}
-    - Scolaires : {{{difficulties.schoolDifficulties}}}
-    - Motrices : {{{difficulties.motorDifficulties}}}
-    - Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}
-    - Contraintes du handicap : {{{difficulties.disabilityConstraints}}}
+    {{#if difficulties.cognitiveDifficulties}}- Cognitives : {{{difficulties.cognitiveDifficulties}}}{{/if}}
+    {{#if difficulties.schoolDifficulties}}- Scolaires : {{{difficulties.schoolDifficulties}}}{{/if}}
+    {{#if difficulties.motorDifficulties}}- Motrices : {{{difficulties.motorDifficulties}}}{{/if}}
+    {{#if difficulties.socioEmotionalDifficulties}}- Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}{{/if}}
+    {{#if difficulties.disabilityConstraints}}- Contraintes du handicap : {{{difficulties.disabilityConstraints}}}{{/if}}
+    {{/if}}
 
     INSTRUCTION :
     En te basant principalement sur les DIFFICULTÉS listées, et en considérant les POINTS FORTS comme des moyens pour aider l'élève, propose des listes de besoins concrets et spécifiques pour chaque catégorie ci-dessous.
@@ -91,3 +96,4 @@ const suggestNeedsFlow = ai.defineFlow(
     return output!;
   }
 );
+
