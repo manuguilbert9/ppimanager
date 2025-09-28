@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import type { Strengths, Difficulties } from '@/types';
+import { AiGenerationError, isServiceDisabledError } from '@/ai/errors';
 
 const SuggestNeedsInputSchema = z.object({
   strengths: z.object({
@@ -93,7 +94,31 @@ const suggestNeedsFlow = ai.defineFlow(
   },
   async (input) => {
     console.log('DEBUG: Données reçues par l\'IA (côté serveur)', JSON.stringify(input, null, 2));
-    const { output } = await prompt(input);
-    return output!;
+
+    try {
+      const { output } = await prompt(input);
+      return output!;
+    } catch (error) {
+      console.error("Erreur lors de l'appel au service de génération Gemini", error);
+
+      if (error instanceof AiGenerationError) {
+        throw error;
+      }
+
+      if (isServiceDisabledError(error)) {
+        throw new AiGenerationError(
+          "[SERVICE_DISABLED] L'API Google Generative Language (Gemini) est désactivée ou indisponible pour ce projet. Activez-la depuis la console Google Cloud (https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview) puis réessayez.",
+          'SERVICE_DISABLED',
+          error
+        );
+      }
+
+      const fallbackMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : "Une erreur est survenue lors de la génération des besoins par l'IA.";
+
+      throw new AiGenerationError(fallbackMessage, 'UNKNOWN', error);
+    }
   }
 );
