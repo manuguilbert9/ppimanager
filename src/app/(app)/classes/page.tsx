@@ -19,19 +19,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { getClasses } from '@/lib/classes-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Classe } from '@/types';
 import { AddClasseForm } from './add-classe-form';
 import { ClasseActions } from './classe-actions';
 import { Loader2 } from 'lucide-react';
 
 export default function ClassesPage() {
+  const { user } = useAuth();
   const [classes, setClasses] = useState<Classe[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchClasses = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const data = await getClasses();
+      const data = await getClasses(user.uid);
       setClasses(data);
     } catch (error) {
       console.error("Failed to fetch classes:", error);

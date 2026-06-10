@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { importStudents } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { ImportedStudent } from '@/types';
 
 interface StudentImporterProps {
@@ -26,6 +27,7 @@ interface StudentImporterProps {
 }
 
 export function StudentImporter({ open, onOpenChange, onSuccess }: StudentImporterProps) {
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -97,7 +99,7 @@ export function StudentImporter({ open, onOpenChange, onSuccess }: StudentImport
           }
       }
       
-      const result = await importStudents(studentsToImport);
+      const result = await importStudents(studentsToImport, user!.uid);
       toast({
         title: 'Importation terminée',
         description: `${result.added} élèves ajoutés, ${result.skipped} ignorés (doublons).`,

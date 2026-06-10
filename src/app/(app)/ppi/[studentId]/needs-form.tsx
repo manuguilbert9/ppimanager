@@ -11,6 +11,7 @@ import type { Difficulties, Needs, Strengths } from '@/types';
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { Sparkles, Loader2, PlusCircle, WandSparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { suggestNeeds, SuggestNeedsInput, SuggestNeedsOutput } from '@/ai/flows/suggest-needs-flow';
@@ -100,6 +101,7 @@ const sanitizeNeedsOutput = (output: SuggestNeedsOutput): SuggestNeedsOutput => 
   compensatoryTools: sanitizeStringArray(output.compensatoryTools),
   specialEducationalApproach: sanitizeStringArray(output.specialEducationalApproach),
   complementaryCare: sanitizeStringArray(output.complementaryCare),
+  priorityNeeds: (output.priorityNeeds || []).filter((n) => n.label && n.label.trim().length > 0),
 });
 
 export function NeedsForm({
@@ -119,6 +121,7 @@ export function NeedsForm({
   const [apiError, setApiError] = useState<any>(null);
 
 
+  const { user } = useAuth();
   const form = useFormContext<PpiFormValues>();
 
   const handleSuggestNeeds = async () => {
@@ -132,6 +135,8 @@ export function NeedsForm({
       const studentProfile: SuggestNeedsInput = {
         strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
         difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
+        observations: form.getValues('observations') || {},
+        troubleIds: form.getValues('troubleIds') || [],
       };
 
       setApiRequest(studentProfile);
@@ -150,7 +155,7 @@ export function NeedsForm({
       );
 
       const description = isServiceDisabledError(error)
-        ? "Le service Google Generative AI (Gemini) n'est pas activé pour ce projet. Activez l'API Generative Language depuis la console Google Cloud puis réessayez."
+        ? "Le service DeepSeek n'est pas disponible pour ce projet. Vérifiez que la clé DEEPSEEK_API_KEY est valide et que votre compte DeepSeek dispose d'un solde suffisant, puis réessayez."
         : errorMessage;
 
       toast({
@@ -163,6 +168,31 @@ export function NeedsForm({
     }
   };
   
+  const addPriorityNeedSuggestion = (need: { label: string; domain?: string; rationale?: string }) => {
+    const current = form.getValues('priorityNeeds') || [];
+    if (!current.some((n) => n.label.trim().toLowerCase() === need.label.trim().toLowerCase())) {
+      form.setValue(
+        'priorityNeeds',
+        [
+          ...current,
+          {
+            id: Math.random().toString(36).substring(7),
+            label: need.label.trim(),
+            domain: need.domain || '',
+            rationale: need.rationale || '',
+          },
+        ],
+        { shouldDirty: true }
+      );
+    }
+    if (suggestions) {
+      setSuggestions({
+        ...suggestions,
+        priorityNeeds: (suggestions.priorityNeeds || []).filter((n) => n.label !== need.label),
+      });
+    }
+  };
+
   const addSuggestion = (suggestion: string, field: keyof Needs) => {
     const fieldName = `needs.${field}` as const;
     const currentValues = form.getValues(fieldName) || [];
@@ -173,7 +203,7 @@ export function NeedsForm({
     if (!currentValues.includes(trimmedSuggestion)) {
       const updatedValues = [...currentValues, trimmedSuggestion];
       form.setValue(fieldName, updatedValues, { shouldDirty: true });
-      addLibraryItems([trimmedSuggestion], field); // Add to library as well
+      addLibraryItems([trimmedSuggestion], field, user!.uid);
     }
     // Remove from suggestions list to avoid clutter
     if (suggestions) {
@@ -187,7 +217,7 @@ export function NeedsForm({
   const handleValuesChange = (values: string[] | undefined, category: keyof Needs) => {
     const sanitized = sanitizeStringArray(values);
     if (sanitized.length > 0) {
-      addLibraryItems(sanitized, category);
+      addLibraryItems(sanitized, category, user!.uid);
     }
   };
 
@@ -225,9 +255,33 @@ export function NeedsForm({
             <WandSparkles className="h-4 w-4" />
             <AlertTitle>Suggestions de besoins</AlertTitle>
             <AlertDescription>
-                Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter aux champs correspondants.
+                Suggestions construites à partir de la grille d'observation, des troubles et des difficultés.
+                Cliquez pour les ajouter aux champs correspondants.
             </AlertDescription>
             <div className="mt-4 space-y-4">
+              {suggestions.priorityNeeds && suggestions.priorityNeeds.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Besoins prioritaires proposés (hiérarchisés)</h4>
+                  <div className="space-y-2">
+                    {suggestions.priorityNeeds.map((need, index) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-auto w-full justify-start whitespace-normal text-left"
+                        onClick={() => addPriorityNeedSuggestion(need)}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
+                        <span>
+                          <span className="font-medium">{index + 1}. {need.label}</span>
+                          {need.rationale && <span className="ml-1 text-xs text-muted-foreground">— {need.rationale}</span>}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <SuggestionSection
                 title="Aménagements pédagogiques"
                 suggestions={suggestions.pedagogicalAccommodations}

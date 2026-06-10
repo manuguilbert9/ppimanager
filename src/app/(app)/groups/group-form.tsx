@@ -30,6 +30,7 @@ import type { Group, Student } from '@/types';
 import { getStudents } from '@/lib/students-repository';
 import type { StudentObjectiveProfile } from '@/ai/flows/group-objectives-flow';
 import { addGroup, updateGroup } from '@/lib/groups-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -62,6 +63,7 @@ interface GroupFormProps {
 }
 
 export function GroupForm({ group, onSuccess, children }: GroupFormProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
@@ -72,7 +74,7 @@ export function GroupForm({ group, onSuccess, children }: GroupFormProps) {
       const fetchStudents = async () => {
         setLoadingStudents(true);
         try {
-          const data = await getStudents();
+          const data = await getStudents(user!.uid);
           setStudents(data);
         } catch (error) {
           console.error("Failed to fetch students", error);
@@ -133,7 +135,7 @@ export function GroupForm({ group, onSuccess, children }: GroupFormProps) {
         await updateGroup(group.id, values);
         toast({ title: 'Groupe modifié', description: 'Le groupe a été mis à jour avec succès.' });
       } else {
-        await addGroup(values);
+        await addGroup(values, user!.uid);
         toast({ title: 'Groupe créé', description: 'Le nouveau groupe a été enregistré.' });
       }
       onSuccess();

@@ -43,3 +43,8 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# ouvrage de référence (sous droits d'auteur, ne pas committer ni servir)
+/public/*.pdf
+/test-ppi.docx
+/.tmp-test-docx.js

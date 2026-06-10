@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { PpiFormValues } from './page';
 
 export const strengthsSchema = z.object({
@@ -33,6 +34,7 @@ export function StrengthsForm({
   socialSkillsSuggestions,
   exploitableInterestsSuggestions
 }: StrengthsFormProps) {
+  const { user } = useAuth();
   const form = useFormContext<PpiFormValues>();
 
   type StrengthsCategory =
@@ -44,7 +46,7 @@ export function StrengthsForm({
   const [draggedItem, setDraggedItem] = useState<{ value: string; category: StrengthsCategory } | null>(null);
 
   const handleValuesChange = (values: string[] | undefined, category: 'academicSkills' | 'cognitiveStrengths' | 'socialSkills' | 'exploitableInterests') => {
-      if (values) addLibraryItems(values, category);
+      if (values) addLibraryItems(values, category, user!.uid);
   }
 
   const updateCategoryValues = (category: StrengthsCategory, values: string[]) => {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { deleteClasse } from '@/lib/classes-repository';
+import { useAuth } from '@/hooks/use-auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,13 +19,14 @@ import {
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export function DeleteClasseDialog({ classeId }: { classeId: string }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleDelete = async () => {
     try {
-      await deleteClasse(classeId);
+      await deleteClasse(classeId, user!.uid);
       toast({
         title: 'Classe supprimée',
         description: "La classe a été supprimée avec succès.",

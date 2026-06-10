@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { updatePpiStatus } from '@/lib/ppi-repository';
 import { duplicatePpi } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Ppi, PpiStatus } from '@/types';
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ const statusConfig: Record<PpiStatus, { variant: 'default' | 'secondary' | 'outl
 
 
 export function PpiStatusChanger({ ppi, onStatusChanged, as, children, className }: { ppi: Ppi; onStatusChanged: () => void; as?: 'button'; children?: React.ReactNode, className?: string; }) {
+  const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -78,7 +80,7 @@ export function PpiStatusChanger({ ppi, onStatusChanged, as, children, className
   const handleDuplicate = async () => {
     setIsUpdating(true);
     try {
-      await duplicatePpi(ppi.studentId);
+      await duplicatePpi(ppi.studentId, user!.uid);
       toast({
         title: 'Nouveau PPI créé',
         description: `Un nouveau brouillon de PPI a été créé pour ${ppi.studentName}.`,

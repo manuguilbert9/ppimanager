@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 
 export const globalProfileSchema = z.object({
   globalProfile: z.object({
@@ -27,6 +28,9 @@ export const globalProfileSchema = z.object({
       schoolHistory: z.string().optional(),
       hobbies: z.array(z.string()).optional(),
       personalProject: z.string().optional(),
+      parentalProject: z.string().optional(),
+      careSupports: z.string().optional(),
+      schoolingTime: z.string().optional(),
   }).optional(),
 });
 
@@ -45,10 +49,11 @@ export function GlobalProfileForm({
   equipmentSuggestions,
   hobbiesSuggestions
 }: GlobalProfileFormProps) {
+  const { user } = useAuth();
   const form = useFormContext<z.infer<typeof globalProfileSchema>>();
 
   const handleValuesChange = (values: string[] | undefined, category: 'disabilityNatures' | 'associatedDisorders' | 'medicalNeeds' | 'equipment' | 'hobbies') => {
-      if (values) addLibraryItems(values, category);
+      if (values) addLibraryItems(values, category, user!.uid);
   }
 
   return (
@@ -168,20 +173,36 @@ export function GlobalProfileForm({
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger className="text-lg font-medium text-gray-700">Histoire scolaire et parcours</AccordionTrigger>
-                <AccordionContent className="pt-4">
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Histoire scolaire, parcours et accompagnements</AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="globalProfile.schoolHistory" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Résumé du parcours scolaire antérieur</FormLabel>
-                            <FormControl><Textarea rows={5} {...field} /></FormControl>
+                            <FormControl><Textarea rows={5} {...field} placeholder="Cursus régulier ou non, maintiens de cycle, difficultés depuis le début de la scolarité ou apparues en cours..." /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField control={form.control} name="globalProfile.careSupports" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Suivis et prises en charge</FormLabel>
+                                <FormControl><Textarea rows={4} {...field} placeholder="Orthophonie, ergothérapie, soutien psychologique, SESSAD... Quelle évaluation de ces prises en charge, quelles évolutions ?" /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="globalProfile.schoolingTime" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Temps de scolarisation</FormLabel>
+                                <FormControl><Textarea rows={4} {...field} placeholder="Temps hebdomadaire de scolarisation, temps d'inclusion en classe ordinaire, temps de soins..." /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-5">
-                <AccordionTrigger className="text-lg font-medium text-gray-700">Centres d’intérêt et projet personnel</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-medium text-gray-700">Centres d’intérêt, projet personnel et projet parental</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                     <FormField control={form.control} name="globalProfile.hobbies" render={({ field }) => (
                         <FormItem>
@@ -194,6 +215,13 @@ export function GlobalProfileForm({
                         <FormItem>
                             <FormLabel>Esquisse du projet d’avenir ou professionnel</FormLabel>
                             <FormControl><Textarea {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="globalProfile.parentalProject" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Projet parental pour l'enfant</FormLabel>
+                            <FormControl><Textarea {...field} placeholder="Regard des parents sur la scolarité, attentes, projet pour leur enfant. La famille est « spécialiste » de son enfant : sur quoi peut-on s'appuyer ?" /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />

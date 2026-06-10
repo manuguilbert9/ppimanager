@@ -1,20 +1,20 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, getDoc, deleteDoc, updateDoc, writeBatch, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Student, ImportedStudent, Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { getClasse, addClasse, getClasses } from './classes-repository';
 import { groupBy, orderBy } from 'lodash';
 
-async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
-    const data = doc.data();
+async function studentFromDoc(docData: QueryDocumentSnapshot<DocumentData> | DocumentData): Promise<Student> {
+    const data = docData.data();
     const classe = data.classId ? await getClasse(data.classId) : null;
     const lastUpdateDate = data.lastUpdate?.toDate ? data.lastUpdate.toDate() : new Date();
-    
+
     return {
-        id: doc.id,
+        id: docData.id,
         firstName: data.firstName,
         lastName: data.lastName,
         birthDate: data.birthDate,
@@ -28,7 +28,7 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         className: classe?.name ?? 'N/A',
         teacherName: classe?.teacherName ?? 'N/A',
         lastUpdate: lastUpdateDate.toLocaleDateString('fr-FR'),
-        lastUpdateTimestamp: lastUpdateDate.getTime(), // Use serializable timestamp
+        lastUpdateTimestamp: lastUpdateDate.getTime(),
         ppiStatus: data.ppiStatus || 'draft',
         avatarUrl: data.avatarUrl || `https://placehold.co/40x40.png?text=${data.firstName?.substring(0,1)}${data.lastName?.substring(0,1)}`,
         globalProfile: data.globalProfile || {},
@@ -37,63 +37,55 @@ async function studentFromDoc(doc: QueryDocumentSnapshot<DocumentData> | Documen
         needs: data.needs || {},
         objectives: data.objectives || [],
         notes: data.notes || '',
+        troubleIds: data.troubleIds || [],
+        academicLevels: data.academicLevels || [],
+        observations: data.observations || {},
+        priorityNeeds: data.priorityNeeds || [],
+        evaluationPlan: data.evaluationPlan || {},
+        reviews: data.reviews || [],
     };
 }
 
-/**
- * Fetches all student documents from Firestore without any filtering or grouping.
- * This is useful for contexts like the PPI page where all versions (including archived) are needed.
- * @returns A promise that resolves to an array of all Student objects.
- */
-export async function getAllStudentDocs(): Promise<Student[]> {
-    const querySnapshot = await getDocs(collection(db, 'students'));
+export async function getAllStudentDocs(userId: string): Promise<Student[]> {
+    const q = query(collection(db, 'students'), where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
     return await Promise.all(querySnapshot.docs.map(studentFromDoc));
 }
 
+export async function getStudents(userId: string): Promise<Student[]> {
+    const allStudents = await getAllStudentDocs(userId);
 
-export async function getStudents(): Promise<Student[]> {
-    const allStudents = await getAllStudentDocs();
-
-    // Group students by a unique key (firstName + lastName + birthDate)
     const groupedStudents = groupBy(allStudents, s => `${s.firstName}-${s.lastName}-${s.birthDate || ''}`);
-
     const uniqueStudents: Student[] = [];
 
     for (const key in groupedStudents) {
         const studentGroup = groupedStudents[key];
         if (studentGroup && studentGroup.length > 0) {
-            // Find if there's an active (not archived) student in the group
             let studentToShow = studentGroup.find(s => s.ppiStatus !== 'archived');
-
-            // If no active student, it means all are archived. In that case, show the most recent one.
             if (!studentToShow) {
                 studentToShow = orderBy(studentGroup, ['lastUpdateTimestamp'], ['desc'])[0];
             }
-            
             if (studentToShow) {
                 uniqueStudents.push(studentToShow);
             }
         }
     }
-    
-    // Sort final list alphabetically by last name
+
     return orderBy(uniqueStudents, ['lastName', 'firstName'], ['asc']);
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
     const docRef = doc(db, 'students', id);
     const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-        return null;
-    }
+    if (!docSnap.exists()) return null;
     return studentFromDoc(docSnap);
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives' | 'lastUpdateTimestamp' | 'notes'>) {
+export async function addStudent(student: Omit<Student, 'id' | 'className' | 'teacherName' | 'lastUpdate' | 'ppiStatus' | 'avatarUrl' | 'globalProfile' | 'strengths' | 'difficulties' | 'needs' | 'objectives' | 'lastUpdateTimestamp' | 'notes'> & { ppiStatus?: Student['ppiStatus'] }, userId: string) {
     try {
         await addDoc(collection(db, 'students'), {
             ...student,
+            userId,
             ppiStatus: student.ppiStatus || 'to_create',
             lastUpdate: serverTimestamp(),
             avatarUrl: `https://placehold.co/40x40.png?text=${student.firstName.substring(0,1)}${student.lastName.substring(0,1)}`,
@@ -114,9 +106,8 @@ export async function addStudent(student: Omit<Student, 'id' | 'className' | 'te
 export async function updateStudent(id: string, student: Partial<Student>) {
     try {
         const studentRef = doc(db, 'students', id);
-        // We remove properties that should not be written to Firestore
         const { className, teacherName, lastUpdateTimestamp, ...dataToUpdate } = student;
-        
+
         await updateDoc(studentRef, {
             ...dataToUpdate,
             lastUpdate: serverTimestamp()
@@ -140,42 +131,38 @@ export async function deleteStudent(id: string) {
     }
 }
 
-export async function duplicatePpi(studentId: string) {
+export async function duplicatePpi(studentId: string, userId: string) {
     const student = await getStudent(studentId);
     if (!student) {
         throw new Error("Student not found");
     }
 
     const newStudentData = { ...student };
-    delete (newStudentData as Partial<Student>).id; // remove id for new doc
-    
-    // Reset objectives validation date
+    delete (newStudentData as Partial<Student>).id;
+
     newStudentData.objectives = (newStudentData.objectives || []).map(obj => ({
         ...obj,
         validationDate: '',
     }));
-    
-    // Set new PPI to draft
+
     newStudentData.ppiStatus = 'draft';
     newStudentData.lastUpdate = new Date().toLocaleDateString('fr-FR');
 
     try {
         const batch = writeBatch(db);
-        
-        // Archive old student record if it's not already
+
         const oldStudentRef = doc(db, 'students', studentId);
         batch.update(oldStudentRef, { ppiStatus: 'archived' });
 
-        // Create new student record for the new PPI
         const newStudentRef = doc(collection(db, 'students'));
-        const { id, lastUpdateTimestamp, ...dataToSet } = newStudentData; // Ensure we don't try to set the 'id' field
+        const { id, lastUpdateTimestamp, ...dataToSet } = newStudentData;
         batch.set(newStudentRef, {
             ...dataToSet,
+            userId,
             lastUpdate: serverTimestamp(),
         });
-        
-        await batch.commit();
 
+        await batch.commit();
         revalidatePath('/ppi');
         revalidatePath('/students');
     } catch (error) {
@@ -188,9 +175,9 @@ const normalizeClassName = (name: string) => {
     return name.toLowerCase().replace(/ue\s/g, '').trim();
 }
 
-export async function importStudents(students: ImportedStudent[]): Promise<{ added: number, skipped: number }> {
-    const existingStudents = await getStudents();
-    const existingClasses = await getClasses();
+export async function importStudents(students: ImportedStudent[], userId: string): Promise<{ added: number, skipped: number }> {
+    const existingStudents = await getStudents(userId);
+    const existingClasses = await getClasses(userId);
 
     const existingStudentKeys = new Set(existingStudents.map(s => `${s.firstName.toLowerCase()}-${s.lastName.toLowerCase()}-${s.birthDate || ''}`));
     const classMap = new Map<string, Classe>();
@@ -198,7 +185,7 @@ export async function importStudents(students: ImportedStudent[]): Promise<{ add
 
     let added = 0;
     let skipped = 0;
-    
+
     const batch = writeBatch(db);
 
     for (const student of students) {
@@ -214,17 +201,16 @@ export async function importStudents(students: ImportedStudent[]): Promise<{ add
         if (classMap.has(normalizedClassName)) {
             studentClass = classMap.get(normalizedClassName);
         } else {
-            // Create new class if it doesn't exist
             try {
-                const newClass = await addClasse({ name: student.className, teacherName: 'N/A' });
+                const newClass = await addClasse({ name: student.className, teacherName: 'N/A' }, userId);
                 classMap.set(normalizedClassName, newClass);
                 studentClass = newClass;
             } catch (error) {
                 console.error(`Failed to create class ${student.className}`, error);
-                continue; // Skip student if class creation fails
+                continue;
             }
         }
-        
+
         if (!studentClass) {
             skipped++;
             continue;
@@ -236,6 +222,7 @@ export async function importStudents(students: ImportedStudent[]): Promise<{ add
             lastName: student.lastName,
             birthDate: student.birthDate || '',
             classId: studentClass.id,
+            userId,
             ppiStatus: 'to_create',
             lastUpdate: serverTimestamp(),
             familyContacts: [],
@@ -243,7 +230,7 @@ export async function importStudents(students: ImportedStudent[]): Promise<{ add
         });
 
         added++;
-        existingStudentKeys.add(studentKey); // Add to set to prevent duplicate additions from the same import file
+        existingStudentKeys.add(studentKey);
     }
 
     await batch.commit();

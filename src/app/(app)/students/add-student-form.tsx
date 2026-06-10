@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { addStudent } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import type { Classe } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,6 +67,7 @@ interface AddStudentFormProps {
 }
 
 export function AddStudentForm({ classes, onStudentAdded }: AddStudentFormProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -93,7 +95,7 @@ export function AddStudentForm({ classes, onStudentAdded }: AddStudentFormProps)
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await addStudent(values);
+      await addStudent({ ...values, familyContacts: values.familyContacts || [] }, user!.uid);
       toast({
         title: 'Élève ajouté',
         description: `${values.firstName} ${values.lastName} a été ajouté avec succès.`,

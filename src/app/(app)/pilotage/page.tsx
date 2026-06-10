@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { getStudents } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Student, Objective } from '@/types';
 import { Loader2, User, Calendar, WandSparkles, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -21,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { addGroup } from '@/lib/groups-repository';
 
 export default function PilotagePage() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const { toast } = useToast();
@@ -32,9 +34,10 @@ export default function PilotagePage() {
 
   useEffect(() => {
     const fetchStudents = async () => {
+      if (!user) return;
       setLoadingStudents(true);
       try {
-        const data = await getStudents();
+        const data = await getStudents(user.uid);
         setStudents(data);
       } catch (error) {
         console.error("Failed to fetch students:", error);
@@ -86,7 +89,7 @@ export default function PilotagePage() {
   const handleSaveGroup = async (group: StudentObjectiveGroup, index: number) => {
     setSavingStates(prev => ({ ...prev, [index]: true }));
     try {
-        await addGroup(group);
+        await addGroup(group, user!.uid);
         toast({
             title: "Groupe enregistré",
             description: `Le groupe "${group.groupTitle}" a été sauvegardé avec succès.`,

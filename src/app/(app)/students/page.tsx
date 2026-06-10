@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getStudents } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Student, Classe, PpiStatus, Ppi } from '@/types';
 import { AddStudentForm } from './add-student-form';
 import { StudentActions } from './student-actions';
@@ -73,6 +74,7 @@ const parseDate = (dateStr?: string): number | null => {
 };
 
 export default function StudentsPage() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,9 +82,10 @@ export default function StudentsPage() {
   const [isImporterOpen, setIsImporterOpen] = useState(false);
 
   const fetchData = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const [studentsData, classesData] = await Promise.all([getStudents(), getClasses()]);
+      const [studentsData, classesData] = await Promise.all([getStudents(user.uid), getClasses(user.uid)]);
       setStudents(studentsData);
       setClasses(classesData);
     } catch (error) {

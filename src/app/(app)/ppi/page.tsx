@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getPpis } from '@/lib/ppi-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Ppi } from '@/types';
 import { PpiStatusChanger } from './ppi-status-changer';
 import { ExportPpiButton } from './export-ppi-button';
@@ -83,13 +84,15 @@ const PpiSection = ({
 };
 
 export default function PpiPage() {
+  const { user } = useAuth();
   const [ppis, setPpis] = useState<Ppi[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPpis = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const data = await getPpis();
+      const data = await getPpis(user.uid);
       setPpis(data);
     } catch (error) {
       console.error("Failed to fetch PPIs:", error);

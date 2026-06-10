@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { addClasse } from '@/lib/classes-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -42,6 +43,7 @@ interface AddClasseFormProps {
 }
 
 export function AddClasseForm({ onClasseAdded }: AddClasseFormProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -55,7 +57,7 @@ export function AddClasseForm({ onClasseAdded }: AddClasseFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await addClasse(values);
+      await addClasse(values, user!.uid);
       toast({
         title: 'Classe ajoutée',
         description: `La classe ${values.name} a été ajoutée avec succès.`,

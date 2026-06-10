@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { LibraryItem } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -33,13 +34,15 @@ const SectionTitle = ({ title }: { title: string }) => (
 
 
 export default function LibraryPage() {
+  const { user } = useAuth();
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
       try {
-        const items = await getAllLibraryItems();
+        const items = await getAllLibraryItems(user.uid);
         setLibraryItems(items);
       } catch (error) {
         console.error("Failed to fetch library items:", error);

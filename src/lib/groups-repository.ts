@@ -1,18 +1,17 @@
 
 'use server';
 
-import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, deleteDoc, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot, DocumentData, addDoc, serverTimestamp, doc, deleteDoc, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Group } from '@/types';
-import type { StudentObjectiveGroup } from '@/ai/flows/group-objectives-flow';
 import { revalidatePath } from 'next/cache';
 
-function groupFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Group {
-    const data = doc.data();
+function groupFromDoc(docData: QueryDocumentSnapshot<DocumentData> | DocumentData): Group {
+    const data = docData.data();
     const createdAtDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-    
+
     return {
-        id: doc.id,
+        id: docData.id,
         groupTitle: data.groupTitle,
         rationale: data.rationale,
         students: data.students,
@@ -20,16 +19,21 @@ function groupFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): 
     };
 }
 
-export async function getGroups(): Promise<Group[]> {
-    const q = query(collection(db, 'groups'), orderBy('createdAt', 'desc'));
+export async function getGroups(userId: string): Promise<Group[]> {
+    const q = query(
+        collection(db, 'groups'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+    );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(groupFromDoc);
 }
 
-export async function addGroup(group: Omit<Group, 'id' | 'createdAt'>) {
+export async function addGroup(group: Omit<Group, 'id' | 'createdAt'>, userId: string) {
     try {
         await addDoc(collection(db, 'groups'), {
             ...group,
+            userId,
             createdAt: serverTimestamp(),
         });
         revalidatePath('/groups');

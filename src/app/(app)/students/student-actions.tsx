@@ -16,6 +16,7 @@ import type { Student, Classe } from '@/types';
 import { DeleteStudentDialog } from './delete-student-dialog';
 import { EditStudentForm } from './edit-student-form';
 import { duplicatePpi } from '@/lib/students-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ import { Loader2 } from 'lucide-react';
 import { ViewNotesDialog } from './view-notes-dialog';
 
 export function StudentActions({ student, classes }: { student: Student, classes: Classe[] }) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isDuplicating, setIsDuplicating] = useState(false);
@@ -30,7 +32,7 @@ export function StudentActions({ student, classes }: { student: Student, classes
   const handleDuplicate = async () => {
     setIsDuplicating(true);
     try {
-      await duplicatePpi(student.id);
+      await duplicatePpi(student.id, user!.uid);
       toast({
         title: 'Nouveau PPI créé',
         description: `Un nouveau brouillon de PPI a été créé pour ${student.firstName} ${student.lastName}.`,

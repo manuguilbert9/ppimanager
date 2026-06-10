@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getGroups, deleteGroup } from '@/lib/groups-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Group } from '@/types';
 import { Loader2, Trash2, FileDown, User, Calendar, PlusCircle, Edit } from 'lucide-react';
 import {
@@ -33,6 +34,7 @@ import { generateGroupDocx } from '@/lib/group-docx-exporter';
 import { GroupForm } from './group-form';
 
 export default function GroupsPage() {
+  const { user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -40,9 +42,10 @@ export default function GroupsPage() {
   const [exportingId, setExportingId] = useState<string | null>(null);
 
   const fetchGroups = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const data = await getGroups();
+      const data = await getGroups(user.uid);
       setGroups(data);
     } catch (error) {
       console.error("Failed to fetch groups:", error);

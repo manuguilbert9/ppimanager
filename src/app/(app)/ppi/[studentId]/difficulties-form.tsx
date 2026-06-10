@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ComboboxInput } from '@/components/combobox-input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { PpiFormValues } from './page';
 
 export const difficultiesSchema = z.object({
@@ -37,6 +38,7 @@ export function DifficultiesForm({
   socioEmotionalDifficultiesSuggestions,
   disabilityConstraintsSuggestions,
 }: DifficultiesFormProps) {
+  const { user } = useAuth();
   const form = useFormContext<PpiFormValues>();
 
   type DifficultyCategory =
@@ -49,7 +51,7 @@ export function DifficultiesForm({
   const [draggedItem, setDraggedItem] = useState<{ value: string; category: DifficultyCategory } | null>(null);
 
   const handleValuesChange = (values: string[] | undefined, category: 'cognitiveDifficulties' | 'schoolDifficulties' | 'motorDifficulties' | 'socioEmotionalDifficulties' | 'disabilityConstraints') => {
-      if (values) addLibraryItems(values, category);
+      if (values) addLibraryItems(values, category, user!.uid);
   }
 
   const updateCategoryValues = (category: DifficultyCategory, values: string[]) => {

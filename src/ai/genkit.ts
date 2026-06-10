@@ -1,28 +1,25 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { deepSeek } from '@genkit-ai/compat-oai/deepseek';
 
-const geminiApiKey =
-  process.env.GEMINI_API_KEY ??
-  process.env.GOOGLE_API_KEY ??
-  process.env.GOOGLE_GENAI_API_KEY ??
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const deepseekApiKey =
+  process.env.DEEPSEEK_API_KEY ??
+  process.env.DEEPSEEK_V4_API_KEY ??
+  process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY;
 
-if (!geminiApiKey) {
+if (!deepseekApiKey) {
   throw new Error(
-    "Aucune clé API Gemini trouvée. Définissez GEMINI_API_KEY (ou GOOGLE_API_KEY) dans les variables d'environnement."
+    "Aucune clé API DeepSeek trouvée. Définissez DEEPSEEK_API_KEY dans les variables d'environnement."
   );
 }
 
-// In App Hosting, the API key is automatically available in the environment.
-// The googleAI() plugin will find and use it without explicit configuration.
-
+// DeepSeek expose une API compatible OpenAI.
+// `deepseek-chat` est le modèle de chat rapide (alias pointant toujours vers la
+// dernière version du modèle DeepSeek), utilisé ici en remplacement de Gemini.
 export const ai = genkit({
   plugins: [
-    googleAI({
-      apiKey: geminiApiKey,
+    deepSeek({
+      apiKey: deepseekApiKey,
     }),
   ],
-  model: googleAI.model('gemini-2.5-flash', {
-    apiKey: geminiApiKey,
-  }),
+  model: deepSeek.model('deepseek-chat'),
 });

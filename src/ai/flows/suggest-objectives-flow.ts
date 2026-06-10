@@ -1,17 +1,15 @@
-
 'use server';
 
 /**
- * @fileOverview Suggests learning objectives for a student based on their profile.
- *
- * - suggestObjectives - A function that generates objective suggestions.
- * - SuggestObjectivesInput - The input type for the suggestObjectives function.
- * - SuggestObjectivesOutput - The return type for the suggestObjectives function.
+ * @fileOverview Suggère des objectifs d'apprentissage prioritaires,
+ * opérationnalisés selon la démarche PPI : référés aux programmes et au
+ * socle commun, formulés avec un verbe d'action, assortis d'un critère de
+ * réussite observable, d'une échéance et de moyens (démarches, supports).
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { Strengths, Difficulties, Needs, Objective } from '@/types';
+import { getTroubles } from '@/lib/egron/troubles';
 
 const SuggestObjectivesInputSchema = z.object({
   strengths: z.object({
@@ -34,15 +32,22 @@ const SuggestObjectivesInputSchema = z.object({
     specialEducationalApproach: z.array(z.string()).optional(),
     complementaryCare: z.array(z.string()).optional(),
   }).optional(),
+  /** Besoins prioritaires hiérarchisés (fondement des objectifs). */
+  priorityNeeds: z.array(z.string()).optional(),
+  /** Niveaux scolaires par domaine (« Lecture : cycle 2 – mi-CE1 (...) »). */
+  academicLevels: z.array(z.string()).optional(),
+  troubleIds: z.array(z.string()).optional(),
 });
 export type SuggestObjectivesInput = z.infer<typeof SuggestObjectivesInputSchema>;
 
 const SuggestObjectivesOutputSchema = z.object({
   objectives: z.array(z.object({
-    title: z.string().describe("L'intitulé clair et concis de l'objectif."),
-    successCriteria: z.string().describe("Le critère de réussite mesurable pour cet objectif."),
-    deadline: z.string().describe("L'échéance suggérée pour atteindre l'objectif, au format JJ/MM/AAAA. Par exemple, si nous sommes en septembre 2024, une échéance crédible serait '15/11/2024'."),
-    validationDate: z.string().optional().describe("La date de validation de l'objectif, au format JJ/MM/AAAA."),
+    title: z.string().describe("Intitulé clair, centré sur l'élève, commençant par un verbe d'action observable."),
+    domain: z.string().describe("Domaine d'apprentissage (ex. : Français – lecture, Mathématiques – nombres et calcul, Transversal – autonomie)."),
+    competenceRef: z.string().describe('Compétence visée, en référence aux programmes ou au socle commun, avec le cycle.'),
+    means: z.array(z.string()).describe("2 à 4 démarches, moyens ou supports pour travailler cet objectif."),
+    successCriteria: z.string().describe('Critère de réussite simple et observable.'),
+    deadline: z.string().describe("Échéance réaliste au format JJ/MM/AAAA, dans le futur (2 à 4 mois)."),
   })),
 });
 export type SuggestObjectivesOutput = z.infer<typeof SuggestObjectivesOutputSchema>;
@@ -51,54 +56,64 @@ export async function suggestObjectives(input: SuggestObjectivesInput): Promise<
   return suggestObjectivesFlow(input);
 }
 
+const formatList = (label: string, values?: string[]) =>
+  values && values.length > 0 ? `- ${label} : ${values.join(' ; ')}` : '';
+
 const prompt = ai.definePrompt({
   name: 'suggestObjectivesPrompt',
-  input: { schema: z.object({
-      strengths: SuggestObjectivesInputSchema.shape.strengths,
-      difficulties: SuggestObjectivesInputSchema.shape.difficulties,
-      needs: SuggestObjectivesInputSchema.shape.needs,
+  input: {
+    schema: z.object({
+      profileText: z.string(),
+      priorityNeedsText: z.string(),
+      academicLevelsText: z.string(),
+      troublesText: z.string(),
       currentDate: z.string(),
-  }) },
+    }),
+  },
   output: { schema: SuggestObjectivesOutputSchema },
   prompt: `
-    Tu es un expert en ingénierie pédagogique spécialisé dans l'éducation inclusive.
-    Ton rôle est de proposer des objectifs d'apprentissage prioritaires pour un élève en situation de handicap, en te basant sur son profil.
+    Tu es un enseignant spécialisé expert, formé à la démarche PPI de Bruno Egron
+    (« Enseigner en unité d'enseignement », Retz).
 
-    Voici le profil de l'élève :
+    PRINCIPES :
+    - Le PPI décline des objectifs choisis parmi les programmes nationaux et le socle commun, en lien avec
+      les capacités d'apprentissage de l'élève. Les objectifs du socle ne sont pas modifiés : c'est le
+      chemin pour les atteindre qui est individualisé.
+    - Chaque objectif découle d'un besoin prioritaire identifié.
+    - Vise la zone proximale de développement : la prochaine étape logique, ni déjà acquise, ni hors de portée.
+    - Ne pas sous-alimenter cognitivement l'élève : la reconstruction de l'estime de soi passe par un
+      obstacle surmonté, pas par des tâches sans effort cognitif.
+    - Varier : objectifs disciplinaires ET transversaux (autonomie, socialisation, processus d'apprentissage).
 
-    POINTS FORTS (ce que l'élève sait déjà faire) :
-    - Compétences académiques : {{{strengths.academicSkills}}}
-    - Forces cognitives : {{{strengths.cognitiveStrengths}}}
-    - Habiletés sociales : {{{strengths.socialSkills}}}
-    - Intérêts : {{{strengths.exploitableInterests}}}
+    {{#if priorityNeedsText}}
+    BESOINS PRIORITAIRES RETENUS (fondement des objectifs, dans l'ordre de priorité) :
+    {{{priorityNeedsText}}}
+    {{/if}}
 
-    DIFFICULTÉS :
-    - Cognitives : {{{difficulties.cognitiveDifficulties}}}
-    - Scolaires : {{{difficulties.schoolDifficulties}}}
-    - Motrices : {{{difficulties.motorDifficulties}}}
-    - Socio-émotionnelles : {{{difficulties.socioEmotionalDifficulties}}}
-    - Contraintes du handicap : {{{difficulties.disabilityConstraints}}}
+    {{#if academicLevelsText}}
+    NIVEAUX SCOLAIRES PAR DOMAINE (évaluation diagnostique — attention aux profils dysharmoniques) :
+    {{{academicLevelsText}}}
+    {{/if}}
 
-    BESOINS ÉDUCATIFS PARTICULIERS :
-    - Aménagements pédagogiques : {{{needs.pedagogicalAccommodations}}}
-    - Aide humaine : {{{needs.humanAssistance}}}
-    - Outils de compensation : {{{needs.compensatoryTools}}}
-    - Approche éducative : {{{needs.specialEducationalApproach}}}
-    - Soins complémentaires : {{{needs.complementaryCare}}}
+    {{#if troublesText}}
+    TROUBLES IDENTIFIÉS :
+    {{{troublesText}}}
+    {{/if}}
 
-    INSTRUCTION IMPORTANTE :
-    Analyse le profil complet pour identifier la "zone proximale de développement" de l'élève.
-    Ne propose PAS d'objectifs qui répètent les compétences déjà listées dans les "POINTS FORTS".
-    Tes suggestions doivent représenter la prochaine étape logique d'apprentissage, en s'appuyant sur les forces pour surmonter les difficultés.
+    {{#if profileText}}
+    PROFIL COMPLÉMENTAIRE :
+    {{{profileText}}}
+    {{/if}}
 
-    À partir de cette analyse, définis 3 à 5 objectifs d'apprentissage prioritaires.
-    Pour chaque objectif, formule :
-    1.  Un intitulé clair, spécifique et centré sur l'élève (commençant par un verbe d'action).
-    2.  Un critère de réussite simple et observable.
-    3.  Une échéance réaliste. Nous sommes le {{{currentDate}}}, donc l'échéance doit être DANS LE FUTUR (par exemple, dans 2 ou 3 mois). L'échéance doit être une date précise au format JJ/MM/AAAA.
-
-    Les objectifs doivent être pertinents, réalisables et directement liés aux besoins identifiés, tout en s'appuyant sur les points forts de l'élève.
-    Assure-toi que les suggestions soient variées (scolaires, transversaux comme l'autonomie ou la socialisation).
+    INSTRUCTIONS :
+    Propose 3 à 5 objectifs prioritaires. Pour chacun :
+    1. Un intitulé centré sur l'élève, commençant par un verbe d'action observable (« Lire... », « Résoudre... », « Demander de l'aide... »).
+    2. Le domaine d'apprentissage.
+    3. La compétence visée en référence aux programmes ou au socle commun, avec le cycle correspondant au niveau réel de l'élève dans ce domaine (pas à son âge).
+    4. 2 à 4 démarches/moyens/supports concrets pour le travailler, en t'appuyant sur les points forts et les intérêts de l'élève comme leviers.
+    5. Un critère de réussite simple et observable (quantifié si possible).
+    6. Une échéance réaliste au format JJ/MM/AAAA. Nous sommes le {{{currentDate}}} : l'échéance doit être dans le futur (2 à 4 mois).
+    Ne propose pas d'objectifs qui répètent des compétences déjà acquises.
   `,
 });
 
@@ -110,9 +125,30 @@ const suggestObjectivesFlow = ai.defineFlow(
   },
   async (input) => {
     const currentDate = new Date().toLocaleDateString('fr-FR');
+
+    const troubles = getTroubles(input.troubleIds || []);
+    const troublesText = troubles.map((t) => `- ${t.label}`).join('\n');
+
+    const profileText = [
+      formatList('Compétences académiques acquises', input.strengths?.academicSkills),
+      formatList('Forces cognitives', input.strengths?.cognitiveStrengths),
+      formatList('Habiletés sociales', input.strengths?.socialSkills),
+      formatList('Intérêts exploitables (leviers)', input.strengths?.exploitableInterests),
+      formatList('Difficultés cognitives', input.difficulties?.cognitiveDifficulties),
+      formatList('Difficultés scolaires', input.difficulties?.schoolDifficulties),
+      formatList('Difficultés motrices', input.difficulties?.motorDifficulties),
+      formatList('Difficultés socio-émotionnelles', input.difficulties?.socioEmotionalDifficulties),
+      formatList('Aménagements pédagogiques', input.needs?.pedagogicalAccommodations),
+      formatList('Aide humaine', input.needs?.humanAssistance),
+      formatList('Outils de compensation', input.needs?.compensatoryTools),
+    ].filter(Boolean).join('\n');
+
     const { output } = await prompt({
-        ...input,
-        currentDate,
+      profileText,
+      priorityNeedsText: (input.priorityNeeds || []).map((n, i) => `${i + 1}. ${n}`).join('\n'),
+      academicLevelsText: (input.academicLevels || []).map((l) => `- ${l}`).join('\n'),
+      troublesText,
+      currentDate,
     });
     return output!;
   }

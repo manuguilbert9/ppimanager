@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,15 +9,13 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList, Group as GroupIcon, Bot, Maximize, Minimize } from 'lucide-react';
+import { FileText, LayoutDashboard, Library, Settings, Users, School, ClipboardList, Group as GroupIcon, Maximize, Minimize } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AiChatBot } from '@/app/(app)/chat/ai-chat-bot';
 
 export function SidebarNav() {
   const pathname = usePathname();
   const [isPilotageOpen, setIsPilotageOpen] = useState(pathname.startsWith('/pilotage') || pathname.startsWith('/groups'));
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -123,20 +121,14 @@ export function SidebarNav() {
     </SidebarMenu>
 
     <SidebarMenu>
-        <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setIsChatOpen(true)} tooltip="Assistant IA">
-                <Bot />
-                Assistant IA
-            </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
+<SidebarMenuItem>
             <SidebarMenuButton onClick={toggleFullScreen} tooltip={isFullscreen ? "Quitter le mode plein écran" : "Passer en mode plein écran"}>
                 {isFullscreen ? <Minimize /> : <Maximize />}
                 {isFullscreen ? "Plein écran" : "Plein écran"}
             </SidebarMenuButton>
         </SidebarMenuItem>
     </SidebarMenu>
-    <AiChatBot open={isChatOpen} onOpenChange={setIsChatOpen} />
     </>
   );
 }
+

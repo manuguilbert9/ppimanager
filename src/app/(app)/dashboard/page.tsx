@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { getStudents } from '@/lib/students-repository';
 import { getPpis } from '@/lib/ppi-repository';
 import { getGroups } from '@/lib/groups-repository';
+import { useAuth } from '@/hooks/use-auth';
 import type { Student, Ppi, Group, Objective } from '@/types';
 import { format, parse, eachDayOfInterval, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -216,18 +217,20 @@ const UpcomingObjectives = ({ students }: { students: Student[] }) => {
 
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [ppis, setPpis] = useState<Ppi[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const [studentsData, ppisData, groupsData] = await Promise.all([
-        getStudents(),
-        getPpis(),
-        getGroups()
+        getStudents(user.uid),
+        getPpis(user.uid),
+        getGroups(user.uid)
       ]);
       setStudents(studentsData);
       setPpis(ppisData);

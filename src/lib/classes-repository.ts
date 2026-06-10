@@ -6,33 +6,32 @@ import { db } from './firebase';
 import type { Classe } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-function classeFromDoc(doc: QueryDocumentSnapshot<DocumentData> | DocumentData): Classe {
-    const data = doc.data();
+function classeFromDoc(docData: QueryDocumentSnapshot<DocumentData> | DocumentData): Classe {
+    const data = docData.data();
     return {
-        id: doc.id,
+        id: docData.id,
         name: data.name,
         teacherName: data.teacherName,
     };
 }
 
-export async function getClasses(): Promise<Classe[]> {
-    const querySnapshot = await getDocs(collection(db, 'classes'));
+export async function getClasses(userId: string): Promise<Classe[]> {
+    const q = query(collection(db, 'classes'), where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(classeFromDoc);
 }
 
+/** Récupère une classe par son ID (sans filtre userId — utilisé comme référence interne). */
 export async function getClasse(id: string): Promise<Classe | null> {
     const docRef = doc(db, 'classes', id);
     const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-        return null;
-    }
+    if (!docSnap.exists()) return null;
     return classeFromDoc(docSnap);
 }
 
-export async function addClasse(classe: { name: string; teacherName: string; }): Promise<Classe> {
+export async function addClasse(classe: { name: string; teacherName: string; }, userId: string): Promise<Classe> {
     try {
-        const docRef = await addDoc(collection(db, 'classes'), classe);
+        const docRef = await addDoc(collection(db, 'classes'), { ...classe, userId });
         revalidatePath('/classes');
         return {
             id: docRef.id,
@@ -55,26 +54,25 @@ export async function updateClasse(id: string, classe: { name: string; teacherNa
     }
 }
 
-export async function deleteClasse(id: string) {
+export async function deleteClasse(id: string, userId: string) {
     try {
         const batch = writeBatch(db);
 
-        // 1. Find all students in the class
-        const studentsQuery = query(collection(db, 'students'), where('classId', '==', id));
+        // Supprime uniquement les élèves de cet utilisateur dans cette classe.
+        const studentsQuery = query(
+            collection(db, 'students'),
+            where('classId', '==', id),
+            where('userId', '==', userId)
+        );
         const studentsSnapshot = await getDocs(studentsQuery);
-
-        // 2. Delete each student found
         studentsSnapshot.forEach(studentDoc => {
             batch.delete(studentDoc.ref);
         });
 
-        // 3. Delete the class itself
         const classRef = doc(db, "classes", id);
         batch.delete(classRef);
 
-        // 4. Commit the batch
         await batch.commit();
-
         revalidatePath('/classes');
         revalidatePath('/students');
         revalidatePath('/ppi');

@@ -1,22 +1,24 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller, useFormContext } from 'react-hook-form';
+import { useFieldArray, Controller, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import type { Student, Objective, Strengths, Difficulties, Needs } from '@/types';
+import type { Strengths, Difficulties, Needs, Objective } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addLibraryItems } from '@/lib/library-repository';
+import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Trash2, Sparkles, Loader2, WandSparkles, RefreshCw, GripVertical } from 'lucide-react';
 import { suggestObjectives, SuggestObjectivesInput, SuggestObjectivesOutput } from '@/ai/flows/suggest-objectives-flow';
 import { suggestAdaptations } from '@/ai/flows/suggest-adaptations-flow';
@@ -30,42 +32,59 @@ import type { PpiFormValues } from './page';
 const objectiveSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, 'L\'intitulé est requis.'),
+  domain: z.string().optional(),
+  competenceRef: z.string().optional(),
+  means: z.array(z.string()).optional(),
   adaptations: z.array(z.string()).optional(),
   successCriteria: z.string().optional(),
   deadline: z.string().optional(),
   validationDate: z.string().optional(),
+  status: z.enum(['in_progress', 'achieved', 'partial', 'abandoned']).optional(),
+  evaluation: z.string().optional(),
 });
 
 export const objectivesSchema = z.object({
   objectives: z.array(objectiveSchema),
 });
 
+const OBJECTIVE_DOMAINS = [
+  'Français – langage oral',
+  'Français – lecture',
+  'Français – écriture',
+  'Mathématiques – nombres et calcul',
+  'Mathématiques – résolution de problèmes',
+  'Mathématiques – espace et géométrie',
+  'Questionner le monde / sciences',
+  'EPS',
+  'Arts',
+  'Transversal – autonomie',
+  'Transversal – socialisation / vivre ensemble',
+  'Transversal – méthodologie / processus d\'apprentissage',
+  'Transversal – communication',
+  'Projet professionnel',
+];
+
+const MEANS_SUGGESTIONS = [
+  'Manipulation accompagnée d\'une verbalisation de la démarche',
+  'Travail en petit groupe de besoin',
+  'Séances courtes et régulières',
+  'Entretien d\'explicitation sur les procédures',
+  'Supports visuels et pictogrammes',
+  'Tutorat par un pair',
+  'Situations finalisées et projets',
+  'Rituels et cadres prévisibles',
+  'Outils numériques (ordinateur, logiciels adaptés)',
+  'Renforcement positif et contrat',
+];
+
 interface ObjectivesFormProps {
-  student: Student;
   objectivesSuggestions: string[];
   adaptationsSuggestions: string[];
 }
 
-const SortableObjectiveItem = ({
-  id,
-  children,
-}: {
-  id: string;
-  children: React.ReactNode;
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
+const SortableObjectiveItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style} className="flex items-start w-full gap-2">
       <div {...attributes} {...listeners} className="cursor-grab touch-none p-2 mt-2">
@@ -77,19 +96,24 @@ const SortableObjectiveItem = ({
 };
 
 const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySuggestions }: { objectiveIndex: number; adaptationsSuggestions: string[]; }) => {
-    const { getValues, setValue, control } = useFormContext<PpiFormValues>();
+    const { user } = useAuth();
+    const { getValues, setValue, control, watch } = useFormContext<PpiFormValues>();
     const { toast } = useToast();
 
-    type ObjectiveAdaptationsFieldArrayName = `objectives.${number}.adaptations`;
+    const adaptations: string[] = watch(`objectives.${objectiveIndex}.adaptations`) || [];
 
-    const { fields: adaptationFields, append: appendAdaptation, remove: removeAdaptation } = useFieldArray<PpiFormValues, ObjectiveAdaptationsFieldArrayName>({
-        control,
-        name: `objectives.${objectiveIndex}.adaptations` as ObjectiveAdaptationsFieldArrayName,
-    });
+    const removeAdaptation = (index: number) => {
+        const current = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
+        setValue(
+            `objectives.${objectiveIndex}.adaptations`,
+            current.filter((_, i) => i !== index),
+            { shouldDirty: true }
+        );
+    };
 
     const [adaptationSuggestions, setAdaptationSuggestions] = useState<string[]>([]);
     const [isSuggestingAdaptations, setIsSuggestingAdaptations] = useState(false);
-    
+
     const handleSuggestAdaptations = async () => {
         const objectiveTitle = getValues(`objectives.${objectiveIndex}.title`);
         if (!objectiveTitle) {
@@ -99,7 +123,12 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
 
         setIsSuggestingAdaptations(true);
         try {
-            const result = await suggestAdaptations({ objectiveTitle });
+            const result = await suggestAdaptations({
+                objectiveTitle,
+                troubleIds: getValues('troubleIds') || [],
+                priorityNeeds: (getValues('priorityNeeds') || []).map((n) => n.label),
+                userId: user?.uid,
+            });
             const currentAdaptations = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
             const newSuggestions = result.adaptations.filter(a => !currentAdaptations.includes(a));
             setAdaptationSuggestions(newSuggestions);
@@ -117,7 +146,7 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
             const currentAdaptations = getValues(`objectives.${objectiveIndex}.adaptations`) || [];
             if (!currentAdaptations.includes(trimmedAdaptation)) {
                 setValue(`objectives.${objectiveIndex}.adaptations`, [...currentAdaptations, trimmedAdaptation], { shouldDirty: true });
-                addLibraryItems([trimmedAdaptation], 'adaptations');
+                addLibraryItems([trimmedAdaptation], 'adaptations', user!.uid);
             }
             setAdaptationSuggestions(prev => prev.filter(s => s !== adaptation));
         }
@@ -126,7 +155,7 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
     return (
         <FormItem>
             <div className="flex items-center justify-between">
-                <FormLabel>Moyens et adaptations</FormLabel>
+                <FormLabel>Adaptations (ancrées dans les pistes du référentiel)</FormLabel>
                 <Button type="button" size="sm" variant="ghost" onClick={handleSuggestAdaptations} disabled={isSuggestingAdaptations}>
                     {isSuggestingAdaptations ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Suggérer par IA
@@ -148,8 +177,8 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
             )}
 
             <div className="space-y-2">
-                {adaptationFields.map((field, index) => (
-                    <div key={field.id} className="flex items-start gap-2">
+                {adaptations.map((_, index) => (
+                    <div key={index} className="flex items-start gap-2">
                         <Controller
                             control={control}
                             name={`objectives.${objectiveIndex}.adaptations.${index}`}
@@ -181,7 +210,6 @@ const AdaptationsManager = ({ objectiveIndex, adaptationsSuggestions: librarySug
         </FormItem>
     );
 };
-
 
 const sanitizeStringArray = (values?: string[]) => {
   if (!values) {
@@ -217,17 +245,10 @@ const sanitizeSection = <T extends Record<string, string[] | undefined> | undefi
   return sanitizedEntries as T;
 };
 
-const sanitizeObjectiveSuggestion = (suggestion: SuggestObjectivesOutput['objectives'][number]) => ({
-  title: suggestion.title.trim(),
-  successCriteria: suggestion.successCriteria.trim(),
-  deadline: suggestion.deadline.trim(),
-  validationDate: suggestion.validationDate?.trim(),
-});
-
-export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
+export function ObjectivesForm({ objectivesSuggestions, adaptationsSuggestions }: ObjectivesFormProps) {
   const { toast } = useToast();
   const [isSuggestingObjectives, setIsSuggestingObjectives] = useState(false);
-  const [objectiveSuggestions, setObjectiveSuggestions] = useState<Objective[]>([]);
+  const [objectiveSuggestions, setObjectiveSuggestions] = useState<SuggestObjectivesOutput['objectives']>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -235,7 +256,6 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   }, []);
 
   const form = useFormContext<PpiFormValues>();
-  const { control } = form;
 
   const { fields, append, remove, move } = useFieldArray({
     control: form.control,
@@ -248,21 +268,21 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   const activeObjectives = fields
     .map((field, index) => ({ field, originalIndex: index }))
-    .filter(({ field, originalIndex }) => !form.watch(`objectives.${originalIndex}.validationDate`));
+    .filter(({ originalIndex }) => !form.watch(`objectives.${originalIndex}.validationDate`));
 
   const validatedObjectives = fields
     .map((field, index) => ({ field, originalIndex: index }))
-    .filter(({ field, originalIndex }) => form.watch(`objectives.${originalIndex}.validationDate`));
+    .filter(({ originalIndex }) => form.watch(`objectives.${originalIndex}.validationDate`));
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndexInActive = activeObjectives.findIndex((item) => item.field.id === active.id);
       const newIndexInActive = activeObjectives.findIndex((item) => item.field.id === over.id);
-      
+
       const originalOldIndex = activeObjectives[oldIndexInActive].originalIndex;
       const originalNewIndex = activeObjectives[newIndexInActive].originalIndex;
 
@@ -278,8 +298,15 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
             strengths: sanitizeSection<Strengths | undefined>(form.getValues('strengths') as Strengths | undefined),
             difficulties: sanitizeSection<Difficulties | undefined>(form.getValues('difficulties') as Difficulties | undefined),
             needs: sanitizeSection<Needs | undefined>(form.getValues('needs') as Needs | undefined),
+            priorityNeeds: (form.getValues('priorityNeeds') || [])
+              .map((n) => n.label)
+              .filter((l) => l && l.trim().length > 0),
+            academicLevels: (form.getValues('academicLevels') || [])
+              .filter((l) => l.domain)
+              .map((l) => `${l.domain} : ${l.level || 'non précisé'}${l.comment ? ` (${l.comment})` : ''}`),
+            troubleIds: form.getValues('troubleIds') || [],
         };
-        
+
       const result = await suggestObjectives(studentProfile);
       const existingObjectiveTitles = new Set(
         (form.getValues('objectives') || [])
@@ -288,18 +315,10 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
       );
 
       const sanitizedSuggestions = result.objectives
-        .map(sanitizeObjectiveSuggestion)
-        .filter((suggestion) => suggestion.title.length > 0)
-        .filter((suggestion) => !existingObjectiveTitles.has(suggestion.title.toLowerCase()));
+        .filter((suggestion) => suggestion.title.trim().length > 0)
+        .filter((suggestion) => !existingObjectiveTitles.has(suggestion.title.trim().toLowerCase()));
 
-      setObjectiveSuggestions(
-        sanitizedSuggestions.map((suggestion) => ({
-          title: suggestion.title,
-          successCriteria: suggestion.successCriteria,
-          deadline: suggestion.deadline,
-          validationDate: suggestion.validationDate,
-        }))
-      );
+      setObjectiveSuggestions(sanitizedSuggestions);
     } catch (error) {
       console.error(error);
       toast({
@@ -312,28 +331,37 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
     }
   };
 
-  const addObjectiveSuggestionToForm = (suggestion: Objective) => {
+  const addObjectiveSuggestionToForm = (suggestion: SuggestObjectivesOutput['objectives'][number]) => {
     append({
         id: Math.random().toString(36).substring(7),
         title: suggestion.title.trim(),
+        domain: suggestion.domain?.trim() || '',
+        competenceRef: suggestion.competenceRef?.trim() || '',
+        means: Array.isArray(suggestion.means) ? suggestion.means : [],
         successCriteria: suggestion.successCriteria?.trim() || '',
         deadline: suggestion.deadline?.trim() || '',
-        validationDate: suggestion.validationDate?.trim() || '',
-        adaptations: Array.isArray(suggestion.adaptations) ? suggestion.adaptations : [],
+        validationDate: '',
+        adaptations: [],
+        status: 'in_progress',
+        evaluation: '',
     });
     const normalizedTitle = suggestion.title.trim().toLowerCase();
     setObjectiveSuggestions(
       objectiveSuggestions.filter((s) => s.title.trim().toLowerCase() !== normalizedTitle)
     );
   };
-  
+
   const renderObjective = (item: { field: any, originalIndex: number }, isSortable: boolean) => {
     const { field, originalIndex } = item;
+    const domain = form.watch(`objectives.${originalIndex}.domain`);
     const objectiveContent = (
       <AccordionItem value={field.id} className="w-full bg-background/50 border-purple-200 dark:border-purple-800 border rounded-md px-4">
         <div className="flex items-center w-full">
           <AccordionTrigger className="text-lg font-medium hover:no-underline flex-1 py-3 text-purple-800">
-            <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
+            <div className="flex items-center gap-2 text-left">
+              {domain && <Badge variant="outline" className="shrink-0 bg-purple-50 text-purple-700">{domain}</Badge>}
+              <span>{form.watch(`objectives.${originalIndex}.title`) || 'Nouvel objectif'}</span>
+            </div>
           </AccordionTrigger>
           <Button type="button" variant="ghost" size="icon" onClick={() => remove(originalIndex)} className="ml-2">
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -345,7 +373,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               name={`objectives.${originalIndex}.title`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Intitulé de l'objectif</FormLabel>
+                  <FormLabel>Intitulé de l'objectif (verbe d'action, observable)</FormLabel>
                   <FormControl>
                     <ComboboxField
                       {...field}
@@ -357,8 +385,66 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               )}
             />
 
-            <AdaptationsManager 
-              objectiveIndex={originalIndex} 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name={`objectives.${originalIndex}.domain`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Domaine d'apprentissage</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un domaine" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {OBJECTIVE_DOMAINS.map((d) => (
+                          <SelectItem key={d} value={d}>{d}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`objectives.${originalIndex}.competenceRef`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Compétence visée (programmes / socle commun)</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} placeholder="Ex. : Lire et comprendre une consigne simple (cycle 2)" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name={`objectives.${originalIndex}.means`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Démarches, moyens et supports</FormLabel>
+                  <FormControl>
+                    <ComboboxInput
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      suggestions={MEANS_SUGGESTIONS}
+                      placeholder="Comment travailler cet objectif..."
+                      badgeClassName="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <AdaptationsManager
+              objectiveIndex={originalIndex}
               adaptationsSuggestions={adaptationsSuggestions}
             />
 
@@ -367,7 +453,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
               name={`objectives.${originalIndex}.successCriteria`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Critère de réussite attendue</FormLabel>
+                  <FormLabel>Critère de réussite attendue (simple et observable)</FormLabel>
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
@@ -375,7 +461,7 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name={`objectives.${originalIndex}.deadline`}
@@ -388,6 +474,29 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                               onChange={field.onChange}
                             />
                           </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`objectives.${originalIndex}.status`}
+                  render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Statut</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || 'in_progress'}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="in_progress">En cours</SelectItem>
+                              <SelectItem value="partial">Partiellement atteint</SelectItem>
+                              <SelectItem value="achieved">Atteint</SelectItem>
+                              <SelectItem value="abandoned">Suspendu / révisé</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                       </FormItem>
                   )}
@@ -409,6 +518,19 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                   )}
                 />
             </div>
+            <FormField
+              control={form.control}
+              name={`objectives.${originalIndex}.evaluation`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bilan de l'objectif</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} value={field.value || ''} rows={2} placeholder="Progrès constatés, obstacles rencontrés, ce qui a fonctionné..." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
         </AccordionContent>
       </AccordionItem>
     );
@@ -420,11 +542,11 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
         </SortableObjectiveItem>
       );
     }
-    
+
     return (
       <div key={field.id} className="flex items-start w-full gap-2">
         <div className="p-2 mt-2">
-          <div className="h-5 w-5" /> 
+          <div className="h-5 w-5" />
         </div>
         <div className="flex-grow">{objectiveContent}</div>
       </div>
@@ -432,12 +554,15 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
   };
 
   return (
-    <Card className="border-l-4 border-fuchsia-500">
+    <Card className="border-l-4 border-purple-500">
       <CardHeader>
         <div>
           <CardTitle>Objectifs prioritaires d’apprentissage</CardTitle>
           <CardDescription>
-            Objectifs individualisés, précis et évaluables, fixés pour une période donnée.
+            Pour chaque besoin prioritaire retenu : un objectif référé aux programmes et au socle commun,
+            opérationnalisé (verbe d'action, critère de réussite observable, échéance), avec les démarches,
+            moyens et supports pour l'atteindre. Les objectifs du socle ne sont pas modifiés : c'est le
+            programme d'enseignement qui est ajusté pour aider l'élève à les atteindre.
           </CardDescription>
         </div>
       </CardHeader>
@@ -464,19 +589,22 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                 </Button>
             )}
             </div>
-            
+
             {objectiveSuggestions.length > 0 && (
                 <Alert className="mb-6">
                     <WandSparkles className="h-4 w-4" />
                     <AlertTitle>Suggestions d'objectifs</AlertTitle>
                     <AlertDescription>
-                    Voici quelques suggestions générées par l'IA. Cliquez pour les ajouter.
+                    Suggestions construites à partir des besoins prioritaires et des niveaux scolaires. Cliquez pour ajouter.
                     </AlertDescription>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 space-y-2">
                         {objectiveSuggestions.map((suggestion, index) => (
-                            <Button key={index} variant="outline" size="sm" onClick={() => addObjectiveSuggestionToForm(suggestion)}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                {suggestion.title}
+                            <Button key={index} variant="outline" size="sm" onClick={() => addObjectiveSuggestionToForm(suggestion)} className="h-auto w-full justify-start whitespace-normal text-left">
+                                <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
+                                <span>
+                                  <span className="font-medium">{suggestion.title}</span>
+                                  {suggestion.domain && <span className="ml-2 text-xs text-muted-foreground">({suggestion.domain})</span>}
+                                </span>
                             </Button>
                         ))}
                     </div>
@@ -497,12 +625,12 @@ export function ObjectivesForm({ student, objectivesSuggestions, adaptationsSugg
                     {activeObjectives.map((item) => renderObjective(item, false))}
                 </Accordion>
             )}
-            
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: Math.random().toString(36).substring(7), title: '', successCriteria: '', deadline: '', validationDate: '', adaptations: [] })}>
+
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: Math.random().toString(36).substring(7), title: '', domain: '', competenceRef: '', means: [], successCriteria: '', deadline: '', validationDate: '', adaptations: [], status: 'in_progress', evaluation: '' })}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Ajouter un objectif
             </Button>
-            
+
             {validatedObjectives.length > 0 && (
                 <>
                     <Separator className="my-8" />
